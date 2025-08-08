@@ -229,4 +229,3 @@ export default defineConfig({
 - **React Router DOM** - 라우팅
 - **React Query** - 서버 상태 관리
 - **Axios** - HTTP 클라이언트
-- **Tailwind CSS** - CSS 프레임워크
