@@ -97,15 +97,67 @@
   border: 1px solid #ced4da;
   border-radius: 2px;
   box-shadow: 
-    0 4px 8px rgba(0,0,0,0.3),
-    0 8px 16px rgba(0,0,0,0.2);
+    0 2px 4px rgba(0,0,0,0.15),
+    0 4px 8px rgba(0,0,0,0.1);
   transform-origin: center bottom;
   animation: paperRise 4s ease-out forwards;
   opacity: 1;
 }
 
+/* 편지봉투 스타일 */
+.envelope {
+  position: absolute;
+  width: 260px;
+  height: 160px;
+  background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 30%, #dee2e6 70%, #ced4da 100%);
+  border: 2px solid #adb5bd;
+  border-radius: 8px;
+  box-shadow: 
+    0 2px 4px rgba(0,0,0,0.1),
+    0 4px 8px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  transform-origin: center bottom;
+  animation: paperRise 4s ease-out forwards;
+  opacity: 1;
+  z-index: 13;
+  position: relative;
+}
+
+.envelope::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid #adb5bd;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.envelope::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(145deg, #f1f3f4 0%, #e8eaed 50%, #dadce0 100%);
+  border-radius: 6px 6px 0 0;
+  transform-origin: top center;
+  transform: rotateX(0deg);
+  transition: transform 0.3s ease;
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
 /* 떨어지는 애니메이션 */
 .paper.falling {
+  animation: paperFall 2s ease-in forwards;
+}
+
+.envelope.falling {
   animation: paperFall 2s ease-in forwards;
 }
 
@@ -135,26 +187,29 @@
 }
 
 /* 각 종이별 위치와 애니메이션 설정 */
-.paper-1 { bottom: -100vh; left: 50px; animation-delay: 0s; --final-y: -60vh; animation-duration: 3.2s; }
-.paper-2 { bottom: -100vh; left: 200px; animation-delay: 0.05s; --final-y: -75vh; animation-duration: 2.8s; }
-.paper-3 { bottom: -100vh; left: 350px; animation-delay: 0.02s; --final-y: -85vh; animation-duration: 4.1s; }
-.paper-4 { bottom: -100vh; left: 500px; animation-delay: 0.08s; --final-y: -55vh; animation-duration: 2.3s; }
-.paper-5 { bottom: -100vh; left: 650px; animation-delay: 0.01s; --final-y: -95vh; animation-duration: 3.7s; }
-.paper-6 { bottom: -100vh; left: 800px; animation-delay: 0.12s; --final-y: -70vh; animation-duration: 2.9s; }
-.paper-7 { bottom: -100vh; left: 950px; animation-delay: 0.15s; --final-y: -80vh; animation-duration: 3.4s; }
-.paper-8 { bottom: -100vh; left: 1100px; animation-delay: 0.04s; --final-y: -65vh; animation-duration: 2.6s; }
-.paper-9 { bottom: -100vh; left: 1250px; animation-delay: 0.03s; --final-y: -90vh; animation-duration: 3.8s; }
-.paper-10 { bottom: -100vh; left: 140px; animation-delay: 0.06s; --final-y: -72vh; animation-duration: 2.7s; }
-.paper-11 { bottom: -100vh; left: 290px; animation-delay: 0.02s; --final-y: -120vh; animation-duration: 4.3s; }
-.paper-12 { bottom: -100vh; left: 440px; animation-delay: 0.18s; --final-y: -50vh; animation-duration: 2.1s; }
-.paper-13 { bottom: -100vh; left: 590px; animation-delay: 0.03s; --final-y: -78vh; animation-duration: 3.5s; }
-.paper-14 { bottom: -100vh; left: 740px; animation-delay: 0.07s; --final-y: -92vh; animation-duration: 3.9s; }
-.paper-15 { bottom: -100vh; left: 890px; animation-delay: 0.01s; --final-y: -68vh; animation-duration: 2.4s; }
-.paper-16 { bottom: -100vh; left: 20px; animation-delay: 0.05s; --final-y: -45vh; animation-duration: 2.8s; }
-.paper-17 { bottom: -100vh; left: 170px; animation-delay: 0.09s; --final-y: -58vh; animation-duration: 3.1s; }
-.paper-18 { bottom: -100vh; left: 1380px; animation-delay: 0.04s; --final-y: -52vh; animation-duration: 2.5s; }
-.paper-19 { bottom: -100vh; left: 1530px; animation-delay: 0.06s; --final-y: -110vh; animation-duration: 3.3s; }
-.paper-20 { bottom: -100vh; left: 1040px; animation-delay: 0.08s; --final-y: -48vh; animation-duration: 2.2s; }
+.paper-1 { bottom: -100vh; left: 50px; animation-delay: 0s; --final-y: -60vh; animation-duration: 3.2s; z-index: 10; }
+.paper-2 { bottom: -100vh; left: 200px; animation-delay: 0.01s; --final-y: -75vh; animation-duration: 2.8s; z-index: 9; }
+.paper-3 { bottom: -100vh; left: 350px; animation-delay: 0.02s; --final-y: -85vh; animation-duration: 4.1s; z-index: 11; }
+.paper-4 { bottom: -100vh; left: 500px; animation-delay: 0.03s; --final-y: -55vh; animation-duration: 2.3s; z-index: 7; }
+.paper-5 { bottom: -100vh; left: 650px; animation-delay: 0.04s; --final-y: -95vh; animation-duration: 3.7s; z-index: 12; }
+.paper-6 { bottom: -100vh; left: 800px; animation-delay: 0.05s; --final-y: -70vh; animation-duration: 2.9s; z-index: 8; }
+.paper-7 { bottom: -100vh; left: 950px; animation-delay: 0.06s; --final-y: -80vh; animation-duration: 3.4s; z-index: 10; }
+.paper-8 { bottom: -100vh; left: 1100px; animation-delay: 0.07s; --final-y: -65vh; animation-duration: 2.6s; z-index: 9; }
+.paper-9 { bottom: -100vh; left: 1250px; animation-delay: 0.08s; --final-y: -90vh; animation-duration: 3.8s; z-index: 11; }
+.paper-10 { bottom: -100vh; left: 140px; animation-delay: 0.09s; --final-y: -72vh; animation-duration: 2.7s; z-index: 7; }
+.paper-11 { bottom: -100vh; left: 290px; animation-delay: 0.1s; --final-y: -120vh; animation-duration: 3.5s; z-index: 13; }
+.paper-12 { bottom: -100vh; left: 440px; animation-delay: 0.11s; --final-y: -50vh; animation-duration: 2.1s; z-index: 8; }
+.paper-13 { bottom: -100vh; left: 590px; animation-delay: 0.12s; --final-y: -78vh; animation-duration: 3.5s; z-index: 15; }
+.paper-14 { bottom: -100vh; left: 740px; animation-delay: 0.13s; --final-y: -92vh; animation-duration: 3.9s; z-index: 14; }
+.paper-15 { bottom: -100vh; left: 890px; animation-delay: 0.14s; --final-y: -68vh; animation-duration: 2.4s; z-index: 9; }
+.paper-16 { bottom: -100vh; left: 20px; animation-delay: 0.15s; --final-y: -45vh; animation-duration: 2.8s; z-index: 7; }
+.paper-17 { bottom: -100vh; left: 170px; animation-delay: 0.16s; --final-y: -58vh; animation-duration: 3.1s; z-index: 10; }
+.paper-18 { bottom: -100vh; left: 1380px; animation-delay: 0.17s; --final-y: -52vh; animation-duration: 2.5s; z-index: 8; }
+.paper-19 { bottom: -100vh; left: 1530px; animation-delay: 0.18s; --final-y: -110vh; animation-duration: 2.8s; z-index: 12; }
+.paper-20 { bottom: -100vh; left: 1040px; animation-delay: 0.19s; --final-y: -48vh; animation-duration: 2.2s; z-index: 9; }
+
+/* 편지봉투 위치와 애니메이션 */
+.envelope-1 { bottom: -100vh; left: 750px; animation-delay: 0.6s; --final-y: -70vh; animation-duration: 4.1s; --rotation: -8deg; }
 
 /* 각 종이별 회전 각도 */
 .paper-1 { --rotation: -5deg; }
@@ -167,7 +222,7 @@
 .paper-8 { --rotation: 10deg; }
 .paper-9 { --rotation: -12deg; }
 .paper-10 { --rotation: -12deg; }
-.paper-11 { --rotation: -15deg; }
+.paper-11 { --rotation: 8deg; }
 .paper-12 { --rotation: 4deg; }
 .paper-13 { --rotation: -10deg; }
 .paper-14 { --rotation: 8deg; }
@@ -177,33 +232,3 @@
 .paper-18 { --rotation: -11deg; }
 .paper-19 { --rotation: 13deg; }
 .paper-20 { --rotation: 15deg; }
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .schedule-title {
-    font-size: 2rem;
-  }
-  
-  .schedule-subtitle {
-    font-size: 1rem;
-  }
-  
-  .schedule-features {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .feature {
-    padding: 1.5rem;
-  }
-  
-  .paper {
-    width: 300px;
-    height: 420px;
-  }
-}
-
-
-
-
-

@@ -10,6 +10,37 @@ const ScheduleSection: React.FC = () => {
   const lastWheelTime = useRef(0);
   const fallingTimeoutRef = useRef<number | null>(null);
 
+  // 종이 상태 초기화
+  const resetPaperState = () => {
+    setShowPapers(false);
+    setIsFalling(false);
+  };
+
+  // 타임아웃 정리
+  const clearFallingTimeout = () => {
+    if (fallingTimeoutRef.current) {
+      clearTimeout(fallingTimeoutRef.current);
+      fallingTimeoutRef.current = null;
+    }
+  };
+
+  // 종이 애니메이션 시작
+  const startPaperAnimation = () => {
+    setShowPapers(true);
+    setIsFalling(false);
+  };
+
+  // 역순 애니메이션 시작
+  const startReverseAnimation = () => {
+    setIsFalling(true);
+    
+    // 2초 후에 종이들을 숨김
+    clearFallingTimeout();
+    fallingTimeoutRef.current = window.setTimeout(() => {
+      resetPaperState();
+    }, 2000);
+  };
+
   // Intersection Observer 설정
   useEffect(() => {
     const section = sectionRef.current;
@@ -54,37 +85,6 @@ const ScheduleSection: React.FC = () => {
     };
   }, [isInView, showPapers, isFalling]);
 
-  // 종이 애니메이션 시작
-  const startPaperAnimation = () => {
-    setShowPapers(true);
-    setIsFalling(false);
-  };
-
-  // 역순 애니메이션 시작
-  const startReverseAnimation = () => {
-    setIsFalling(true);
-    
-    // 2초 후에 종이들을 숨김
-    clearFallingTimeout();
-    fallingTimeoutRef.current = window.setTimeout(() => {
-      resetPaperState();
-    }, 2000);
-  };
-
-  // 종이 상태 초기화
-  const resetPaperState = () => {
-    setShowPapers(false);
-    setIsFalling(false);
-  };
-
-  // 타임아웃 정리
-  const clearFallingTimeout = () => {
-    if (fallingTimeoutRef.current) {
-      clearTimeout(fallingTimeoutRef.current);
-      fallingTimeoutRef.current = null;
-    }
-  };
-
   // 종이 요소들 생성
   const renderPapers = () => {
     const papers = [];
@@ -94,10 +94,16 @@ const ScheduleSection: React.FC = () => {
           key={i} 
           className={`paper paper-${i} ${isFalling ? 'falling' : ''}`}
         >
-          {i}
         </div>
       );
     }
+    // 편지봉투 추가
+    papers.push(
+      <div 
+        key="envelope" 
+        className={`envelope envelope-1 ${isFalling ? 'falling' : ''}`}
+      />
+    );
     return papers;
   };
 
