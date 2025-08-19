@@ -1,0 +1,129 @@
+.map-preview-section {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  scroll-snap-align: start;
+}
+
+.map-preview-content {
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+}
+
+.map-preview-title {
+  color: var(--text-primary);
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 4rem;
+}
+
+.map-preview-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.map-info {
+  text-align: left;
+}
+
+.map-info h3 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.map-info p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.map-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.map-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.map-feature .feature-icon {
+  font-size: 1.2rem;
+}
+
+.map-placeholder {
+  display: flex;
+  justify-content: center;
+}
+
+.map-mock {
+  width: 400px;
+  height: 300px;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.map-header {
+  background-color: var(--accent-primary);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.map-content {
+  height: calc(100% - 60px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.location-marker {
+  position: absolute;
+  font-size: 1.5rem;
+}
+
+.marker-1 {
+  top: 30%;
+  left: 20%;
+}
+
+.marker-2 {
+  top: 60%;
+  right: 25%;
+}
+
+.meeting-point {
+  position: absolute;
+  font-size: 2rem;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.map-text {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}

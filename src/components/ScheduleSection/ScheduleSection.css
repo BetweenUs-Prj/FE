@@ -1,0 +1,209 @@
+/* 메인 섹션 스타일 */
+.schedule-section {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 콘텐츠 영역 */
+.schedule-content {
+  text-align: center;
+  max-width: 1000px;
+  width: 100%;
+  padding: 0 2rem;
+  z-index: 10;
+  position: relative;
+}
+
+/* 제목 스타일 */
+.schedule-title {
+  color: var(--text-primary);
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.schedule-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 3rem;
+}
+
+/* 기능 카드 그리드 */
+.schedule-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+/* 개별 기능 카드 */
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  min-width: 60px;
+}
+
+.feature-text h3 {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.feature-text p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* 종이 효과 컨테이너 */
+.paper-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* 기본 종이 스타일 */
+.paper {
+  position: absolute;
+  width: 300px;
+  height: 420px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+  border: 1px solid #ced4da;
+  border-radius: 2px;
+  box-shadow: 
+    0 4px 8px rgba(0,0,0,0.3),
+    0 8px 16px rgba(0,0,0,0.2);
+  transform-origin: center bottom;
+  animation: paperRise 4s ease-out forwards;
+  opacity: 1;
+}
+
+/* 떨어지는 애니메이션 */
+.paper.falling {
+  animation: paperFall 2s ease-in forwards;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes paperRise {
+  0% {
+    transform: translateY(100vh) rotate(var(--rotation, 0deg));
+  }
+  50% {
+    transform: translateY(var(--final-y, -90vh)) rotate(var(--rotation, 0deg));
+  }
+  100% {
+    transform: translateY(var(--final-y, -90vh)) rotate(var(--rotation, 0deg));
+  }
+}
+
+@keyframes paperFall {
+  0% {
+    transform: translateY(var(--final-y, -90vh)) rotate(var(--rotation, 0deg));
+  }
+  50% {
+    transform: translateY(var(--final-y, -90vh)) rotate(var(--rotation, 0deg));
+  }
+  100% {
+    transform: translateY(100vh) rotate(var(--rotation, 0deg));
+  }
+}
+
+/* 각 종이별 위치와 애니메이션 설정 */
+.paper-1 { bottom: -100vh; left: 50px; animation-delay: 0s; --final-y: -60vh; animation-duration: 3.2s; }
+.paper-2 { bottom: -100vh; left: 200px; animation-delay: 0.05s; --final-y: -75vh; animation-duration: 2.8s; }
+.paper-3 { bottom: -100vh; left: 350px; animation-delay: 0.02s; --final-y: -85vh; animation-duration: 4.1s; }
+.paper-4 { bottom: -100vh; left: 500px; animation-delay: 0.08s; --final-y: -55vh; animation-duration: 2.3s; }
+.paper-5 { bottom: -100vh; left: 650px; animation-delay: 0.01s; --final-y: -95vh; animation-duration: 3.7s; }
+.paper-6 { bottom: -100vh; left: 800px; animation-delay: 0.12s; --final-y: -70vh; animation-duration: 2.9s; }
+.paper-7 { bottom: -100vh; left: 950px; animation-delay: 0.15s; --final-y: -80vh; animation-duration: 3.4s; }
+.paper-8 { bottom: -100vh; left: 1100px; animation-delay: 0.04s; --final-y: -65vh; animation-duration: 2.6s; }
+.paper-9 { bottom: -100vh; left: 1250px; animation-delay: 0.03s; --final-y: -90vh; animation-duration: 3.8s; }
+.paper-10 { bottom: -100vh; left: 140px; animation-delay: 0.06s; --final-y: -72vh; animation-duration: 2.7s; }
+.paper-11 { bottom: -100vh; left: 290px; animation-delay: 0.02s; --final-y: -120vh; animation-duration: 4.3s; }
+.paper-12 { bottom: -100vh; left: 440px; animation-delay: 0.18s; --final-y: -50vh; animation-duration: 2.1s; }
+.paper-13 { bottom: -100vh; left: 590px; animation-delay: 0.03s; --final-y: -78vh; animation-duration: 3.5s; }
+.paper-14 { bottom: -100vh; left: 740px; animation-delay: 0.07s; --final-y: -92vh; animation-duration: 3.9s; }
+.paper-15 { bottom: -100vh; left: 890px; animation-delay: 0.01s; --final-y: -68vh; animation-duration: 2.4s; }
+.paper-16 { bottom: -100vh; left: 20px; animation-delay: 0.05s; --final-y: -45vh; animation-duration: 2.8s; }
+.paper-17 { bottom: -100vh; left: 170px; animation-delay: 0.09s; --final-y: -58vh; animation-duration: 3.1s; }
+.paper-18 { bottom: -100vh; left: 1380px; animation-delay: 0.04s; --final-y: -52vh; animation-duration: 2.5s; }
+.paper-19 { bottom: -100vh; left: 1530px; animation-delay: 0.06s; --final-y: -110vh; animation-duration: 3.3s; }
+.paper-20 { bottom: -100vh; left: 1040px; animation-delay: 0.08s; --final-y: -48vh; animation-duration: 2.2s; }
+
+/* 각 종이별 회전 각도 */
+.paper-1 { --rotation: -5deg; }
+.paper-2 { --rotation: 8deg; }
+.paper-3 { --rotation: -10deg; }
+.paper-4 { --rotation: 12deg; }
+.paper-5 { --rotation: -3deg; }
+.paper-6 { --rotation: 15deg; }
+.paper-7 { --rotation: -8deg; }
+.paper-8 { --rotation: 10deg; }
+.paper-9 { --rotation: -12deg; }
+.paper-10 { --rotation: -12deg; }
+.paper-11 { --rotation: -15deg; }
+.paper-12 { --rotation: 4deg; }
+.paper-13 { --rotation: -10deg; }
+.paper-14 { --rotation: 8deg; }
+.paper-15 { --rotation: -6deg; }
+.paper-16 { --rotation: -7deg; }
+.paper-17 { --rotation: 9deg; }
+.paper-18 { --rotation: -11deg; }
+.paper-19 { --rotation: 13deg; }
+.paper-20 { --rotation: 15deg; }
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .schedule-title {
+    font-size: 2rem;
+  }
+  
+  .schedule-subtitle {
+    font-size: 1rem;
+  }
+  
+  .schedule-features {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .feature {
+    padding: 1.5rem;
+  }
+  
+  .paper {
+    width: 300px;
+    height: 420px;
+  }
+}
+
+
+
+
+
