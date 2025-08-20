@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import FadeIn from '../FadeIn';
 import './ScheduleSection.css';
 
 const ScheduleSection: React.FC = () => {
   const [showPapers, setShowPapers] = useState(false);
   const [isFalling, setIsFalling] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [envelopeHovered, setEnvelopeHovered] = useState(false);
   
   const sectionRef = useRef<HTMLElement>(null);
   const lastWheelTime = useRef(0);
@@ -39,6 +41,22 @@ const ScheduleSection: React.FC = () => {
     fallingTimeoutRef.current = window.setTimeout(() => {
       resetPaperState();
     }, 2000);
+  };
+
+  // 편지봉투 클릭 핸들러
+  const handleEnvelopeClick = () => {
+    console.log('편지봉투가 클릭되었습니다!');
+    // 메인페이지로 이동
+    window.location.href = '/home';
+  };
+
+  // 편지봉투 호버 핸들러
+  const handleEnvelopeHover = () => {
+    setEnvelopeHovered(true);
+  };
+
+  const handleEnvelopeLeave = () => {
+    setEnvelopeHovered(false);
   };
 
   // Intersection Observer 설정
@@ -101,7 +119,13 @@ const ScheduleSection: React.FC = () => {
     papers.push(
       <div 
         key="envelope" 
-        className={`envelope envelope-1 ${isFalling ? 'falling' : ''}`}
+        className={`envelope envelope-1 ${isFalling ? 'falling' : ''} ${envelopeHovered ? 'hovered' : ''}`}
+        onClick={handleEnvelopeClick}
+        onMouseEnter={handleEnvelopeHover}
+        onMouseLeave={handleEnvelopeLeave}
+        style={{ cursor: 'pointer' }}
+        title="클릭"
+        data-tooltip="클릭"
       />
     );
     return papers;
@@ -110,43 +134,55 @@ const ScheduleSection: React.FC = () => {
   return (
     <section ref={sectionRef} className="schedule-section">
       <div className="schedule-content">
-        <h2 className="schedule-title">일정 공유 & 막차시간 관리</h2>
-        <p className="schedule-subtitle">
-          개개인의 막차시간과 일정을 공유하여 아무도 뒤처지지 않는 완벽한 만남을 계획해보세요
-        </p>
+        <FadeIn delay={0.2} direction="up">
+          <h2 className="schedule-title">일정 공유 & 막차시간 관리</h2>
+        </FadeIn>
+        <FadeIn delay={0.3} direction="up">
+          <p className="schedule-subtitle">
+            개개인의 막차시간과 일정을 공유하여 아무도 뒤처지지 않는 완벽한 만남을 계획해보세요
+          </p>
+        </FadeIn>
         
         <div className="schedule-features">
-          <div className="feature">
-            <div className="feature-icon">🚇</div>
-            <div className="feature-text">
-              <h3>막차시간 공유</h3>
-              <p>개인별 막차시간을 설정하고 안전한 만남을 보장합니다</p>
+          <FadeIn delay={0.4} direction="up">
+            <div className="feature">
+              <div className="feature-icon">🚇</div>
+              <div className="feature-text">
+                <h3>막차시간 공유</h3>
+                <p>개인별 막차시간을 설정하고 안전한 만남을 보장합니다</p>
+              </div>
             </div>
-          </div>
+          </FadeIn>
           
-          <div className="feature">
-            <div className="feature-icon">📅</div>
-            <div className="feature-text">
-              <h3>일정 동기화</h3>
-              <p>모든 참여자의 일정을 한눈에 확인하고 최적의 시간을 찾습니다</p>
+          <FadeIn delay={0.5} direction="up">
+            <div className="feature">
+              <div className="feature-icon">📅</div>
+              <div className="feature-text">
+                <h3>일정 동기화</h3>
+                <p>모든 참여자의 일정을 한눈에 확인하고 최적의 시간을 찾습니다</p>
+              </div>
             </div>
-          </div>
+          </FadeIn>
           
-          <div className="feature">
-            <div className="feature-icon">⏰</div>
-            <div className="feature-text">
-              <h3>알림 설정</h3>
-              <p>중요한 시간을 놓치지 않도록 스마트한 알림을 제공합니다</p>
+          <FadeIn delay={0.6} direction="up">
+            <div className="feature">
+              <div className="feature-icon">⏰</div>
+              <div className="feature-text">
+                <h3>알림 설정</h3>
+                <p>중요한 시간을 놓치지 않도록 스마트한 알림을 제공합니다</p>
+              </div>
             </div>
-          </div>
+          </FadeIn>
           
-          <div className="feature">
-            <div className="feature-icon">📱</div>
-            <div className="feature-text">
-              <h3>실시간 업데이트</h3>
-              <p>일정 변경사항을 실시간으로 공유하여 혼선을 방지합니다</p>
+          <FadeIn delay={0.7} direction="up">
+            <div className="feature">
+              <div className="feature-icon">📱</div>
+              <div className="feature-text">
+                <h3>실시간 업데이트</h3>
+                <p>일정 변경사항을 실시간으로 공유하여 혼선을 방지합니다</p>
+              </div>
             </div>
-          </div>
+          </FadeIn>
         </div>
       </div>
 
