@@ -1,5 +1,7 @@
 import React from 'react';
 import FadeIn from '../FadeIn';
+import KakaoMap from '../KakaoMap';
+import { KAKAO_MAP_APP_KEY, DEFAULT_MAP_CENTER, DEFAULT_MAP_LEVEL, MAP_PRESETS } from '../../constants/config';
 import './MapPreviewSection.css';
 
 const MapPreviewSection: React.FC = () => {
@@ -43,18 +45,19 @@ const MapPreviewSection: React.FC = () => {
             </div>
           </FadeIn>
           <FadeIn delay={0.4} direction="right">
-            <div className="map-placeholder">
-              <div className="map-mock">
-                <div className="map-header">
-                  <span>카카오맵</span>
-                </div>
-                <div className="map-content">
-                  <div className="location-marker marker-1">📍</div>
-                  <div className="location-marker marker-2">📍</div>
-                  <div className="meeting-point">🎯</div>
-                  <div className="map-text">중간 만남 지점</div>
-                </div>
-              </div>
+            <div className="map-preview">
+              <KakaoMap
+                containerId="preview-map"
+                center={{ lat: 37.5665, lng: 126.9780 }}  // 서울 시청
+                level={6}                                  // 확대 레벨
+                draggable={true}                          // 드래그 가능
+                zoomable={false}                           // 확대/축소 불가능
+                scrollwheel={false}                        // 마우스 휠로 확대/축소 불가능
+                disableDoubleClickZoom={true}            // 더블클릭 확대 비활성화
+                disableDoubleTapZoom={true}              // 더블탭 확대 비활성화
+                appKey={KAKAO_MAP_APP_KEY}
+                className="preview-map-container"
+              />
             </div>
           </FadeIn>
         </div>

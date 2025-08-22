@@ -8,15 +8,16 @@ const Header: React.FC = () => {
   return (
     <header className="header">
       <div className="header-container">
-        <Link to="/" className="logo">
-          우리사이
-        </Link>
+        <div className="logo" onClick={() => window.location.reload()}>
+        </div>
         <nav className="nav-menu">
           <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-            홈
+            소개페이지
           </Link>
         </nav>
-        <button className="login-button">로그인</button>
+        <button className="kakao-login-button">
+          카카오로 시작하기
+        </button>
       </div>
     </header>
   );

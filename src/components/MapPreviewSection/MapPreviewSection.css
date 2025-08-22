@@ -64,66 +64,15 @@
   font-size: 1.2rem;
 }
 
-.map-placeholder {
+.map-preview {
   display: flex;
   justify-content: center;
 }
 
-.map-mock {
+.preview-map-container {
   width: 400px;
   height: 300px;
-  background-color: var(--bg-secondary);
-  border: 2px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
-  position: relative;
-}
-
-.map-header {
-  background-color: var(--accent-primary);
-  color: white;
-  padding: 1rem;
-  text-align: center;
-  font-weight: 600;
-}
-
-.map-content {
-  height: calc(100% - 60px);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.location-marker {
-  position: absolute;
-  font-size: 1.5rem;
-}
-
-.marker-1 {
-  top: 30%;
-  left: 20%;
-}
-
-.marker-2 {
-  top: 60%;
-  right: 25%;
-}
-
-.meeting-point {
-  position: absolute;
-  font-size: 2rem;
-  top: 45%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.map-text {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

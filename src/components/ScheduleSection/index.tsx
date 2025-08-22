@@ -47,14 +47,17 @@ const ScheduleSection: React.FC = () => {
 
   // 편지봉투 클릭 핸들러
   const handleEnvelopeClick = () => {
-    console.log('편지봉투가 클릭되었습니다!');
-    // 메인페이지로 이동
-    navigate('/');
+    navigate('/BetweenUs');
   };
 
   // 편지봉투 호버 핸들러
   const handleEnvelopeHover = () => {
     setEnvelopeHovered(true);
+    // 툴팁 메시지 표시
+    const envelope = document.querySelector('.envelope');
+    if (envelope) {
+      envelope.setAttribute('title', '클릭해보세요');
+    }
   };
 
   const handleEnvelopeLeave = () => {
@@ -126,9 +129,10 @@ const ScheduleSection: React.FC = () => {
         onMouseEnter={handleEnvelopeHover}
         onMouseLeave={handleEnvelopeLeave}
         style={{ cursor: 'pointer' }}
-        title="클릭"
-        data-tooltip="클릭"
-      />
+        title="클릭해보세요"
+      >
+        <div className="envelope-tooltip">클릭해보세요</div>
+      </div>
     );
     return papers;
   };
@@ -186,6 +190,12 @@ const ScheduleSection: React.FC = () => {
             </div>
           </FadeIn>
         </div>
+      </div>
+
+      {/* 하단 화살표 */}
+      <div className="bottom-arrow">
+        <div className="arrow-icon">↓</div>
+        <div className="arrow-text">편지가 왔어요!</div>
       </div>
 
       {/* 종이 효과 */}
