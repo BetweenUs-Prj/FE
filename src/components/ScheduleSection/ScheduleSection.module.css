@@ -92,7 +92,7 @@
   white-space: nowrap;
 }
 
-.arrow-icon {
+.schedule-section .arrow-icon {
   font-size: 2rem;
   color: var(--text-primary);
   animation: bounce 1.5s infinite;

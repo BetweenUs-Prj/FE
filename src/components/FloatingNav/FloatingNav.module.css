@@ -1,0 +1,213 @@
+.floatingNav {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  top: auto;
+  left: auto;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+  padding: 10px;
+  transform: none;
+}
+
+/* 플로팅 버튼 */
+.floatingButton {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1001;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.floatingButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 1);
+}
+
+.floatingButton.open {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* 햄버거 아이콘 */
+.floatingNav .buttonIcon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.floatingNav .hamburgerLine {
+  width: 20px;
+  height: 2px;
+  background: #333;
+  border-radius: 1px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+}
+
+.floatingNav .hamburgerLine:nth-child(1) {
+  transform: translateY(-6px);
+}
+
+.floatingNav .hamburgerLine:nth-child(2) {
+  transform: translateY(0);
+}
+
+.floatingNav .hamburgerLine:nth-child(3) {
+  transform: translateY(6px);
+}
+
+.floatingNav .floatingButton.open .hamburgerLine:nth-child(1) {
+  transform: rotate(45deg) translateY(0);
+}
+
+.floatingNav .floatingButton.open .hamburgerLine:nth-child(2) {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.floatingNav .floatingButton.open .hamburgerLine:nth-child(3) {
+  transform: rotate(-45deg) translateY(0);
+}
+
+/* 네비게이션 아이템 */
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(100px) scale(0.8);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.navItem.show {
+  pointer-events: auto;
+}
+
+.navItem:hover {
+  transform: translateX(-5px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 1);
+}
+
+/* 순차적 애니메이션 */
+.friendItem {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scheduleItem {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meetingItem {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.friendItem.show {
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.scheduleItem.show {
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+}
+
+.meetingItem.show {
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+}
+
+/* 사라질 때 순차적 애니메이션 */
+.friendItem:not(.show) {
+  animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+}
+
+.scheduleItem:not(.show) {
+  animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+}
+
+.meetingItem:not(.show) {
+  animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s forwards;
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100px) scale(0.8);
+  }
+}
+
+/* 아이콘과 텍스트 */
+.navIcon {
+  font-size: 1.2rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: none;
+}
+
+.navText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .floatingNav {
+    right: 20px;
+    bottom: 20px;
+  }
+  
+  .floatingButton {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .navItem {
+    padding: 10px 14px;
+  }
+  
+  .navText {
+    font-size: 0.85rem;
+  }
+}

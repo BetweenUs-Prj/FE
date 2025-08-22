@@ -6,7 +6,7 @@ import UseCaseSection from '../../components/UseCaseSection';
 import MapPreviewSection from '../../components/MapPreviewSection';
 import GamePreviewSection from '../../components/GamePreviewSection';
 import ScheduleSection from '../../components/ScheduleSection';
-import './Landing.css';
+import styles from './Landing.module.css';
 
 const Landing = () => {
   const [currentSection, setCurrentSection] = useState(0);
@@ -124,7 +124,7 @@ const Landing = () => {
   };
 
   return (
-    <div className="landing-page">
+    <div className={styles.landingPage}>
       <main className="main">
         <HeroSection />
         <FeaturesSection />
@@ -136,11 +136,11 @@ const Landing = () => {
       </main>
       
       {/* 플로팅 네비게이션 점들 */}
-      <div className="floating-nav">
+      <div className={styles.floatingNav}>
         {Array.from({ length: totalSections }, (_, index) => (
           <button
             key={index}
-            className={`nav-dot ${index === currentSection ? 'active' : ''}`}
+            className={`${styles.navDot} ${index === currentSection ? styles.active : ''}`}
             onClick={() => handleDotClick(index)}
             aria-label={`섹션 ${index + 1}로 이동`}
           />

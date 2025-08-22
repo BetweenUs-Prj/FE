@@ -1,0 +1,190 @@
+.paperDrawer {
+  position: absolute;
+  bottom: 0;
+  height: 90vh;
+  width: 650px;
+  left: 50%;
+  margin-left: -325px;
+  transform: translateY(calc(100% - 15%));
+  border-radius: 20px 20px 0 0;
+  background: url('/src/assets/images/pngegg.png') no-repeat center center;
+  background-size: cover;
+  z-index: 1000;
+  overflow: hidden;
+  transition: all 0.6s ease;
+}
+
+.expanded {
+  transform: translateY(5%);
+}
+
+.paperDrawerContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.paperDrawerHeader {
+  height: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  transition: background-color 0.3s ease;
+}
+
+.paperTab {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.paperTab:hover {
+  transform: translateY(-2px);
+}
+
+.paperTabIcon {
+  font-size: 1.5rem;
+  animation: bounce 2s infinite;
+}
+
+.paperTabText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.paperDrawerBody {
+  flex: 1;
+  padding: 3.5rem 2rem;
+  overflow-y: auto;
+}
+
+.defaultContent {
+  text-align: center;
+  color: #495057;
+}
+
+.defaultContent h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #343a40;
+}
+
+.defaultContent p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #6c757d;
+}
+
+/* 친구 관리 스타일 */
+.friendsContainer {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.friendItem {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.friendItem:hover {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.friendHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.friendNameInput,
+.friendLocationInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+}
+
+.friendNameInput:focus,
+.friendLocationInput:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white;
+}
+
+.friendLocationInput {
+  margin-top: 0.5rem;
+}
+
+.removeFriendBtn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+}
+
+.removeFriendBtn:hover {
+  background: #ff5252;
+  transform: scale(1.1);
+}
+
+.addFriendBtn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.addFriendBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+

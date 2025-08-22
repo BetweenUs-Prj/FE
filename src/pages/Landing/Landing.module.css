@@ -1,15 +1,15 @@
-.landing-page {
+.landingPage {
   width: 100%;
   height: 100vh;
   position: relative;
 }
 
-.landing-page .main {
+.landingPage .main {
   height: 100vh;
 }
 
 /* 플로팅 네비게이션 */
-.floating-nav {
+.floatingNav {
   position: fixed;
   right: 30px;
   top: 50%;
@@ -19,7 +19,7 @@
   gap: 15px;
 }
 
-.nav-dot {
+.navDot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -30,17 +30,17 @@
   position: relative;
 }
 
-.nav-dot:hover {
+.navDot:hover {
   background-color: rgba(102, 126, 234, 0.6);
   transform: scale(1.2);
 }
 
-.nav-dot.active {
+.navDot.active {
   background-color: var(--accent-primary);
   transform: scale(1.3);
 }
 
-.nav-dot::before {
+.navDot::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -54,7 +54,7 @@
   transition: all 0.3s ease;
 }
 
-.nav-dot.active::before {
+.navDot.active::before {
   border-color: var(--accent-primary);
   animation: pulse 1s ease-out 2 forwards;
 }
@@ -72,12 +72,12 @@
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .floating-nav {
+  .floatingNav {
     right: 15px;
     gap: 10px;
   }
   
-  .nav-dot {
+  .navDot {
     width: 10px;
     height: 10px;
   }

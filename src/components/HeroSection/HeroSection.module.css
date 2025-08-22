@@ -1,4 +1,4 @@
-.hero-section {
+.heroSection {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -8,32 +8,32 @@
   position: relative;
 }
 
-.hero-content {
+.heroContent {
   text-align: center;
 }
 
-.hero-title {
+.heroTitle {
   color: var(--text-primary);
   font-size: 4rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
 }
 
-.hero-subtitle {
+.heroSubtitle {
   color: var(--text-secondary);
   font-size: 1.5rem;
   font-weight: 400;
 }
 
 /* 바로 시작하기 버튼 */
-.start-button-container {
+.startButtonContainer {
   position: absolute;
   top: 2rem;
   right: 2rem;
   z-index: 10;
 }
 
-.start-button {
+.startButton {
   background-color: var(--accent-color);
   color: white;
   border: none;
@@ -46,13 +46,13 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.start-button:hover {
+.startButton:hover {
   background-color: var(--accent-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.start-button:active {
+.startButton:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }

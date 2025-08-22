@@ -2,7 +2,7 @@ import React from 'react';
 import FadeIn from '../FadeIn';
 import KakaoMap from '../KakaoMap';
 import { KAKAO_MAP_APP_KEY, DEFAULT_MAP_CENTER, DEFAULT_MAP_LEVEL, MAP_PRESETS } from '../../constants/config';
-import './MapPreviewSection.css';
+import styles from './MapPreviewSection.module.css';
 
 const MapPreviewSection: React.FC = () => {
   return (

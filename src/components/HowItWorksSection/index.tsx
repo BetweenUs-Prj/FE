@@ -1,6 +1,6 @@
 import React from 'react';
 import FadeIn from '../FadeIn';
-import './HowItWorksSection.css';
+import styles from './HowItWorksSection.module.css';
 
 const HowItWorksSection: React.FC = () => {
   return (

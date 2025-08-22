@@ -1,6 +1,6 @@
 import React from 'react';
 import FadeIn from '../FadeIn';
-import './UseCaseSection.css';
+import styles from './UseCaseSection.module.css';
 
 const UseCaseSection: React.FC = () => {
   return (

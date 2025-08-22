@@ -1,4 +1,4 @@
-.game-preview-section {
+.gamePreviewSection {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -8,51 +8,51 @@
   scroll-snap-align: start;
 }
 
-.game-preview-content {
+.gamePreviewContent {
   max-width: 1200px;
   width: 100%;
   text-align: center;
 }
 
-.game-preview-title {
+.gamePreviewTitle {
   color: var(--text-primary);
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 4rem;
 }
 
-.game-preview-container {
+.gamePreviewContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: center;
 }
 
-.game-info {
+.gameInfo {
   text-align: left;
 }
 
-.game-info h3 {
+.gameInfo h3 {
   color: var(--text-primary);
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
 }
 
-.game-info p {
+.gameInfo p {
   color: var(--text-secondary);
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 2rem;
 }
 
-.game-types {
+.gameTypes {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-.game-type {
+.gameType {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -60,16 +60,16 @@
   font-weight: 500;
 }
 
-.game-type .game-icon {
+.gameType .gameIcon {
   font-size: 1.2rem;
 }
 
-.game-demo {
+.gameDemo {
   display: flex;
   justify-content: center;
 }
 
-.game-mock {
+.gameMock {
   width: 400px;
   height: 300px;
   background-color: var(--bg-primary);
@@ -79,7 +79,7 @@
   position: relative;
 }
 
-.game-header {
+.gameHeader {
   background-color: var(--accent-secondary);
   color: white;
   padding: 1rem;
@@ -87,7 +87,7 @@
   font-weight: 600;
 }
 
-.game-content {
+.gameContent {
   height: calc(100% - 60px);
   display: flex;
   flex-direction: column;
@@ -96,7 +96,7 @@
   position: relative;
 }
 
-.game-wheel {
+.gameWheel {
   width: 200px;
   height: 200px;
   border-radius: 50%;
@@ -111,7 +111,7 @@
   margin-bottom: 1rem;
 }
 
-.wheel-center {
+.wheelCenter {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -127,38 +127,38 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.wheel-option {
+.wheelOption {
   position: absolute;
   color: white;
   font-weight: 600;
   font-size: 0.8rem;
 }
 
-.option-1 {
+.option1 {
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.option-2 {
+.option2 {
   top: 50%;
   right: 10px;
   transform: translateY(-50%);
 }
 
-.option-3 {
+.option3 {
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.option-4 {
+.option4 {
   top: 50%;
   left: 10px;
   transform: translateY(-50%);
 }
 
-.game-status {
+.gameStatus {
   color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import FadeIn from '../FadeIn';
-import './HeroSection.css';
+import styles from './HeroSection.module.css';
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
@@ -11,20 +11,20 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="hero-section">
+    <section className={styles.heroSection}>
       {/* 바로 시작하기 버튼 */}
-      <div className="start-button-container">
-        <button className="start-button" onClick={handleStartClick}>
+      <div className={styles.startButtonContainer}>
+        <button className={styles.startButton} onClick={handleStartClick}>
           바로 시작하기
         </button>
       </div>
       
-      <div className="hero-content">
+      <div className={styles.heroContent}>
         <FadeIn delay={0.2} direction="up">
-          <h1 className="hero-title">우리사이</h1>
+          <h1 className={styles.heroTitle}>우리사이</h1>
         </FadeIn>
         <FadeIn delay={0.4} direction="up">
-          <p className="hero-subtitle">함께하는 공간, 우리만의 이야기</p>
+          <p className={styles.heroSubtitle}>함께하는 공간, 우리만의 이야기</p>
         </FadeIn>
       </div>
     </section>

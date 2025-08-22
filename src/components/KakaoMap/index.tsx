@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKakaoMap } from '../../hooks/useKakaoMap';
-import './KakaoMap.css';
+import styles from './KakaoMap.module.css';
 
 interface KakaoMapProps {
   containerId: string;

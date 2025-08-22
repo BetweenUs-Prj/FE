@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FadeIn from '../FadeIn';
 import { useTransition } from '../../contexts/TransitionContext';
-import './ScheduleSection.css';
+import styles from './ScheduleSection.module.css';
 
 const ScheduleSection: React.FC = () => {
   const navigate = useNavigate();

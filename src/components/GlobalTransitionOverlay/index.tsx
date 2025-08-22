@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTransition } from '../../contexts/TransitionContext';
-import './GlobalTransitionOverlay.css';
+import styles from './GlobalTransitionOverlay.module.css';
 
 const GlobalTransitionOverlay: React.FC = () => {
   const { isTransitioning, endTransition } = useTransition();
