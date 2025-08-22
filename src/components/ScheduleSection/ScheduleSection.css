@@ -5,6 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   background-color: var(--bg-primary);
   scroll-snap-align: start;
   position: relative;
@@ -80,14 +81,15 @@
 /* 하단 화살표 */
 .bottom-arrow {
   position: absolute;
-  bottom: 2rem;
+  top: 100px;
   left: 50%;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   z-index: 10;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .arrow-icon {

@@ -21,7 +21,7 @@
   cursor: pointer;
   width: 100px;
   height: 100px;
-  background-image: url('../../assets/icons/우리 사이 로고.png');
+  background-image: url('/src/assets/icons/우리 사이 로고.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;

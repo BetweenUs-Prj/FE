@@ -3,6 +3,7 @@ import Header from '../../components/Header';
 import FadeIn from '@/components/FadeIn';
 import KakaoMap from '../../components/KakaoMap';
 import { KAKAO_MAP_APP_KEY, MAP_PRESETS } from '../../constants/config';
+import PaperDrawer from '@/components/PaperDrawer';
 
 const Home = () => {
   return (
@@ -20,7 +21,8 @@ const Home = () => {
           appKey={KAKAO_MAP_APP_KEY}
           className="home-map-container"
         />
-        <div className="home-content">
+      </div>
+      <div className="home-content">
           <FadeIn delay={0.2} direction="up">
             <h1 className="home-title">우리 사이</h1>
             <p className="map-description">
@@ -28,7 +30,7 @@ const Home = () => {
             </p>
           </FadeIn>
         </div>
-      </div>
+      <PaperDrawer />
     </div>
   );
 };

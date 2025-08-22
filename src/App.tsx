@@ -1,11 +1,16 @@
 import { Outlet } from 'react-router-dom';
+import { TransitionProvider } from './contexts/TransitionContext';
+import GlobalTransitionOverlay from './components/GlobalTransitionOverlay';
 import './styles/App.css';
 
 function App() {
   return (
-    <div className="App">
-      <Outlet />
-    </div>
+    <TransitionProvider>
+      <div className="App">
+        <Outlet />
+        <GlobalTransitionOverlay />
+      </div>
+    </TransitionProvider>
   );
 }
 

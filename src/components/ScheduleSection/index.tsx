@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FadeIn from '../FadeIn';
+import { useTransition } from '../../contexts/TransitionContext';
 import './ScheduleSection.css';
 
 const ScheduleSection: React.FC = () => {
   const navigate = useNavigate();
+  const { startTransition } = useTransition();
   const [showPapers, setShowPapers] = useState(false);
   const [isFalling, setIsFalling] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [envelopeHovered, setEnvelopeHovered] = useState(false);
-  
   const sectionRef = useRef<HTMLElement>(null);
   const lastWheelTime = useRef(0);
   const fallingTimeoutRef = useRef<number | null>(null);
@@ -45,11 +46,6 @@ const ScheduleSection: React.FC = () => {
     }, 2000);
   };
 
-  // 편지봉투 클릭 핸들러
-  const handleEnvelopeClick = () => {
-    navigate('/BetweenUs');
-  };
-
   // 편지봉투 호버 핸들러
   const handleEnvelopeHover = () => {
     setEnvelopeHovered(true);
@@ -62,6 +58,14 @@ const ScheduleSection: React.FC = () => {
 
   const handleEnvelopeLeave = () => {
     setEnvelopeHovered(false);
+  };
+
+  // 편지봉투 클릭 핸들러
+  const handleEnvelopeClick = () => {
+    startTransition();
+    setTimeout(() => {
+      navigate('/BetweenUs');
+    }, 1500);
   };
 
   // Intersection Observer 설정
@@ -191,19 +195,20 @@ const ScheduleSection: React.FC = () => {
           </FadeIn>
         </div>
       </div>
-
-      {/* 하단 화살표 */}
-      <div className="bottom-arrow">
-        <div className="arrow-icon">↓</div>
-        <div className="arrow-text">편지가 왔어요!</div>
-      </div>
-
+      <FadeIn delay={0.8} direction="down">
+            <div className="bottom-arrow">
+              <div className="arrow-icon">↓</div>
+              <div className="arrow-text">편지가 왔어요!</div>
+            </div>
+          </FadeIn>
       {/* 종이 효과 */}
       {showPapers && (
         <div className="paper-container">
           {renderPapers()}
         </div>
       )}
+
+
     </section>
   );
 };
