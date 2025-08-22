@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FadeIn from '../FadeIn';
 import './ScheduleSection.css';
 
 const ScheduleSection: React.FC = () => {
+  const navigate = useNavigate();
   const [showPapers, setShowPapers] = useState(false);
   const [isFalling, setIsFalling] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -47,7 +49,7 @@ const ScheduleSection: React.FC = () => {
   const handleEnvelopeClick = () => {
     console.log('편지봉투가 클릭되었습니다!');
     // 메인페이지로 이동
-    window.location.href = '/home';
+    navigate('/');
   };
 
   // 편지봉투 호버 핸들러
