@@ -4,21 +4,109 @@
 
 ## 🚀 시작하기
 
-### 설치 및 실행
+### 로컬 개발 환경 설정
 
+이 프론트엔드는 백엔드 서버(MiniGameService)와 연동하여 동작합니다.
+
+#### 1. 백엔드 실행
+```bash
+# 백엔드 서버 실행 (포트 8080)
+cd C:\Users\82106\Workspace\MiniGameService
+.\gradlew bootRun
+```
+
+#### 2. 프론트엔드 실행
 ```bash
 # 의존성 설치
 npm install
 
-# 개발 서버 실행
+# 개발 서버 실행 (포트 5173, Vite 기본 포트)
 npm run dev
+```
 
+#### 3. 연결 상태 확인
+```powershell
+# 백엔드 상태 확인
+irm http://localhost:8080/actuator/health
+
+# 프론트엔드 접속
+# http://localhost:5173
+```
+
+### 개발 환경 세부 설정
+
+- **프록시 설정**: `vite.config.ts`에서 `/api`와 `/ws` 경로를 `http://localhost:8080`으로 프록시
+- **환경변수**: `.env.development.local`에서 `VITE_API_BASE_URL=/api` 설정
+- **CORS**: 백엔드에서 `localhost:3000`, `localhost:5173` 허용 설정 완료
+- **WebSocket**: STOMP 프로토콜 사용, `/ws` 엔드포인트로 연결
+
+### 기타 명령어
+
+```bash
 # 빌드
 npm run build
 
 # 빌드 미리보기
 npm run preview
 ```
+
+**중요**: 프록시는 개발 전용 설정이며, 배포 시에는 환경변수나 빌드 설정으로 API baseURL을 교체해야 합니다.
+
+### 벌칙 추가 (개발 모드)
+
+벌칙 선택 화면에서 새로운 벌칙을 추가할 수 있습니다.
+
+#### 기능 설명
+- **공개 벌칙**: 모든 사용자가 볼 수 있는 벌칙 (`userUid: null`)
+- **개인 벌칙**: 현재 사용자만 볼 수 있는 벌칙 (`userUid: 현재_사용자_ID`)
+- `X-USER-UID` 헤더가 자동으로 추가되어 백엔드에서 사용자를 식별합니다.
+
+#### curl 테스트 예시
+```powershell
+# 공개 벌칙 생성
+curl -s -H "Content-Type: application/json" -H "X-USER-UID: test-user" ^
+     -d "{\"description\":\"테스트 벌칙\",\"userUid\":null}" ^
+     http://localhost:5173/api/penalties
+
+# 개인 벌칙 생성  
+curl -s -H "Content-Type: application/json" -H "X-USER-UID: test-user" ^
+     -d "{\"description\":\"내 전용 벌칙\",\"userUid\":\"test-user\"}" ^
+     http://localhost:5173/api/penalties
+```
+
+### 퀴즈 시작 (카테고리 선택)
+
+퀴즈 게임을 선택하면 카테고리를 선택한 후 세션을 시작할 수 있습니다.
+
+#### 기능 흐름
+1. **벌칙 선택**: 원하는 벌칙을 선택하고 "확정하기" 클릭
+2. **카테고리 선택**: 퀴즈 카테고리 선택 화면이 나타남
+   - 백엔드에서 카테고리 목록 조회: `GET /api/mini-games/categories`  
+   - 실패 시 기본 카테고리 사용: `['음식', '상식', '스포츠', '영화', '음악']`
+3. **퀴즈 시작**: 선택한 카테고리로 퀴즈 세션 생성 및 문제 로드
+
+#### API 호출 순서
+```powershell
+# 1. 퀴즈 세션 생성 (카테고리 포함)
+curl -v -H "Content-Type: application/json" -H "X-USER-UID: test-user-123" ^
+     -d "{\"gameType\":\"QUIZ\",\"totalRounds\":5,\"category\":\"음식\",\"penaltyId\":1}" ^
+     http://localhost:5173/api/mini-games/sessions
+
+# 2. 해당 카테고리 문제 조회
+curl -s "http://localhost:5173/api/mini-games/questions?category=음식&page=0&size=5"
+
+# 3. 라운드 시작 (각 라운드마다)
+curl -v -H "Content-Type: application/json" -H "X-USER-UID: test-user-123" ^
+     -d "{\"questionId\":1}" ^
+     http://localhost:5173/api/mini-games/sessions/{sessionId}/rounds
+```
+
+#### 상태 관리
+- **Zustand Store**: 선택한 카테고리, 로드된 질문들, 현재 라운드 인덱스 저장
+- **네트워크 탭 확인사항**:
+  - `POST /api/mini-games/sessions` - payload에 `category` 포함
+  - `GET /api/mini-games/questions` - 카테고리별 문제 로드  
+  - `POST /api/mini-games/sessions/{sessionId}/rounds` - 각 라운드 시작
 
 ## 🚦 라우팅(react-router-dom) 설치 및 사용법
 
