@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import styles from './Home.module.css';
 import Header from '../../components/Header';
 import FadeIn from '@/components/FadeIn';
@@ -5,6 +6,7 @@ import KakaoMap from '../../components/KakaoMap';
 import { KAKAO_MAP_APP_KEY } from '../../constants/config';
 import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
+import MiddlePlaceList from '@/components/MiddlePlaceList';
 
 // 랜덤 좌표 생성 함수
 const generateRandomLocation = () => {
@@ -15,8 +17,13 @@ const generateRandomLocation = () => {
 };
 
 const Home = () => {
-  // 컴포넌트가 마운트될 때마다 랜덤 좌표 생성
-  const randomLocation = generateRandomLocation();
+  const [showPlaceList, setShowPlaceList] = useState(false);
+  const [randomLocation, setRandomLocation] = useState({ lat: 37.5665, lng: 126.9780 }); // 기본값: 서울시청
+
+  // 컴포넌트가 마운트될 때만 랜덤 좌표 생성
+  useEffect(() => {
+    setRandomLocation(generateRandomLocation());
+  }, []);
 
   const handleFriendClick = () => {
     console.log('친구 메뉴 클릭');
@@ -31,6 +38,21 @@ const Home = () => {
   const handleMeetingClick = () => {
     console.log('만남 메뉴 클릭');
     // TODO: 만남 관리 페이지로 이동
+  };
+
+  const handlePlaceCardClick = (cardId: number) => {
+    console.log(`추천 장소 카드 ${cardId} 클릭됨`);
+    // TODO: 각 카드별 중간거리 계산 로직 구현
+  };
+
+  const handleFindMiddle = () => {
+    if (showPlaceList) {
+      // 이미 보이는 상태라면 순차적으로 사라지도록
+      setShowPlaceList(false);
+    } else {
+      // 숨겨진 상태라면 나타나도록
+      setShowPlaceList(true);
+    }
   };
 
   return (
@@ -58,7 +80,11 @@ const Home = () => {
             </p>
           </FadeIn>
         </div>
-      <PaperDrawer />
+      <PaperDrawer onFindMiddle={handleFindMiddle} />
+      <MiddlePlaceList 
+        isVisible={showPlaceList}
+        onCardClick={handlePlaceCardClick}
+      />
       <FloatingNav
         onFriendClick={handleFriendClick}
         onScheduleClick={handleScheduleClick}

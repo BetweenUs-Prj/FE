@@ -9,9 +9,10 @@ interface Friend {
 
 interface PaperDrawerProps {
   children?: React.ReactNode;
+  onFindMiddle?: () => void;
 }
 
-const PaperDrawer: React.FC<PaperDrawerProps> = () => {
+const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([
     { id: 1, name: '', location: '' },
@@ -45,8 +46,11 @@ const PaperDrawer: React.FC<PaperDrawerProps> = () => {
   };
 
   const handleFindMiddle = () => {
-    // 중간거리 찾기 버튼 클릭 시 PaperDrawer 토글
+    // 중간거리 찾기 버튼 클릭 시 PaperDrawer 토글 및 부모 컴포넌트에 알림
     setIsExpanded(!isExpanded);
+    if (onFindMiddle) {
+      onFindMiddle();
+    }
     console.log('중간거리 찾기 버튼 클릭됨');
     // TODO: 실제 중간거리 계산 로직 구현
   };

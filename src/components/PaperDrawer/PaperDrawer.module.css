@@ -1,13 +1,14 @@
   .paperDrawer {
   position: absolute;
   bottom: 0;
-  height: 93vh;
-  width: 65vw;
+  height: 700px;
+  width: 750px;
+  max-width: 800px;
+  min-width: 700px;
   left: 0;
   right: 0;
   margin: 0 auto;
-  transform: translateY(80vh);
-  border-radius: 2vw 2vw 0 0;
+  transform: translateY(600px);
   background: url('/src/assets/images/pngegg.png') no-repeat center center;
   background-size: 100% auto;
   background-position: center top;
@@ -17,14 +18,14 @@
 }
 
 .expanded {
-  transform: translateY(5vh);
+  transform: translateY(40px);
 }
 
   .paperDrawerContent {
     height: 100%;
     display: flex;
     flex-direction: column;
-    margin-top: 1.8vw;
+    margin-top: 2.5%;
   }
 
   .paperDrawerHeader {
@@ -39,28 +40,29 @@
 
   .paperTab {
   display: flex;
+  max-height: 40px;
   flex-direction: row;
   align-items: center;
-  gap: 0.8vw;
-  padding: 0.8vw 1.2vw;
-  border-radius: 1.5vw;
+  gap: 8px;
+  padding: 10px 15px;
+  border-radius: 15px;
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0.2vw 0.8vw rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  margin-bottom: 3vw;
+  margin-bottom: 25px;
 }
 
 .paperTab:hover {
-  transform: translateY(-0.2vw);
+  transform: translateY(-2px);
 }
 
 .paperTabIcon {
-  font-size: 2.4vw;
+  font-size: 24px;
   animation: bounce 2s infinite;
 }
 
 .paperTabText {
-  font-size: 1.4vw;
+  font-size: 14px;
   font-weight: 600;
   color: #495057;
   white-space: nowrap;
@@ -68,24 +70,25 @@
 
   .paperDrawerBody {
   flex: 1;
-  padding: 3.5vw 2vw;
+  padding: 30px 20px;
   overflow-y: auto;
 }
 
 .defaultContent {
   text-align: center;
   color: #495057;
+  margin-top: 45px;
 }
 
 .defaultContent h3 {
-  font-size: 2.4vw;
+  font-size: 24px;
   font-weight: 600;
-  margin-bottom: 1vw;
+  margin-bottom: 10px;
   color: #343a40;
 }
 
 .defaultContent p {
-  font-size: 1.6vw;
+  font-size: 16px;
   line-height: 1.6;
   color: #6c757d;
 }
@@ -96,8 +99,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.86vw;
+  gap: 20px;
   width: 100%;
+  margin-top: 15px;
 }
 
 .friendItem {
@@ -112,11 +116,11 @@
 }
 
 .friendLabel {
-  font-size: 1.6vw;
+  font-size: 17px;
   font-weight: 600;
   color: #495057;
-  margin-right: 2.6vw;
-  min-width: 3vw;
+  margin-right: 60px;
+  min-width: 30px;
   text-align: left;
 }
 
@@ -130,9 +134,9 @@
 .friendNameInput,
 .friendLocationInput {
   width: 100%;
-  padding: 0.75vw;
-  padding-right: 3.2vw;
-  font-size: 1.6vw;
+  padding: 7px;
+  padding-right: 28px;
+  font-size: 15px;
   border: none;
   background: transparent;
 }
@@ -146,21 +150,21 @@
 
 .removeFriendBtn {
   position: absolute;
-  right: 0.4vw;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
   background: #ff6b6b;
   color: white;
   border: none;
   border-radius: 50%;
-  width: 2.4vw;
-  height: 2.4vw;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   cursor: pointer;
-  font-size: 1.4vw;
+  font-size: 12px;
   transition: all 0.3s ease;
 }
 
@@ -168,19 +172,19 @@
   background: #495057;
   color: white;
   border: none;
-  border-radius: 1.2vw;
-  padding: 1vw;
-  font-size: 1.4vw;
+  border-radius: 12px;
+  padding: 9px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1vw;
+  margin-top: 10px;
 }
 
 .addFriendBtn:hover {
   background: #343a40;
-  transform: translateY(-0.2vw);
-  box-shadow: 0 0.6vw 2vw rgba(73, 80, 87, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(73, 80, 87, 0.3);
 }
 
   @keyframes bounce {
@@ -188,24 +192,25 @@
     transform: translateY(0);
   }
   40% {
-    transform: translateY(-0.5vw);
+    transform: translateY(-3px);
   }
   60% {
-    transform: translateY(-0.3vw);
+    transform: translateY(-2px);
   }
 }
 
 .findMiddleButton {
   position: absolute;
-  bottom: 20vw;
-  right: 25vw;
+  bottom: 15%;
+  right: 50%;
+  transform: translateX(50%) translateY(50%);
   background: #54ae57;
   color: white;
   border: none;
-  width: 14vw;
-  height: 5vw;
-  border-radius: 1.2vw;
-  padding: 0.5vw 1.3vw;
+  width: 130px;
+  height: 45px;
+  border-radius: 12px;
+  padding: 5px 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -217,16 +222,11 @@
 }
 
 .findMiddleButton:hover {
-  transform: translateY(-0.4vw) scale(1.05);
+  transform: translateX(50%) translateY(50%) scale(1.05);
 }
-
-.findMiddleButton:active {
-  transform: translateY(-0.2vw) scale(1.02);
-}
-
 .findMiddleButtonText {
-  font-size: 1.3vw;
+  font-size: 13px;
   font-weight: 700;
-  text-shadow: 0 0.1vw 0.2vw rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
