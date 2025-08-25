@@ -25,6 +25,7 @@ const generateRandomLocation = () => {
 const Home = () => {
   const [randomLocation, setRandomLocation] = useState({ lat: 37.5665, lng: 126.9780 }); // 기본값: 서울시청
   const [showCardList, setShowCardList] = useState(false);
+  const [showHomeContent, setShowHomeContent] = useState(true);
   const [currentView, setCurrentView] = useState<'stations' | 'places'>('stations');
   const [selectedStation, setSelectedStation] = useState<string>('');
   const [cards, setCards] = useState<MiddlePlaceCard[]>([]);
@@ -97,11 +98,13 @@ const Home = () => {
     setCurrentView('stations');
     setSelectedStation('');
     setShowCardList(true);
+    setShowHomeContent(false); // homeContent 숨기기
   };
 
   const handleHideCards = () => {
     console.log('카드 숨기기');
     setShowCardList(false);
+    setShowHomeContent(true); // homeContent 다시 표시
     setCurrentView('stations');
     setSelectedStation('');
     
@@ -160,7 +163,8 @@ const Home = () => {
           className={styles.homeMapContainer}
         />
       </div>
-      <div className={styles.homeContent}>
+      {showHomeContent && (
+        <div className={styles.homeContent}>
           <FadeIn delay={0.2} direction="up">
             <h1 className={styles.homeTitle}>우리 사이</h1>
             <p className={styles.mapDescription}>
@@ -168,6 +172,7 @@ const Home = () => {
             </p>
           </FadeIn>
         </div>
+      )}
       <PaperDrawer 
         onFindMiddle={handleFindMiddle} 
         onHideCards={handleHideCards}
