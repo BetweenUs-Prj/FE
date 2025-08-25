@@ -2,6 +2,18 @@ import React from 'react';
 import { useKakaoMap } from '../../hooks/useKakaoMap';
 import styles from './KakaoMap.module.css';
 
+interface MarkerInfo {
+  id: string;
+  position: {
+    lat: number;
+    lng: number;
+  };
+  title: string;
+  type?: 'station' | 'place';
+  isHighlighted?: boolean;
+  isVisible?: boolean;
+}
+
 interface KakaoMapProps {
   containerId: string;
   center: {
@@ -18,6 +30,10 @@ interface KakaoMapProps {
   scrollwheel?: boolean;      // 마우스 휠로 확대/축소 가능 여부
   disableDoubleClickZoom?: boolean;  // 더블클릭 확대 비활성화
   disableDoubleTapZoom?: boolean;    // 더블탭 확대 비활성화
+  
+  // 마커 관련 props
+  markers?: MarkerInfo[];     // 표시할 마커 목록
+  onMarkerClick?: (markerId: string) => void; // 마커 클릭 시 호출되는 함수
   
   // 추가 가능한 기능들 (주석으로만 표시)
   // mapTypeId?: string;         // 지도 타입 (roadmap, satellite, hybrid)
@@ -50,7 +66,11 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
   zoomable = true,    // 지도 확대/축소 가능 여부 (기본값: true)
   scrollwheel = true, // 마우스 휠로 확대/축소 가능 여부 (기본값: true)
   disableDoubleClickZoom = false,  // 더블클릭 확대 비활성화 (기본값: false)
-  disableDoubleTapZoom = false     // 더블탭 확대 비활성화 (기본값: false)
+  disableDoubleTapZoom = false,    // 더블탭 확대 비활성화 (기본값: false)
+  
+  // 마커 관련 props
+  markers = [],       // 표시할 마커 목록
+  onMarkerClick       // 마커 클릭 시 호출되는 함수
 }) => {
   useKakaoMap({
     containerId,
@@ -63,7 +83,9 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
       disableDoubleClickZoom,
       disableDoubleTapZoom
     },
-    appKey
+    appKey,
+    markers,
+    onMarkerClick
   });
 
   return (

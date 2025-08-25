@@ -7,6 +7,8 @@ import { KAKAO_MAP_APP_KEY } from '../../constants/config';
 import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
 import MiddlePlaceRecommendCard from '@/components/MiddlePlaceRecommendCard';
+import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
+
 
 interface MiddlePlaceCard {
   id: number;
@@ -28,45 +30,55 @@ const Home = () => {
   const [showHomeContent, setShowHomeContent] = useState(true);
   const [currentView, setCurrentView] = useState<'stations' | 'places'>('stations');
   const [selectedStation, setSelectedStation] = useState<string>('');
+  const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
   const [cards, setCards] = useState<MiddlePlaceCard[]>([]);
+  const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.9780 });
+  const [mapMarkers, setMapMarkers] = useState<Array<{
+    id: string;
+    position: { lat: number; lng: number };
+    title: string;
+    type: 'station' | 'place';
+    isHighlighted?: boolean;
+    isVisible?: boolean;
+  }>>([]);
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  
+
 
   // 컴포넌트가 마운트될 때만 랜덤 좌표 생성
   useEffect(() => {
     setRandomLocation(generateRandomLocation());
   }, []);
 
+
+
   // 역 목록 생성
   const generateStationCards = (): MiddlePlaceCard[] => {
-    return [
-      { id: 1, title: "강남역", duration: "15분", type: "station" },
-      { id: 2, title: "홍대입구역", duration: "25분", type: "station" },
-      { id: 3, title: "신촌역", duration: "20분", type: "station" },
-      { id: 4, title: "이대역", duration: "18분", type: "station" },
-      { id: 5, title: "아현역", duration: "22분", type: "station" },
-      { id: 6, title: "충정로역", duration: "12분", type: "station" }
-    ];
+    const stations = getAllStations();
+    return stations.map(station => ({
+      id: station.id,
+      title: station.name,
+      duration: station.duration,
+      type: "station" as const
+    }));
   };
 
   // 추천 장소 목록 생성
-  const generatePlaceCards = (stationName: string): MiddlePlaceCard[] => {
-    const placeTypes = [
-      { title: "카페", duration: "도보 3분" },
-      { title: "식당", duration: "도보 5분" },
-      { title: "공원", duration: "도보 8분" },
-      { title: "쇼핑몰", duration: "도보 10분" },
-      { title: "문화시설", duration: "도보 7분" }
-    ];
+  const generatePlaceCards = (stationId: number): MiddlePlaceCard[] => {
+    const station = getStationById(stationId);
+    if (!station) return [];
 
-    const placeCards = placeTypes.map((place, index) => ({
-      id: index + 1,
-      title: `${stationName} ${place.title}`,
+    const places = getPlacesByStationId(stationId);
+    const placeCards = places.map(place => ({
+      id: place.id,
+      title: place.title,
       duration: place.duration,
       type: "place" as const
     }));
 
-    // 뒤로가기 카드 추가
+    // 뒤로가기 카드 추가 (고유한 ID 부여)
     const backCard = {
-      id: placeCards.length + 1,
+      id: 9999, // 고유한 ID로 설정
       title: "뒤로가기",
       duration: "역 선택으로 돌아가기",
       type: "back" as const
@@ -99,6 +111,18 @@ const Home = () => {
     setSelectedStation('');
     setShowCardList(true);
     setShowHomeContent(false); // homeContent 숨기기
+    
+    // 모든 역들의 마커 표시
+    const allStations = getAllStations();
+    const stationMarkers = allStations.map(station => ({
+      id: `station-${station.id}`,
+      position: { lat: station.lat, lng: station.lng },
+      title: station.name,
+      type: 'station' as const,
+      isVisible: true,
+      isHighlighted: false
+    }));
+    setMapMarkers(stationMarkers);
   };
 
   const handleHideCards = () => {
@@ -107,12 +131,18 @@ const Home = () => {
     setShowHomeContent(true); // homeContent 다시 표시
     setCurrentView('stations');
     setSelectedStation('');
+    setSelectedCardId(null); // 선택된 카드 초기화
     
     // MiddlePlaceRecommendCard의 선택 상태도 리셋
     if ((window as any).resetMiddlePlaceCardSelection) {
       (window as any).resetMiddlePlaceCardSelection();
     }
+    
+    // 마커 제거
+    setMapMarkers([]);
   };
+
+
 
   const handleCardClick = (cardId: number) => {
     const clickedCard = cards.find(card => card.id === cardId);
@@ -122,11 +152,43 @@ const Home = () => {
     if (currentView === 'stations') {
       // 역 선택 시 추천 장소로 변경
       if (clickedCard.type === 'station') {
-        setSelectedStation(clickedCard.title);
-        const placeCards = generatePlaceCards(clickedCard.title);
-        setCards(placeCards);
-        setCurrentView('places');
-        console.log(`${clickedCard.title} 추천 장소로 변경`);
+        const station = getStationById(clickedCard.id);
+        if (station) {
+          setSelectedStation(station.name);
+          setSelectedStationId(station.id);
+          setMapCenter({ lat: station.lat, lng: station.lng });
+          
+          // 역 마커와 해당 역의 모든 추천 장소 마커 추가
+          const places = getPlacesByStationId(station.id);
+          const placeMarkers = places.map(place => ({
+            id: `place-${place.id}`,
+            position: { lat: place.lat, lng: place.lng },
+            title: place.title,
+            type: 'place' as const
+          }));
+          
+          const allMarkers = [
+            {
+              id: `station-${station.id}`,
+              position: { lat: station.lat, lng: station.lng },
+              title: station.name,
+              type: 'station' as const,
+              isVisible: true,
+              isHighlighted: false
+            },
+            ...placeMarkers.map(place => ({
+              ...place,
+              isVisible: true,
+              isHighlighted: false
+            }))
+          ];
+          setMapMarkers(allMarkers);
+          
+          const placeCards = generatePlaceCards(clickedCard.id);
+          setCards(placeCards);
+          setCurrentView('places');
+          console.log(`${clickedCard.title} 추천 장소로 변경`);
+        }
       }
     } else {
       // 추천 장소 선택 시 처리
@@ -136,10 +198,44 @@ const Home = () => {
         setCards(stationCards);
         setCurrentView('stations');
         setSelectedStation('');
+        setSelectedStationId(null);
+        setSelectedCardId(null); // 선택된 카드 초기화
+        setMapCenter({ lat: 37.5665, lng: 126.9780 }); // 서울시청으로 초기화
+        // 마커 완전히 제거
+        setMapMarkers([]);
         console.log('역 선택으로 돌아가기');
       } else if (clickedCard.type === 'place') {
-        // 장소 선택 - 카드 목록은 그대로 유지
-        console.log(`추천 장소 ${clickedCard.title} 선택됨`);
+        // 이미 선택된 카드를 다시 클릭하면 원상복귀
+        if (selectedCardId === clickedCard.id) {
+          setSelectedCardId(null);
+          // 모든 마커 표시하고 강조 해제
+          setMapMarkers(prevMarkers => 
+            prevMarkers.map(marker => ({
+              ...marker,
+              isHighlighted: false,
+              isVisible: true
+            }))
+          );
+          console.log(`추천 장소 ${clickedCard.title} 선택 해제됨`);
+        } else {
+          // 새로운 장소 선택 - 맵 중심을 해당 장소로 이동
+          const places = getPlacesByStationId(selectedStationId || 0);
+          const selectedPlace = places.find(place => place.id === clickedCard.id);
+          if (selectedPlace) {
+            setMapCenter({ lat: selectedPlace.lat, lng: selectedPlace.lng });
+            setSelectedCardId(clickedCard.id); // 선택된 카드 ID 저장
+            
+            // 선택된 장소만 강조하고 다른 장소 마커들은 숨김
+            setMapMarkers(prevMarkers => 
+              prevMarkers.map(marker => ({
+                ...marker,
+                isHighlighted: marker.id === `place-${selectedPlace.id}`,
+                isVisible: marker.id === `place-${selectedPlace.id}` || marker.type === 'station'
+              }))
+            );
+            console.log(`추천 장소 ${clickedCard.title} 선택됨 - 맵 중심 이동`);
+          }
+        }
         // TODO: 선택된 장소에 대한 상세 정보 표시
         // 카드 목록을 변경하지 않음 - 선택된 카드가 유지됨
       }
@@ -152,7 +248,7 @@ const Home = () => {
       <div className={styles.mapBackground}>
         <KakaoMap
           containerId="home-map"
-          center={randomLocation}
+          center={mapCenter}
           level={5}
           zoomable={false}
           scrollwheel={false}
@@ -161,6 +257,31 @@ const Home = () => {
           draggable={false}
           appKey={KAKAO_MAP_APP_KEY}
           className={styles.homeMapContainer}
+          markers={mapMarkers}
+          onMarkerClick={(markerId) => {
+            console.log('마커 클릭:', markerId);
+            
+            // 마커 ID에서 장소 ID 추출
+            if (markerId.startsWith('place-')) {
+              const placeId = parseInt(markerId.replace('place-', ''));
+              
+              // 현재 추천 장소 카드 목록에서 해당 장소 찾기
+              const placeCard = cards.find(card => card.id === placeId && card.type === 'place');
+              if (placeCard) {
+                // 해당 장소 카드 클릭과 동일한 동작 수행
+                handleCardClick(placeId);
+              }
+            } else if (markerId.startsWith('station-')) {
+              const stationId = parseInt(markerId.replace('station-', ''));
+              
+              // 현재 역 카드 목록에서 해당 역 찾기
+              const stationCard = cards.find(card => card.id === stationId && card.type === 'station');
+              if (stationCard) {
+                // 해당 역 카드 클릭과 동일한 동작 수행
+                handleCardClick(stationId);
+              }
+            }
+          }}
         />
       </div>
       {showHomeContent && (
@@ -187,6 +308,7 @@ const Home = () => {
         }}
         cards={cards}
         currentView={currentView}
+        selectedCardId={selectedCardId}
       />
       <FloatingNav
         onFriendClick={handleFriendClick}

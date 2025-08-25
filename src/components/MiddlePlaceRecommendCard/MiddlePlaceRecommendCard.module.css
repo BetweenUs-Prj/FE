@@ -22,7 +22,7 @@
   background: rgba(59, 130, 246, 0.95);
   color: white;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateX(-100%);
   opacity: 0;
@@ -43,7 +43,6 @@
 
 .card.station.hovered {
   background: rgba(37, 99, 235, 1);
-  transform: translateX(0) scale(1.05);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
 }
 
@@ -54,7 +53,6 @@
 
 .card.place.hovered {
   background: rgba(34, 197, 94, 1);
-  transform: translateX(0) scale(1.05);
   box-shadow: 0 8px 25px rgba(84, 174, 87, 0.4);
 }
 
@@ -65,7 +63,6 @@
 
 .card.back.hovered {
   background: rgba(75, 85, 99, 1);
-  transform: translateX(0) scale(1.05);
   box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
 }
 
@@ -139,8 +136,4 @@
   }
 }
 
-/* 호버 효과 */
-.card:hover {
-  transform: translateX(0) scale(1.02);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
+/* 호버 효과 제거 - 애니메이션과 충돌 방지 */
