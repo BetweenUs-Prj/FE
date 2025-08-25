@@ -1,0 +1,146 @@
+/* 카드 리스트 컨테이너 */
+.cardList {
+  position: fixed;
+  left: 0;
+  top: 100px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+/* 카드 기본 스타일 */
+.card {
+  display: flex;
+  width: auto;
+  min-width: 170px;
+  max-width: 350px;
+  height: 50px;
+  border-radius: 0 15px 15px 0;
+  background: rgba(59, 130, 246, 0.95);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-100%);
+  opacity: 0;
+  animation: slideInFromLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+.card:nth-child(5) { animation-delay: 0.5s; }
+.card:nth-child(6) { animation-delay: 0.6s; }
+
+/* 역 카드 스타일 */
+.card.station {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+.card.station.hovered {
+  background: rgba(37, 99, 235, 1);
+  transform: translateX(0) scale(1.05);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* 장소 카드 스타일 */
+.card.place {
+  background: rgba(84, 174, 87, 0.8);
+}
+
+.card.place.hovered {
+  background: rgba(34, 197, 94, 1);
+  transform: translateX(0) scale(1.05);
+  box-shadow: 0 8px 25px rgba(84, 174, 87, 0.4);
+}
+
+/* 뒤로가기 카드 스타일 */
+.card.back {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+.card.back.hovered {
+  background: rgba(75, 85, 99, 1);
+  transform: translateX(0) scale(1.05);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+}
+
+/* 카드 내용 */
+.cardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 20px;
+  gap: 15px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: visible;
+  flex: 1;
+  letter-spacing: -0.025em;
+  min-width: 0;
+}
+
+.cardDuration {
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: visible;
+  flex-shrink: 0;
+  letter-spacing: -0.025em;
+  min-width: 0;
+}
+
+/* 선택되지 않은 카드들이 왼쪽으로 사라지는 애니메이션 */
+.card.slideOut {
+  animation: slideOutToLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+
+
+/* 선택된 카드 스타일 */
+.card.selected {
+  transform: translateX(0) scale(1.1);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+
+/* 왼쪽으로 사라지는 애니메이션 */
+@keyframes slideOutToLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+/* 슬라이드 인 애니메이션 */
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 호버 효과 */
+.card:hover {
+  transform: translateX(0) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}

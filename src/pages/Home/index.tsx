@@ -6,107 +6,68 @@ import KakaoMap from '../../components/KakaoMap';
 import { KAKAO_MAP_APP_KEY } from '../../constants/config';
 import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
-import MiddlePlaceList from '@/components/MiddlePlaceList';
+import StationCardList from '@/components/StationCardList';
 
-// PlaceCard 타입 정의
-interface PlaceCard {
+interface StationCard {
   id: number;
   title: string;
-  description: string;
-  icon: string;
-  type?: 'station' | 'place' | 'back';
+  duration: string;
+  type: 'station' | 'place' | 'back';
 }
 
 // 랜덤 좌표 생성 함수
 const generateRandomLocation = () => {
-  // 서울 지역 내 랜덤 좌표 (위도: 37.4~37.7, 경도: 126.8~127.2)
-  const lat = 37.4 + Math.random() * 0.3;
+  const lat = 37.4 + Math.random() * 0.4;
   const lng = 126.8 + Math.random() * 0.4;
   return { lat, lng };
 };
 
 const Home = () => {
-  const [showPlaceList, setShowPlaceList] = useState(false);
   const [randomLocation, setRandomLocation] = useState({ lat: 37.5665, lng: 126.9780 }); // 기본값: 서울시청
-  const [placeCards, setPlaceCards] = useState<PlaceCard[]>([]); // 동적 카드 데이터
-  const [currentView, setCurrentView] = useState<'stationTypes' | 'places'>('stationTypes'); // 현재 보여주는 뷰
-  const [selectedStationType, setSelectedStationType] = useState<string>(''); // 선택된 역 종류
+  const [showCardList, setShowCardList] = useState(false);
+  const [currentView, setCurrentView] = useState<'stations' | 'places'>('stations');
+  const [selectedStation, setSelectedStation] = useState<string>('');
+  const [cards, setCards] = useState<StationCard[]>([]);
 
   // 컴포넌트가 마운트될 때만 랜덤 좌표 생성
   useEffect(() => {
     setRandomLocation(generateRandomLocation());
   }, []);
 
-  // 역 종류 목록 생성 (1단계)
-  const generateStationTypeCards = () => {
-    // TODO: API 연동 시 이 부분을 실제 역 종류 API 호출로 대체
-    const stationTypes = [
-      {
-        id: 1,
-        title: "2호선",
-        description: "강남, 홍대, 잠실 등 주요 역",
-        icon: "🚇",
-        type: "station" as const
-      },
-      {
-        id: 2,
-        title: "1호선",
-        description: "종로, 용산, 영등포 등 주요 역",
-        icon: "🚇",
-        type: "station" as const
-      },
-      {
-        id: 3,
-        title: "3호선",
-        description: "고속터미널, 교대, 양재 등 주요 역",
-        icon: "🚇",
-        type: "station" as const
-      },
-      {
-        id: 4,
-        title: "4호선",
-        description: "명동, 동대문, 창동 등 주요 역",
-        icon: "🚇",
-        type: "station" as const
-      },
-      {
-        id: 5,
-        title: "5호선",
-        description: "김포공항, 여의도, 강동 등 주요 역",
-        icon: "🚇",
-        type: "station" as const
-      }
+  // 역 목록 생성
+  const generateStationCards = (): StationCard[] => {
+    return [
+      { id: 1, title: "강남역", duration: "15분", type: "station" },
+      { id: 2, title: "홍대입구역", duration: "25분", type: "station" },
+      { id: 3, title: "신촌역", duration: "20분", type: "station" },
+      { id: 4, title: "이대역", duration: "18분", type: "station" },
+      { id: 5, title: "아현역", duration: "22분", type: "station" },
+      { id: 6, title: "충정로역", duration: "12분", type: "station" }
     ];
-
-    return stationTypes;
   };
 
-  // 선택된 역 종류의 추천 장소 생성 (2단계)
-  const generatePlaceCards = (stationType: string) => {
-    // TODO: API 연동 시 이 부분을 실제 추천 장소 API 호출로 대체
-    // 예시: 카카오 장소 검색 API, 네이버 지도 API
+  // 추천 장소 목록 생성
+  const generatePlaceCards = (stationName: string): StationCard[] => {
     const placeTypes = [
-      { title: "카페", description: "맛있는 커피와 디저트" },
-      { title: "식당", description: "다양한 음식점" },
-      { title: "공원", description: "산책하기 좋은 공원" },
-      { title: "쇼핑몰", description: "쇼핑과 놀이" },
-      { title: "문화시설", description: "박물관, 영화관" }
+      { title: "카페", duration: "도보 3분" },
+      { title: "식당", duration: "도보 5분" },
+      { title: "공원", duration: "도보 8분" },
+      { title: "쇼핑몰", duration: "도보 10분" },
+      { title: "문화시설", duration: "도보 7분" }
     ];
 
     const placeCards = placeTypes.map((place, index) => ({
       id: index + 1,
-      title: `${stationType} ${place.title}`,
-      description: place.description,
-      icon: "📍",
+      title: `${stationName} ${place.title}`,
+      duration: place.duration,
       type: "place" as const
     }));
 
-    // 뒤로가기 카드 추가 (최하단)
+    // 뒤로가기 카드 추가
     const backCard = {
       id: placeCards.length + 1,
       title: "뒤로가기",
-      description: "역 선택으로 돌아가기",
-      icon: "⬅️",
+      duration: "역 선택으로 돌아가기",
       type: "back" as const
     };
 
@@ -128,73 +89,58 @@ const Home = () => {
     // TODO: 만남 관리 페이지로 이동
   };
 
-  const handlePlaceCardClick = (cardId: number) => {
-    console.log(`카드 ${cardId} 클릭됨`);
-    
-    if (currentView === 'stationTypes') {
-      // 1단계: 역 종류 선택 시 해당 역 종류의 추천 장소로 변경
-      const stationTypeCards = placeCards;
-      const selectedStationTypeCard = stationTypeCards.find(card => card.id === cardId);
-      
-      if (selectedStationTypeCard) {
-        setSelectedStationType(selectedStationTypeCard.title);
-        const newPlaceCards = generatePlaceCards(selectedStationTypeCard.title);
-        setPlaceCards(newPlaceCards);
-        setCurrentView('places');
-        
-        console.log(`${selectedStationTypeCard.title} 추천 장소로 변경`);
-      }
-    } else {
-      // 2단계: 추천 장소 선택 시 처리
-      const currentPlaceCards = placeCards;
-      const clickedCard = currentPlaceCards.find(card => card.id === cardId);
-      
-      if (clickedCard?.type === 'back') {
-        // 뒤로가기 카드 클릭 시 역 선택 단계로 돌아가기
-        const stationTypeCards = generateStationTypeCards();
-        setPlaceCards(stationTypeCards);
-        setCurrentView('stationTypes');
-        setSelectedStationType('');
-        console.log('역 선택 단계로 돌아가기');
-      } else {
-        // 일반 추천 장소 카드 클릭 시 카드 확장 (상세 정보 표시)
-        console.log(`추천 장소 ${cardId} 선택됨 - 카드 확장`);
-        // TODO: API 연동 시 선택된 장소의 상세 정보를 가져오는 API 호출
-        // 카드 확장은 MiddlePlaceList 컴포넌트에서 처리됨
-      }
-    }
-  };
-
   const handleFindMiddle = async () => {
-    // TODO: API 연동 시 이 부분을 실제 API 호출로 대체
-    // 예시:
-    // try {
-    //   const response = await fetch('/api/find-middle', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ locations: friends.map(f => f.location) })
-    //   });
-    //   const data = await response.json();
-    //   setPlaceCards(data.stationTypeCards); // 역 종류 목록
-    //   setCurrentView('stationTypes');
-    //   setShowPlaceList(true);
-    // } catch (error) {
-    //   console.error('중간거리 찾기 실패:', error);
-    // }
-    
-    // 중간거리 찾기 - 역 종류 목록 표시 (1단계)
-    const stationTypeCards = generateStationTypeCards();
-    setPlaceCards(stationTypeCards);
-    setCurrentView('stationTypes');
-    setSelectedStationType('');
-    setShowPlaceList(true);
+    console.log('중간거리 찾기 버튼 클릭됨');
+    // 역 목록 표시
+    const stationCards = generateStationCards();
+    setCards(stationCards);
+    setCurrentView('stations');
+    setSelectedStation('');
+    setShowCardList(true);
   };
 
   const handleHideCards = () => {
-    // 카드들 숨기기 및 상태 리셋
-    setShowPlaceList(false);
-    setCurrentView('stationTypes');
-    setSelectedStationType('');
+    console.log('카드 숨기기');
+    setShowCardList(false);
+    setCurrentView('stations');
+    setSelectedStation('');
+    
+    // StationCardList의 선택 상태도 리셋
+    if ((window as any).resetStationCardSelection) {
+      (window as any).resetStationCardSelection();
+    }
+  };
+
+  const handleCardClick = (cardId: number) => {
+    const clickedCard = cards.find(card => card.id === cardId);
+    
+    if (!clickedCard) return;
+
+    if (currentView === 'stations') {
+      // 역 선택 시 추천 장소로 변경
+      if (clickedCard.type === 'station') {
+        setSelectedStation(clickedCard.title);
+        const placeCards = generatePlaceCards(clickedCard.title);
+        setCards(placeCards);
+        setCurrentView('places');
+        console.log(`${clickedCard.title} 추천 장소로 변경`);
+      }
+    } else {
+      // 추천 장소 선택 시 처리
+      if (clickedCard.type === 'back') {
+        // 뒤로가기
+        const stationCards = generateStationCards();
+        setCards(stationCards);
+        setCurrentView('stations');
+        setSelectedStation('');
+        console.log('역 선택으로 돌아가기');
+      } else if (clickedCard.type === 'place') {
+        // 장소 선택 - 카드 목록은 그대로 유지
+        console.log(`추천 장소 ${clickedCard.title} 선택됨`);
+        // TODO: 선택된 장소에 대한 상세 정보 표시
+        // 카드 목록을 변경하지 않음 - 선택된 카드가 유지됨
+      }
+    }
   };
 
   return (
@@ -226,10 +172,15 @@ const Home = () => {
         onFindMiddle={handleFindMiddle} 
         onHideCards={handleHideCards}
       />
-      <MiddlePlaceList 
-        isVisible={showPlaceList}
-        onCardClick={handlePlaceCardClick}
-        placeCards={placeCards}
+      <StationCardList
+        isVisible={showCardList}
+        onCardClick={handleCardClick}
+        onResetSelection={() => {
+          if ((window as any).resetStationCardSelection) {
+            (window as any).resetStationCardSelection();
+          }
+        }}
+        cards={cards}
         currentView={currentView}
       />
       <FloatingNav
