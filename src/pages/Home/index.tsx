@@ -6,9 +6,9 @@ import KakaoMap from '../../components/KakaoMap';
 import { KAKAO_MAP_APP_KEY } from '../../constants/config';
 import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
-import StationCardList from '@/components/StationCardList';
+import MiddlePlaceRecommendCard from '@/components/MiddlePlaceRecommendCard';
 
-interface StationCard {
+interface MiddlePlaceCard {
   id: number;
   title: string;
   duration: string;
@@ -27,7 +27,7 @@ const Home = () => {
   const [showCardList, setShowCardList] = useState(false);
   const [currentView, setCurrentView] = useState<'stations' | 'places'>('stations');
   const [selectedStation, setSelectedStation] = useState<string>('');
-  const [cards, setCards] = useState<StationCard[]>([]);
+  const [cards, setCards] = useState<MiddlePlaceCard[]>([]);
 
   // 컴포넌트가 마운트될 때만 랜덤 좌표 생성
   useEffect(() => {
@@ -35,7 +35,7 @@ const Home = () => {
   }, []);
 
   // 역 목록 생성
-  const generateStationCards = (): StationCard[] => {
+  const generateStationCards = (): MiddlePlaceCard[] => {
     return [
       { id: 1, title: "강남역", duration: "15분", type: "station" },
       { id: 2, title: "홍대입구역", duration: "25분", type: "station" },
@@ -47,7 +47,7 @@ const Home = () => {
   };
 
   // 추천 장소 목록 생성
-  const generatePlaceCards = (stationName: string): StationCard[] => {
+  const generatePlaceCards = (stationName: string): MiddlePlaceCard[] => {
     const placeTypes = [
       { title: "카페", duration: "도보 3분" },
       { title: "식당", duration: "도보 5분" },
@@ -105,9 +105,9 @@ const Home = () => {
     setCurrentView('stations');
     setSelectedStation('');
     
-    // StationCardList의 선택 상태도 리셋
-    if ((window as any).resetStationCardSelection) {
-      (window as any).resetStationCardSelection();
+    // MiddlePlaceRecommendCard의 선택 상태도 리셋
+    if ((window as any).resetMiddlePlaceCardSelection) {
+      (window as any).resetMiddlePlaceCardSelection();
     }
   };
 
@@ -172,12 +172,12 @@ const Home = () => {
         onFindMiddle={handleFindMiddle} 
         onHideCards={handleHideCards}
       />
-      <StationCardList
+      <MiddlePlaceRecommendCard
         isVisible={showCardList}
         onCardClick={handleCardClick}
         onResetSelection={() => {
-          if ((window as any).resetStationCardSelection) {
-            (window as any).resetStationCardSelection();
+          if ((window as any).resetMiddlePlaceCardSelection) {
+            (window as any).resetMiddlePlaceCardSelection();
           }
         }}
         cards={cards}

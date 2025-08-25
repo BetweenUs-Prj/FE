@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import styles from './StationCardList.module.css';
+import styles from './MiddlePlaceRecommendCard.module.css';
 
-interface StationCard {
+interface MiddlePlaceCard {
   id: number;
   title: string;
   duration: string;
   type: 'station' | 'place' | 'back';
 }
 
-interface StationCardListProps {
+interface MiddlePlaceRecommendCardProps {
   isVisible: boolean;
   onCardClick: (cardId: number) => void;
   onResetSelection?: () => void;
-  cards: StationCard[];
+  cards: MiddlePlaceCard[];
   currentView: 'stations' | 'places';
 }
 
-const StationCardList: React.FC<StationCardListProps> = ({
+const MiddlePlaceRecommendCard: React.FC<MiddlePlaceRecommendCardProps> = ({
   isVisible,
   onCardClick,
   onResetSelection,
@@ -36,10 +36,10 @@ const StationCardList: React.FC<StationCardListProps> = ({
       };
       
       // onResetSelection 함수를 호출할 수 있도록 전역에 등록
-      (window as any).resetStationCardSelection = resetSelection;
+      (window as any).resetMiddlePlaceCardSelection = resetSelection;
       
       return () => {
-        delete (window as any).resetStationCardSelection;
+        delete (window as any).resetMiddlePlaceCardSelection;
       };
     }
   }, [onResetSelection]);
@@ -89,4 +89,4 @@ const StationCardList: React.FC<StationCardListProps> = ({
   );
 };
 
-export default StationCardList;
+export default MiddlePlaceRecommendCard;
