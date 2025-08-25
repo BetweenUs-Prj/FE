@@ -63,6 +63,14 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], onMark
     };
   }, [containerId, options, appKey]);
 
+  // options 변경 시 맵 업데이트
+  useEffect(() => {
+    if (mapRef.current && options.level) {
+      mapRef.current.setLevel(options.level);
+      console.log(`맵 레벨을 ${options.level}로 설정 (options 변경)`);
+    }
+  }, [options.level]);
+
   // 마커 관리 useEffect
   useEffect(() => {
     if (!mapRef.current || !window.kakao || !window.kakao.maps) return;
@@ -76,6 +84,50 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], onMark
     // 마커가 비어있으면 더 이상 진행하지 않음 (모든 마커 제거됨)
     if (markers.length === 0) {
       return;
+    }
+
+    // 마커 개수에 따라 동적으로 레벨 조정
+    const stationMarkers = markers.filter(marker => marker.type === 'station');
+    const placeMarkers = markers.filter(marker => marker.type === 'place');
+    const highlightedPlaceMarkers = placeMarkers.filter(marker => marker.isHighlighted);
+    
+    if (stationMarkers.length > 0 && placeMarkers.length === 0) {
+      // 역 마커만 있을 때 (모든 역 표시) - 더 넓은 시야
+      mapRef.current.setLevel(7);
+      console.log('맵 레벨을 7로 설정 (모든 역 표시)');
+    } else if (highlightedPlaceMarkers.length > 0) {
+      // 선택된 추천 장소가 있을 때 - 역과 선택된 장소가 모두 보이도록 자동 조정
+      const visibleMarkers = markers.filter(marker => marker.isVisible);
+      if (visibleMarkers.length >= 2) {
+        // 최소 2개 마커(역 + 선택된 장소)가 있을 때 자동 레벨 조정
+        const bounds = new window.kakao.maps.LatLngBounds();
+        visibleMarkers.forEach(marker => {
+          bounds.extend(new window.kakao.maps.LatLng(marker.position.lat, marker.position.lng));
+        });
+        
+        // 모든 마커가 보이도록 맵 영역 설정 (추천장소 쪽으로 약간 치우침)
+        mapRef.current.setBounds(bounds);
+        
+        // 중간 지점을 오른쪽으로 이동
+        const currentCenter = mapRef.current.getCenter();
+        const offsetLng =  -0.001; // 오른쪽으로 이동할 경도 오프셋
+        
+        const newCenter = new window.kakao.maps.LatLng(
+          currentCenter.getLat(),
+          currentCenter.getLng() + offsetLng
+        );
+        mapRef.current.setCenter(newCenter);
+        
+        console.log('자동 레벨 조정으로 역과 선택된 장소가 모두 보이도록 설정 (추천장소 쪽으로 치우침)');
+      } else {
+        // 기본 레벨 1 설정
+        mapRef.current.setLevel(1);
+        console.log('맵 레벨을 1로 설정 (선택된 추천 장소 표시)');
+      }
+    } else if (placeMarkers.length > 0) {
+      // 추천 장소 마커가 있을 때 - 자세한 시야
+      mapRef.current.setLevel(3);
+      console.log('맵 레벨을 3로 설정 (추천 장소 표시)');
     }
 
     // 새로운 마커들 생성
@@ -114,16 +166,6 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], onMark
         });
       }
 
-      // 인포윈도우 생성
-      const infowindow = new window.kakao.maps.InfoWindow({
-        content: `<div style="padding:5px;font-size:12px;">${markerInfo.title}</div>`
-      });
-
-      // 마커 클릭 시 인포윈도우 표시
-      window.kakao.maps.event.addListener(marker, 'click', () => {
-        infowindow.open(mapRef.current, marker);
-      });
-
       markersRef.current.push(marker);
     });
   }, [markers, onMarkerClick]);
@@ -133,7 +175,7 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], onMark
     if (mapContainer && window.kakao && window.kakao.maps) {
       const mapOption = {
         center: new window.kakao.maps.LatLng(options.center.lat, options.center.lng),
-        level: options.level || 3,
+        level: options.level || 8, // 기본 레벨을 8로 설정
         draggable: options.draggable ?? true,
         zoomable: options.zoomable ?? true,
         scrollwheel: options.scrollwheel ?? true,

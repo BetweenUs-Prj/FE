@@ -123,6 +123,13 @@ const Home = () => {
       isHighlighted: false
     }));
     setMapMarkers(stationMarkers);
+    
+    // 맵 중심을 모든 역의 중앙으로 설정
+    if (allStations.length > 0) {
+      const centerLat = allStations.reduce((sum, station) => sum + station.lat, 0) / allStations.length;
+      const centerLng = allStations.reduce((sum, station) => sum + station.lng, 0) / allStations.length;
+      setMapCenter({ lat: centerLat, lng: centerLng });
+    }
   };
 
   const handleHideCards = () => {
@@ -157,6 +164,7 @@ const Home = () => {
           setSelectedStation(station.name);
           setSelectedStationId(station.id);
           setMapCenter({ lat: station.lat, lng: station.lng });
+          // 역 선택 시 더 자세한 시야를 위해 레벨 조정 (useKakaoMap에서 처리)
           
           // 역 마커와 해당 역의 모든 추천 장소 마커 추가
           const places = getPlacesByStationId(station.id);
@@ -200,14 +208,37 @@ const Home = () => {
         setSelectedStation('');
         setSelectedStationId(null);
         setSelectedCardId(null); // 선택된 카드 초기화
-        setMapCenter({ lat: 37.5665, lng: 126.9780 }); // 서울시청으로 초기화
-        // 마커 완전히 제거
-        setMapMarkers([]);
+        
+        // 모든 역 마커 다시 표시
+        const allStations = getAllStations();
+        const stationMarkers = allStations.map(station => ({
+          id: `station-${station.id}`,
+          position: { lat: station.lat, lng: station.lng },
+          title: station.name,
+          type: 'station' as const,
+          isVisible: true,
+          isHighlighted: false
+        }));
+        setMapMarkers(stationMarkers);
+        
+        // 맵 중심을 모든 역의 중앙으로 설정
+        if (allStations.length > 0) {
+          const centerLat = allStations.reduce((sum, station) => sum + station.lat, 0) / allStations.length;
+          const centerLng = allStations.reduce((sum, station) => sum + station.lng, 0) / allStations.length;
+          setMapCenter({ lat: centerLat, lng: centerLng });
+        }
         console.log('역 선택으로 돌아가기');
       } else if (clickedCard.type === 'place') {
         // 이미 선택된 카드를 다시 클릭하면 원상복귀
         if (selectedCardId === clickedCard.id) {
           setSelectedCardId(null);
+          
+          // 역 위치로 맵 중심 복원
+          const station = getStationById(selectedStationId || 0);
+          if (station) {
+            setMapCenter({ lat: station.lat, lng: station.lng });
+          }
+          
           // 모든 마커 표시하고 강조 해제
           setMapMarkers(prevMarkers => 
             prevMarkers.map(marker => ({
@@ -216,24 +247,48 @@ const Home = () => {
               isVisible: true
             }))
           );
-          console.log(`추천 장소 ${clickedCard.title} 선택 해제됨`);
+          console.log(`추천 장소 ${clickedCard.title} 선택 해제됨 - 레벨 3으로 복원`);
         } else {
-          // 새로운 장소 선택 - 맵 중심을 해당 장소로 이동
+          // 새로운 장소 선택 - 맵 중심을 해당 장소로 이동하고 레벨 1로 확대
           const places = getPlacesByStationId(selectedStationId || 0);
           const selectedPlace = places.find(place => place.id === clickedCard.id);
           if (selectedPlace) {
-            setMapCenter({ lat: selectedPlace.lat, lng: selectedPlace.lng });
+            // 선택된 장소와 역의 중간 지점을 중심으로 하되, 오른쪽으로 이동
+            const station = getStationById(selectedStationId || 0);
+            if (station) {
+              // 추천장소와 역의 중간 지점 계산
+              const centerLat = (selectedPlace.lat + station.lat) / 2;
+              const centerLng = (selectedPlace.lng + station.lng) / 2;
+              
+              // 중간 지점을 오른쪽으로 이동 (경도에 오프셋 추가)
+              const offsetLng = 0.005; // 오른쪽으로 이동할 경도 오프셋
+              setMapCenter({ lat: centerLat, lng: centerLng + offsetLng });
+              
+              // 거리에 따라 적절한 레벨 설정을 위한 정보 로깅
+              const distance = Math.sqrt(
+                Math.pow(selectedPlace.lat - station.lat, 2) + 
+                Math.pow(selectedPlace.lng - station.lng, 2)
+              );
+              console.log(`역과 선택된 장소 간 거리: ${distance.toFixed(6)}`);
+            } else {
+              setMapCenter({ lat: selectedPlace.lat, lng: selectedPlace.lng });
+            }
             setSelectedCardId(clickedCard.id); // 선택된 카드 ID 저장
             
-            // 선택된 장소만 강조하고 다른 장소 마커들은 숨김
+            // 선택된 장소를 강조하고, 역 마커와 선택된 장소 마커만 표시
             setMapMarkers(prevMarkers => 
-              prevMarkers.map(marker => ({
-                ...marker,
-                isHighlighted: marker.id === `place-${selectedPlace.id}`,
-                isVisible: marker.id === `place-${selectedPlace.id}` || marker.type === 'station'
-              }))
+              prevMarkers.map(marker => {
+                const isSelectedPlace = marker.id === `place-${selectedPlace.id}`;
+                const isStation = marker.type === 'station';
+                
+                return {
+                  ...marker,
+                  isHighlighted: isSelectedPlace,
+                  isVisible: isSelectedPlace || isStation
+                };
+              })
             );
-            console.log(`추천 장소 ${clickedCard.title} 선택됨 - 맵 중심 이동`);
+            console.log(`추천 장소 ${clickedCard.title} 선택됨 - 맵 중심 이동 및 레벨 1로 확대`);
           }
         }
         // TODO: 선택된 장소에 대한 상세 정보 표시
@@ -249,7 +304,7 @@ const Home = () => {
         <KakaoMap
           containerId="home-map"
           center={mapCenter}
-          level={5}
+          level={2}
           zoomable={false}
           scrollwheel={false}
           disableDoubleClickZoom={true}
