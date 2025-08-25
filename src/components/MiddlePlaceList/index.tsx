@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './MiddlePlaceList.module.css';
 
 interface PlaceCard {
@@ -14,8 +14,41 @@ interface MiddlePlaceListProps {
 }
 
 const MiddlePlaceList: React.FC<MiddlePlaceListProps> = ({ isVisible, onCardClick }) => {
-  const [isClosing, setIsClosing] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(1); // 기본적으로 첫 번째 카드가 커진 상태
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [isReversing, setIsReversing] = useState(false);
+
+  // isVisible이 변경될 때 selectedCardId 초기화
+  useEffect(() => {
+    if (isVisible) {
+      setSelectedCardId(null);
+      setIsReversing(false);
+      setHoveredCard(1); // 1번 카드로 리셋
+    }
+  }, [isVisible]);
+
+  // 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (selectedCardId && !target.closest(`.${styles.placeList}`)) {
+        setIsReversing(true);
+        setTimeout(() => {
+          setSelectedCardId(null);
+          setIsReversing(false);
+          setHoveredCard(1); // 1번 카드로 리셋
+        }, 700);
+      }
+    };
+
+    if (selectedCardId) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [selectedCardId, styles.placeList]);
 
   const placeCards: PlaceCard[] = [
     {
@@ -51,21 +84,25 @@ const MiddlePlaceList: React.FC<MiddlePlaceListProps> = ({ isVisible, onCardClic
   ];
 
   const handleCardClick = (cardId: number) => {
-    onCardClick(cardId);
+    setSelectedCardId(cardId);
+    // 애니메이션 완료 후 콜백 실행
+    setTimeout(() => {
+      onCardClick(cardId);
+    }, 500);
   };
 
   const handleCardHover = (cardId: number) => {
     setHoveredCard(cardId);
   };
 
-  if (!isVisible && !isClosing) return null;
+  if (!isVisible) return null;
 
   return (
     <div className={styles.placeList}>
       {placeCards.map((card, index) => (
         <div
           key={card.id}
-          className={`${styles.placeCard} ${styles[`card${index + 1}`]} ${isVisible && !isClosing ? styles.show : ''} ${isClosing ? styles.closing : ''} ${hoveredCard === card.id ? styles.expanded : ''}`}
+          className={`${styles.placeCard} ${styles[`card${index + 1}`]} ${isVisible ? styles.show : ''} ${hoveredCard === card.id ? styles.expanded : ''} ${selectedCardId && selectedCardId !== card.id ? (isReversing ? styles.slideIn : styles.slideOut) : ''} ${selectedCardId === card.id ? (isReversing ? styles.reverse : styles.selected) : ''}`}
           onClick={() => handleCardClick(card.id)}
           onMouseEnter={() => handleCardHover(card.id)}
         >

@@ -46,13 +46,13 @@ const Home = () => {
   };
 
   const handleFindMiddle = () => {
-    if (showPlaceList) {
-      // 이미 보이는 상태라면 순차적으로 사라지도록
-      setShowPlaceList(false);
-    } else {
-      // 숨겨진 상태라면 나타나도록
-      setShowPlaceList(true);
-    }
+    // 중간거리 찾기 - 카드들을 표시
+    setShowPlaceList(true);
+  };
+
+  const handleHideCards = () => {
+    // 카드들 숨기기
+    setShowPlaceList(false);
   };
 
   return (
@@ -80,7 +80,10 @@ const Home = () => {
             </p>
           </FadeIn>
         </div>
-      <PaperDrawer onFindMiddle={handleFindMiddle} />
+      <PaperDrawer 
+        onFindMiddle={handleFindMiddle} 
+        onHideCards={handleHideCards}
+      />
       <MiddlePlaceList 
         isVisible={showPlaceList}
         onCardClick={handlePlaceCardClick}
