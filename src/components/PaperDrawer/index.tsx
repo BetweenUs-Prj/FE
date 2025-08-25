@@ -66,7 +66,20 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       }
       console.log('중간거리 찾기 버튼 클릭됨');
       
-      // TODO: 실제 중간거리 계산 로직 구현
+      // TODO: API 연동 시 이 부분을 실제 API 호출로 대체
+      // 예시:
+      // const response = await fetch('/api/calculate-middle-distance', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     locations: friends.map(f => f.location),
+      //     preferences: userPreferences // 사용자 선호도
+      //   })
+      // });
+      // const result = await response.json();
+      // console.log('중간거리 계산 결과:', result);
+      
+      // TODO: API 연동 시 이 부분을 삭제하고 실제 API 호출로 대체
       // 예시: API 호출이나 계산 로직
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
       
@@ -75,6 +88,8 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       
     } catch (error) {
       console.error('중간거리 찾기 중 오류 발생:', error);
+      // TODO: API 연동 시 에러 처리 로직 추가
+      // 예시: 사용자에게 에러 메시지 표시
     } finally {
       // 로딩 종료
       setIsLoading(false);

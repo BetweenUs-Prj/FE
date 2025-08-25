@@ -13,20 +13,45 @@
 /* 카드 기본 스타일 */
 .placeCard {
   display: flex;
-  align-items: center;
-  background: rgba(84, 174, 87, 0.95);
   border-radius: 15px;
   opacity: 0;
   transform: translateX(-5vw) scale(0.7);
   pointer-events: none;
-  border: 0.1vw solid rgba(84, 174, 87, 0.2);
   transition: all 0.3s ease;
   color: white;
   width: 10vw;
   height: 80px; /* 모든 카드의 높이를 일정하게 설정 */
   padding: 10px 15px;
   overflow: hidden;
-  margin-bottom: 0
+  margin-bottom: 0;
+  border: 0.1vw solid rgba(255, 255, 255, 0.2);
+}
+
+/* 역 종류 카드 스타일 (파란색 계열) */
+.placeCard.station {
+  background: rgba(59, 130, 246, 0.95); /* 파란색 */
+}
+
+.placeCard.station.expanded {
+  background: rgba(59, 130, 246, 1);
+}
+
+/* 추천 장소 카드 스타일 (초록색 계열) */
+.placeCard.place {
+  background: rgba(84, 174, 87, 0.95); /* 초록색 */
+}
+
+.placeCard.place.expanded {
+  background: rgba(84, 174, 87, 1);
+}
+
+/* 뒤로가기 카드 스타일 (회색 계열) */
+.placeCard.back {
+  background: rgba(107, 114, 128, 0.95); /* 회색 */
+}
+
+.placeCard.back.expanded {
+  background: rgba(107, 114, 128, 1);
 }
 
 .placeCard.show {
