@@ -1,4 +1,4 @@
-.global-transition-overlay {
+.globalTransitionOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,11 +13,11 @@
   animation: fadeIn 0.5s ease-out forwards;
 }
 
-.global-transition-overlay.fade-out {
+.globalTransitionOverlay.fadeOut {
   animation: fadeOut 1.5s ease-in-out forwards;
 }
 
-.logo-container {
+.logoContainer {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,18 +25,18 @@
   height: 100%;
 }
 
-.transition-logo {
+.transitionLogo {
   opacity: 0;
   transform: translateY(50px);
   transition: all 1s ease-out;
 }
 
-.transition-logo.show {
+.transitionLogo.show {
   opacity: 1;
   transform: translateY(0);
 }
 
-.transition-logo-image {
+.transitionLogoImage {
   width: 200px;
   height: 200px;
   background-image: url('/src/assets/icons/우리 사이 로고.png');

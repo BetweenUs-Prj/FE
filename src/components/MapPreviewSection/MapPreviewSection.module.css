@@ -1,4 +1,4 @@
-.map-preview-section {
+.mapPreviewSection {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -8,51 +8,51 @@
   scroll-snap-align: start;
 }
 
-.map-preview-content {
+.mapPreviewContent {
   max-width: 1200px;
   width: 100%;
   text-align: center;
 }
 
-.map-preview-title {
+.mapPreviewTitle {
   color: var(--text-primary);
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 4rem;
 }
 
-.map-preview-container {
+.mapPreviewContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: center;
 }
 
-.map-info {
+.mapInfo {
   text-align: left;
 }
 
-.map-info h3 {
+.mapInfo h3 {
   color: var(--text-primary);
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
 }
 
-.map-info p {
+.mapInfo p {
   color: var(--text-secondary);
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 2rem;
 }
 
-.map-features {
+.mapFeatures {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-.map-feature {
+.mapFeature {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -60,16 +60,16 @@
   font-weight: 500;
 }
 
-.map-feature .feature-icon {
+.mapFeature .featureIcon {
   font-size: 1.2rem;
 }
 
-.map-preview {
+.mapPreview {
   display: flex;
   justify-content: center;
 }
 
-.preview-map-container {
+.previewMapContainer {
   width: 400px;
   height: 300px;
   border-radius: 12px;

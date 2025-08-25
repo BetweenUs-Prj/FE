@@ -125,7 +125,7 @@ const Landing = () => {
 
   return (
     <div className={styles.landingPage}>
-      <main className="main">
+      <main className={styles.main}>
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />

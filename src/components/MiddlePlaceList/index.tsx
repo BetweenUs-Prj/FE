@@ -15,6 +15,7 @@ interface MiddlePlaceListProps {
 
 const MiddlePlaceList: React.FC<MiddlePlaceListProps> = ({ isVisible, onCardClick }) => {
   const [isClosing, setIsClosing] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(1); // 기본적으로 첫 번째 카드가 커진 상태
 
   const placeCards: PlaceCard[] = [
     {
@@ -53,6 +54,10 @@ const MiddlePlaceList: React.FC<MiddlePlaceListProps> = ({ isVisible, onCardClic
     onCardClick(cardId);
   };
 
+  const handleCardHover = (cardId: number) => {
+    setHoveredCard(cardId);
+  };
+
   if (!isVisible && !isClosing) return null;
 
   return (
@@ -60,8 +65,9 @@ const MiddlePlaceList: React.FC<MiddlePlaceListProps> = ({ isVisible, onCardClic
       {placeCards.map((card, index) => (
         <div
           key={card.id}
-          className={`${styles.placeCard} ${styles[`card${index + 1}`]} ${isVisible && !isClosing ? styles.show : ''} ${isClosing ? styles.closing : ''}`}
+          className={`${styles.placeCard} ${styles[`card${index + 1}`]} ${isVisible && !isClosing ? styles.show : ''} ${isClosing ? styles.closing : ''} ${hoveredCard === card.id ? styles.expanded : ''}`}
           onClick={() => handleCardClick(card.id)}
+          onMouseEnter={() => handleCardHover(card.id)}
         >
           <div className={styles.cardContent}>
             <div className={styles.cardTitle}>{card.title}</div>

@@ -35,10 +35,10 @@ const GlobalTransitionOverlay: React.FC = () => {
   if (!isTransitioning) return null;
 
   return (
-    <div className={`global-transition-overlay ${fadeOut ? 'fade-out' : ''}`}>
-      <div className="logo-container">
-        <div className={`transition-logo ${showLogo ? 'show' : ''}`}>
-          <div className="transition-logo-image"></div>
+    <div className={`${styles.globalTransitionOverlay} ${fadeOut ? styles.fadeOut : ''}`}>
+      <div className={styles.logoContainer}>
+        <div className={`${styles.transitionLogo} ${showLogo ? styles.show : ''}`}>
+          <div className={styles.transitionLogoImage}></div>
         </div>
       </div>
     </div>

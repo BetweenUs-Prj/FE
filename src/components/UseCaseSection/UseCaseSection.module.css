@@ -1,4 +1,4 @@
-.use-case-section {
+.useCaseSection {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -8,20 +8,20 @@
   scroll-snap-align: start;
 }
 
-.use-case-content {
+.useCaseContent {
   max-width: 1200px;
   width: 100%;
   text-align: center;
 }
 
-.use-case-title {
+.useCaseTitle {
   color: var(--text-primary);
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 4rem;
 }
 
-.use-cases-grid {
+.useCasesGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
@@ -29,7 +29,7 @@
   margin: 0 auto;
 }
 
-.use-case-card {
+.useCaseCard {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -38,37 +38,37 @@
   transition: transform 0.3s ease;
 }
 
-.use-case-card:hover {
+.useCaseCard:hover {
   transform: translateY(-5px);
 }
 
-.use-case-icon {
+.useCaseIcon {
   font-size: 3rem;
   margin-bottom: 1.5rem;
 }
 
-.use-case-card h3 {
+.useCaseCard h3 {
   color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
 }
 
-.use-case-card p {
+.useCaseCard p {
   color: var(--text-secondary);
   font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 1.5rem;
 }
 
-.use-case-features {
+.useCaseFeatures {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
 }
 
-.use-case-features span {
+.useCaseFeatures span {
   background-color: var(--accent-primary);
   color: white;
   padding: 0.25rem 0.75rem;

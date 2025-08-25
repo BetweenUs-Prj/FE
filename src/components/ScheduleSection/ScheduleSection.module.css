@@ -1,5 +1,5 @@
 /* 메인 섹션 스타일 */
-.schedule-section {
+.scheduleSection {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -13,7 +13,7 @@
 }
 
 /* 콘텐츠 영역 */
-.schedule-content {
+.scheduleContent {
   text-align: center;
   max-width: 1000px;
   width: 100%;
@@ -23,14 +23,14 @@
 }
 
 /* 제목 스타일 */
-.schedule-title {
+.scheduleTitle {
   color: var(--text-primary);
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
 }
 
-.schedule-subtitle {
+.scheduleSubtitle {
   color: var(--text-secondary);
   font-size: 1.2rem;
   line-height: 1.6;
@@ -38,7 +38,7 @@
 }
 
 /* 기능 카드 그리드 */
-.schedule-features {
+.scheduleFeatures {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 2rem;
@@ -60,26 +60,26 @@
   transform: translateY(-5px);
 }
 
-.feature-icon {
+.featureIcon {
   font-size: 2.5rem;
   min-width: 60px;
 }
 
-.feature-text h3 {
+.featureText h3 {
   color: var(--text-primary);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.feature-text p {
+.featureText p {
   color: var(--text-secondary);
   font-size: 1rem;
   line-height: 1.5;
 }
 
 /* 하단 화살표 */
-.bottom-arrow {
+.bottomArrow {
   position: absolute;
   top: 100px;
   left: 50%;
@@ -92,13 +92,13 @@
   white-space: nowrap;
 }
 
-.schedule-section .arrow-icon {
+.scheduleSection .arrowIcon {
   font-size: 2rem;
   color: var(--text-primary);
   animation: bounce 1.5s infinite;
 }
 
-.arrow-text {
+.arrowText {
   font-size: 0.9rem;
   color: var(--text-secondary);
   font-weight: 500;
@@ -118,7 +118,7 @@
 }
 
 /* 종이 효과 컨테이너 */
-.paper-container {
+.paperContainer {
   position: absolute;
   top: 0;
   left: 0;
@@ -235,32 +235,32 @@
 }
 
 /* 각 종이별 위치와 애니메이션 설정 */
-.paper-1 { bottom: -100vh; left: 50px; animation-delay: 0s; --final-y: -60vh; animation-duration: 3.2s; z-index: 10; }
-.paper-2 { bottom: -100vh; left: 200px; animation-delay: 0.01s; --final-y: -75vh; animation-duration: 2.8s; z-index: 9; }
-.paper-3 { bottom: -100vh; left: 350px; animation-delay: 0.02s; --final-y: -85vh; animation-duration: 4.1s; z-index: 11; }
-.paper-4 { bottom: -100vh; left: 500px; animation-delay: 0.03s; --final-y: -55vh; animation-duration: 2.3s; z-index: 7; }
-.paper-5 { bottom: -100vh; left: 650px; animation-delay: 0.04s; --final-y: -95vh; animation-duration: 3.7s; z-index: 12; }
-.paper-6 { bottom: -100vh; left: 800px; animation-delay: 0.05s; --final-y: -70vh; animation-duration: 2.9s; z-index: 8; }
-.paper-7 { bottom: -100vh; left: 950px; animation-delay: 0.06s; --final-y: -80vh; animation-duration: 3.4s; z-index: 10; }
-.paper-8 { bottom: -100vh; left: 1100px; animation-delay: 0.07s; --final-y: -65vh; animation-duration: 2.6s; z-index: 9; }
-.paper-9 { bottom: -100vh; left: 1250px; animation-delay: 0.08s; --final-y: -90vh; animation-duration: 3.8s; z-index: 11; }
-.paper-10 { bottom: -100vh; left: 140px; animation-delay: 0.09s; --final-y: -72vh; animation-duration: 2.7s; z-index: 7; }
-.paper-11 { bottom: -100vh; left: 290px; animation-delay: 0.1s; --final-y: -120vh; animation-duration: 3.5s; z-index: 13; }
-.paper-12 { bottom: -100vh; left: 440px; animation-delay: 0.11s; --final-y: -50vh; animation-duration: 2.1s; z-index: 8; }
-.paper-13 { bottom: -100vh; left: 590px; animation-delay: 0.12s; --final-y: -78vh; animation-duration: 3.5s; z-index: 15; }
-.paper-14 { bottom: -100vh; left: 740px; animation-delay: 0.13s; --final-y: -92vh; animation-duration: 3.9s; z-index: 14; }
-.paper-15 { bottom: -100vh; left: 890px; animation-delay: 0.14s; --final-y: -68vh; animation-duration: 2.4s; z-index: 9; }
-.paper-16 { bottom: -100vh; left: 20px; animation-delay: 0.15s; --final-y: -45vh; animation-duration: 2.8s; z-index: 7; }
-.paper-17 { bottom: -100vh; left: 170px; animation-delay: 0.16s; --final-y: -58vh; animation-duration: 3.1s; z-index: 10; }
-.paper-18 { bottom: -100vh; left: 1380px; animation-delay: 0.17s; --final-y: -52vh; animation-duration: 2.5s; z-index: 8; }
-.paper-19 { bottom: -100vh; left: 1530px; animation-delay: 0.18s; --final-y: -110vh; animation-duration: 2.8s; z-index: 12; }
-.paper-20 { bottom: -100vh; left: 1040px; animation-delay: 0.19s; --final-y: -48vh; animation-duration: 2.2s; z-index: 9; }
+.paper1 { bottom: -100vh; left: 50px; animation-delay: 0s; --final-y: -60vh; animation-duration: 3.2s; z-index: 10; }
+.paper2 { bottom: -100vh; left: 200px; animation-delay: 0.01s; --final-y: -75vh; animation-duration: 2.8s; z-index: 9; }
+.paper3 { bottom: -100vh; left: 350px; animation-delay: 0.02s; --final-y: -85vh; animation-duration: 4.1s; z-index: 11; }
+.paper4 { bottom: -100vh; left: 500px; animation-delay: 0.03s; --final-y: -55vh; animation-duration: 2.3s; z-index: 7; }
+.paper5 { bottom: -100vh; left: 650px; animation-delay: 0.04s; --final-y: -95vh; animation-duration: 3.7s; z-index: 12; }
+.paper6 { bottom: -100vh; left: 800px; animation-delay: 0.05s; --final-y: -70vh; animation-duration: 2.9s; z-index: 8; }
+.paper7 { bottom: -100vh; left: 950px; animation-delay: 0.06s; --final-y: -80vh; animation-duration: 3.4s; z-index: 10; }
+.paper8 { bottom: -100vh; left: 1100px; animation-delay: 0.07s; --final-y: -65vh; animation-duration: 2.6s; z-index: 9; }
+.paper9 { bottom: -100vh; left: 1250px; animation-delay: 0.08s; --final-y: -90vh; animation-duration: 3.8s; z-index: 11; }
+.paper10 { bottom: -100vh; left: 140px; animation-delay: 0.09s; --final-y: -72vh; animation-duration: 2.7s; z-index: 7; }
+.paper11 { bottom: -100vh; left: 290px; animation-delay: 0.1s; --final-y: -120vh; animation-duration: 3.5s; z-index: 13; }
+.paper12 { bottom: -100vh; left: 440px; animation-delay: 0.11s; --final-y: -50vh; animation-duration: 2.1s; z-index: 8; }
+.paper13 { bottom: -100vh; left: 590px; animation-delay: 0.12s; --final-y: -78vh; animation-duration: 3.5s; z-index: 15; }
+.paper14 { bottom: -100vh; left: 740px; animation-delay: 0.13s; --final-y: -92vh; animation-duration: 3.9s; z-index: 14; }
+.paper15 { bottom: -100vh; left: 890px; animation-delay: 0.14s; --final-y: -68vh; animation-duration: 2.4s; z-index: 9; }
+.paper16 { bottom: -100vh; left: 20px; animation-delay: 0.15s; --final-y: -45vh; animation-duration: 2.8s; z-index: 7; }
+.paper17 { bottom: -100vh; left: 170px; animation-delay: 0.16s; --final-y: -58vh; animation-duration: 3.1s; z-index: 10; }
+.paper18 { bottom: -100vh; left: 1380px; animation-delay: 0.17s; --final-y: -52vh; animation-duration: 2.5s; z-index: 8; }
+.paper19 { bottom: -100vh; left: 1530px; animation-delay: 0.18s; --final-y: -110vh; animation-duration: 2.8s; z-index: 12; }
+.paper20 { bottom: -100vh; left: 1040px; animation-delay: 0.19s; --final-y: -48vh; animation-duration: 2.2s; z-index: 9; }
 
 /* 편지봉투 위치와 애니메이션 */
-.envelope-1 { bottom: -100vh; left: 750px; animation-delay: 0.6s; --final-y: -70vh; animation-duration: 4.1s; --rotation: -8deg; }
+.envelope1 { bottom: -100vh; left: 750px; animation-delay: 0.6s; --final-y: -70vh; animation-duration: 4.1s; --rotation: -8deg; }
 
 /* 커스텀 툴팁 */
-.envelope-tooltip {
+.envelopeTooltip {
   position: absolute;
   top: -40px;
   left: 50%;
@@ -278,7 +278,7 @@
   pointer-events: none;
 }
 
-.envelope-tooltip::after {
+.envelopeTooltip::after {
   content: '';
   position: absolute;
   top: 100%;
@@ -288,29 +288,29 @@
   border-top-color: rgba(0, 0, 0, 0.8);
 }
 
-.envelope:hover .envelope-tooltip {
+.envelope:hover .envelopeTooltip {
   opacity: 1;
   visibility: visible;
 }
 
 /* 각 종이별 회전 각도 */
-.paper-1 { --rotation: -5deg; }
-.paper-2 { --rotation: 8deg; }
-.paper-3 { --rotation: -10deg; }
-.paper-4 { --rotation: 12deg; }
-.paper-5 { --rotation: -3deg; }
-.paper-6 { --rotation: 15deg; }
-.paper-7 { --rotation: -8deg; }
-.paper-8 { --rotation: 10deg; }
-.paper-9 { --rotation: -12deg; }
-.paper-10 { --rotation: -12deg; }
-.paper-11 { --rotation: 8deg; }
-.paper-12 { --rotation: 4deg; }
-.paper-13 { --rotation: -10deg; }
-.paper-14 { --rotation: 8deg; }
-.paper-15 { --rotation: -6deg; }
-.paper-16 { --rotation: -7deg; }
-.paper-17 { --rotation: 9deg; }
-.paper-18 { --rotation: -11deg; }
-.paper-19 { --rotation: 13deg; }
-.paper-20 { --rotation: 15deg; }
+.paper1 { --rotation: -5deg; }
+.paper2 { --rotation: 8deg; }
+.paper3 { --rotation: -10deg; }
+.paper4 { --rotation: 12deg; }
+.paper5 { --rotation: -3deg; }
+.paper6 { --rotation: 15deg; }
+.paper7 { --rotation: -8deg; }
+.paper8 { --rotation: 10deg; }
+.paper9 { --rotation: -12deg; }
+.paper10 { --rotation: -12deg; }
+.paper11 { --rotation: 8deg; }
+.paper12 { --rotation: 4deg; }
+.paper13 { --rotation: -10deg; }
+.paper14 { --rotation: 8deg; }
+.paper15 { --rotation: -6deg; }
+.paper16 { --rotation: -7deg; }
+.paper17 { --rotation: 9deg; }
+.paper18 { --rotation: -11deg; }
+.paper19 { --rotation: 13deg; }
+.paper20 { --rotation: 15deg; }

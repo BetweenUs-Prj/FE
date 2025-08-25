@@ -1,4 +1,4 @@
-.how-it-works-section {
+.howItWorksSection {
   height: 100vh;
   width: 100%;
   display: flex;
@@ -8,20 +8,20 @@
   scroll-snap-align: start;
 }
 
-.how-it-works-content {
+.howItWorksContent {
   max-width: 1200px;
   width: 100%;
   text-align: center;
 }
 
-.how-it-works-title {
+.howItWorksTitle {
   color: var(--text-primary);
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 4rem;
 }
 
-.steps-container {
+.stepsContainer {
   display: flex;
   flex-direction: column;
   gap: 3rem;
@@ -39,7 +39,7 @@
   text-align: left;
 }
 
-.step-number {
+.stepNumber {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: white;
   width: 60px;
@@ -53,14 +53,14 @@
   flex-shrink: 0;
 }
 
-.step-content h3 {
+.stepContent h3 {
   color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.step-content p {
+.stepContent p {
   color: var(--text-secondary);
   font-size: 1rem;
   line-height: 1.6;
