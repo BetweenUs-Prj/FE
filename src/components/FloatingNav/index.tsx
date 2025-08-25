@@ -13,40 +13,50 @@ const FloatingNav: React.FC<FloatingNavProps> = ({
   onMeetingClick
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const handleToggle = () => {
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      // 닫을 때 바로 X로 바뀌고 순차적으로 사라지도록
+      setIsOpen(false);
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsClosing(false);
+      }, 600); // 모든 애니메이션이 끝날 시간
+    } else {
+      setIsOpen(true);
+    }
   };
 
   const handleFriendClick = () => {
     onFriendClick?.();
-    setIsOpen(false);
+    handleToggle();
   };
 
   const handleScheduleClick = () => {
     onScheduleClick?.();
-    setIsOpen(false);
+    handleToggle();
   };
 
   const handleMeetingClick = () => {
     onMeetingClick?.();
-    setIsOpen(false);
+    handleToggle();
   };
 
   return (
     <div className={styles.floatingNav}>
       {/* 메뉴 아이템들 */}
-      <div className={`${styles.navItem} ${styles.friendItem} ${isOpen ? styles.show : ''}`} onClick={handleFriendClick}>
+      <div className={`${styles.navItem} ${styles.friendItem} ${isOpen && !isClosing ? styles.show : ''} ${isClosing ? styles.closing : ''}`} onClick={handleFriendClick}>
         <div className={styles.navIcon}>👥</div>
         <span className={styles.navText}>친구</span>
       </div>
       
-      <div className={`${styles.navItem} ${styles.scheduleItem} ${isOpen ? styles.show : ''}`} onClick={handleScheduleClick}>
+      <div className={`${styles.navItem} ${styles.scheduleItem} ${isOpen && !isClosing ? styles.show : ''} ${isClosing ? styles.closing : ''}`} onClick={handleScheduleClick}>
         <div className={styles.navIcon}>📅</div>
         <span className={styles.navText}>일정</span>
       </div>
       
-      <div className={`${styles.navItem} ${styles.meetingItem} ${isOpen ? styles.show : ''}`} onClick={handleMeetingClick}>
+      <div className={`${styles.navItem} ${styles.meetingItem} ${isOpen && !isClosing ? styles.show : ''} ${isClosing ? styles.closing : ''}`} onClick={handleMeetingClick}>
         <div className={styles.navIcon}>🤝</div>
         <span className={styles.navText}>만남</span>
       </div>
