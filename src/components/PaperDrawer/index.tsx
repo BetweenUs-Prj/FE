@@ -55,7 +55,12 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
 
   const handleFriendChange = (id: number, field: 'name' | 'location', value: string) => {
     setFriends(prev => prev.map(friend => 
-      friend.id === id ? { ...friend, [field]: value } : friend
+      friend.id === id ? { 
+        ...friend, 
+        [field]: value,
+        // 위치가 변경되면 좌표 초기화 (드롭다운에서 선택한 것이 아니므로)
+        ...(field === 'location' ? { coordinates: undefined } : {})
+      } : friend
     ));
 
     // 위치가 변경된 경우 검색 실행
@@ -201,19 +206,20 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   };
 
   const handleFindMiddle = async () => {
-    // 좌표가 없는 입력이 있는지 확인
-    const invalidFriends = friends.filter(friend => friend.location && !friend.coordinates);
-    
-    if (invalidFriends.length > 0) {
-      console.log('좌표가 없는 입력 발견:', invalidFriends);
-      showToast('구체적인 장소를 선택해주세요. 임의로 입력한 텍스트는 좌표가 없어 길찾기를 할 수 없습니다.', 'error');
+    // 모든 친구의 위치가 입력되었는지 확인
+    const emptyLocations = friends.filter(friend => !friend.location || !friend.coordinates);
+    if (emptyLocations.length > 0) {
+      const emptyCount = emptyLocations.length;
+      const totalCount = friends.length;
+      showToast(`${totalCount}명 중 ${emptyCount}명의 위치가 입력되지 않았습니다. 모든 친구의 구체적인 위치를 입력해주세요.`, 'error');
       return;
     }
     
-    // 모든 위치가 입력되었는지 확인
-    const emptyLocations = friends.filter(friend => !friend.location || !friend.coordinates);
-    if (emptyLocations.length > 0) {
-      showToast('모든 친구의 위치를 입력해주세요.', 'error');
+    // 좌표가 없는 입력이 있는지 확인 (임의로 입력한 텍스트)
+    const invalidFriends = friends.filter(friend => friend.location && !friend.coordinates);
+    if (invalidFriends.length > 0) {
+      console.log('좌표가 없는 입력 발견:', invalidFriends);
+      showToast('구체적인 장소를 선택해주세요. 임의로 입력한 텍스트는 좌표가 없어 길찾기를 할 수 없습니다.', 'error');
       return;
     }
     
@@ -259,6 +265,29 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     }
   };
 
+  // 중간거리 찾기 가능 여부 확인
+  const canFindMiddle = () => {
+    return friends.every(friend => friend.location && friend.coordinates);
+  };
+
+  // 버튼 텍스트 결정
+  const getButtonText = () => {
+    if (!canFindMiddle()) {
+      const emptyCount = friends.filter(friend => !friend.location || !friend.coordinates).length;
+      const totalCount = friends.length;
+      return `${totalCount}명 중 ${emptyCount}명 입력 필요`;
+    }
+    return '우리 어디서 만날까 ?';
+  };
+
+  // 버튼 툴팁 텍스트 결정
+  const getButtonTitle = () => {
+    if (!canFindMiddle()) {
+      return '모든 친구의 구체적인 위치를 입력해주세요';
+    }
+    return '중간거리 찾기';
+  };
+
   // 헤더 버튼의 텍스트와 아이콘 결정
   const getHeaderContent = () => {
     if (hasFoundMiddle) {
@@ -295,7 +324,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
                             type="text"
                             value={friend.location}
                             onChange={(e) => handleFriendChange(friend.id, 'location', e.target.value)}
-                            className={styles.friendLocationInput}
+                            className={`${styles.friendLocationInput} ${friend.coordinates ? styles.validInput : ''}`}
                             placeholder="위치를 입력해주세요"
                             data-friend-id={friend.id}
                             onFocus={(e) => {
@@ -382,12 +411,12 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
         </div>
         <button 
           onClick={handleFindMiddle} 
-          className={styles.findMiddleButton}
-          title="중간거리 찾기"
-          disabled={isLoading}
+          className={`${styles.findMiddleButton} ${!canFindMiddle() ? styles.disabled : ''}`}
+          title={getButtonTitle()}
+          disabled={isLoading || !canFindMiddle()}
         >
           <div className={styles.findMiddleButtonText}>
-            {isLoading ? '찾는 중...' : '우리 어디서 만날까 ?'}
+            {isLoading ? '찾는 중...' : getButtonText()}
           </div>
         </button>
       </div>

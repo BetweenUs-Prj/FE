@@ -148,6 +148,11 @@
   outline: none;
 }
 
+.friendLocationInput.validInput {
+  color: #54ae57;
+  font-weight: 600;
+}
+
 .removeFriendBtn {
   position: absolute;
   right: 4px;
@@ -223,6 +228,17 @@
 
 .findMiddleButton:hover {
   transform: translateX(50%) translateY(50%) scale(1.05);
+}
+
+.findMiddleButton.disabled {
+  background: #cccccc;
+  color: #888888;
+  cursor: not-allowed;
+  transform: translateX(50%) translateY(50%) scale(1);
+}
+
+.findMiddleButton.disabled:hover {
+  transform: translateX(50%) translateY(50%) scale(1);
 }
 .findMiddleButtonText {
   font-size: 13px;
