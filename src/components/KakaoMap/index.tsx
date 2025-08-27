@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKakaoMap } from '../../hooks/useKakaoMap';
-import styles from './KakaoMap.module.css';
+
 
 interface MarkerInfo {
   id: string;
@@ -9,9 +9,15 @@ interface MarkerInfo {
     lng: number;
   };
   title: string;
-  type?: 'station' | 'place';
+  type?: 'station' | 'place' | 'friend';
   isHighlighted?: boolean;
   isVisible?: boolean;
+}
+
+interface RouteInfo {
+  from: { lat: number; lng: number };
+  to: { lat: number; lng: number };
+  color?: string;
 }
 
 interface KakaoMapProps {
@@ -34,6 +40,12 @@ interface KakaoMapProps {
   // 마커 관련 props
   markers?: MarkerInfo[];     // 표시할 마커 목록
   onMarkerClick?: (markerId: string) => void; // 마커 클릭 시 호출되는 함수
+  
+  // 경로 관련 props
+  routes?: RouteInfo[];       // 표시할 경로 목록
+  
+  // 자동 중심 조정 설정
+  disableAutoCenter?: boolean; // 자동 중심 조정 비활성화
   
   // 추가 가능한 기능들 (주석으로만 표시)
   // mapTypeId?: string;         // 지도 타입 (roadmap, satellite, hybrid)
@@ -70,7 +82,13 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
   
   // 마커 관련 props
   markers = [],       // 표시할 마커 목록
-  onMarkerClick       // 마커 클릭 시 호출되는 함수
+  onMarkerClick,      // 마커 클릭 시 호출되는 함수
+  
+  // 경로 관련 props
+  routes = [],        // 표시할 경로 목록
+  
+  // 자동 중심 조정 설정
+  disableAutoCenter = false  // 자동 중심 조정 비활성화 (기본값: false)
 }) => {
   useKakaoMap({
     containerId,
@@ -85,7 +103,9 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
     },
     appKey,
     markers,
-    onMarkerClick
+    routes,
+    onMarkerClick,
+    disableAutoCenter
   });
 
   return (

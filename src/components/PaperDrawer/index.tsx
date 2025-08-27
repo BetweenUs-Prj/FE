@@ -13,7 +13,7 @@ interface Friend {
 }
 
 interface PaperDrawerProps {
-  onFindMiddle?: () => void;
+  onFindMiddle?: (friends?: Friend[]) => void;
   onHideCards?: () => void; // 카드 숨기기 기능 추가
 }
 
@@ -43,6 +43,8 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     type: 'info'
   });
 
+  // friends 상태가 변경될 때마다 부모 컴포넌트에 알림 (제거 - 중간거리 찾기 버튼 클릭 시에만 전달)
+
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
     
@@ -63,9 +65,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       } : friend
     ));
 
-    // 위치가 변경된 경우 검색 실행
+    // 위치가 변경된 경우 검색 실행 (입력 중에는 토스트 메시지 표시하지 않음)
     if (field === 'location' && value.trim()) {
-      handleLocationSearch(id, value);
+      handleLocationSearch(id, value, false);
     } else if (field === 'location' && !value.trim()) {
       // 입력값이 비어있으면 검색 결과 숨기기
       setSearchResults(prev => ({ ...prev, [id]: [] }));
@@ -73,8 +75,8 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     }
   };
 
-  // 장소 검색 처리
-  const handleLocationSearch = async (friendId: number, keyword: string) => {
+  // 장소 검색 처리 (입력 중에는 토스트 메시지 표시하지 않음)
+  const handleLocationSearch = async (friendId: number, keyword: string, showToastMessage: boolean = false) => {
     console.log('검색 시작:', keyword); // 디버깅 로그
     
     // 이전 검색 취소
@@ -92,11 +94,13 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
         const results = await unifiedSearch(keyword);
         console.log('검색 결과:', results); // 디버깅 로그
         
-        // 검색 결과가 없거나 너무 적은 경우 토스트 메시지 표시
-        if (results.length === 0) {
-          showToast('구체적인 장소나 주소를 입력해주세요. (예: 강남역, 강남대로 123, 스타벅스 강남점)', 'error');
-        } else if (results.length < 3) {
-          showToast('더 구체적인 장소를 입력하시면 더 정확한 결과를 찾을 수 있습니다.', 'error');
+        // 검색 결과가 없거나 너무 적은 경우 토스트 메시지 표시 (showToastMessage가 true일 때만)
+        if (showToastMessage) {
+          if (results.length === 0) {
+            showToast('수도권(서울, 경기, 인천) 내의 구체적인 장소나 주소를 입력해주세요. (예: 강남역, 강남대로 123, 스타벅스 강남점)', 'error');
+          } else if (results.length < 3) {
+            showToast('수도권 내에서 더 구체적인 장소를 입력하시면 더 정확한 결과를 찾을 수 있습니다.', 'error');
+          }
         }
         
         setSearchResults(prev => ({ ...prev, [friendId]: results }));
@@ -104,7 +108,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       } catch (error) {
         console.error('장소 검색 실패:', error);
         setSearchResults(prev => ({ ...prev, [friendId]: [] }));
-        showToast('검색 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+        if (showToastMessage) {
+          showToast('검색 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+        }
       } finally {
         setIsSearching(prev => ({ ...prev, [friendId]: false }));
       }
@@ -151,10 +157,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     }, 100);
   };
 
-  // 검색 결과 외부 클릭 시 숨기기
-  const handleClickOutside = (friendId: number) => {
-    setShowSearchResults(prev => ({ ...prev, [friendId]: false }));
-  };
+
 
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
@@ -227,38 +230,20 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     setIsLoading(true);
     
     try {
-      // 중간거리 찾기 버튼 클릭 시 PaperDrawer 토글 및 부모 컴포넌트에 알림
-      setIsExpanded(!isExpanded);
-      if (onFindMiddle) {
-        onFindMiddle();
-      }
       console.log('중간거리 찾기 버튼 클릭됨');
       console.log('전송할 좌표 데이터:', friends.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
       
-      // TODO: API 연동 시 이 부분을 실제 API 호출로 대체
-      // 예시:
-      // const response = await fetch('/api/calculate-middle-distance', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     locations: friends.map(f => ({ location: f.location, coordinates: f.coordinates })),
-      //     preferences: userPreferences // 사용자 선호도
-      //   })
-      // });
-      // const result = await response.json();
-      // console.log('중간거리 계산 결과:', result);
+      // 중간거리 찾기 버튼 클릭 시 PaperDrawer 토글 및 부모 컴포넌트에 알림
+      setIsExpanded(!isExpanded);
+      if (onFindMiddle) {
+        onFindMiddle(friends); // 친구 데이터를 직접 전달
+      }
       
-      // TODO: API 연동 시 이 부분을 삭제하고 실제 API 호출로 대체
-      // 예시: API 호출이나 계산 로직
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
-      
-      // 중간거리 찾기 완료 상태로 변경
       setHasFoundMiddle(true);
       
     } catch (error) {
       console.error('중간거리 찾기 중 오류 발생:', error);
-      // TODO: API 연동 시 에러 처리 로직 추가
-      // 예시: 사용자에게 에러 메시지 표시
+      showToast('중간거리 찾기 중 오류가 발생했습니다.', 'error');
     } finally {
       // 로딩 종료
       setIsLoading(false);
@@ -333,9 +318,31 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
                                 setShowSearchResults(prev => ({ ...prev, [friend.id]: true }));
                               }
                             }}
-                            onBlur={(e) => {
-                              // 포커스를 잃을 때 좌표가 없는 입력 정리
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                // 엔터 키를 눌렀을 때 토스트 메시지와 함께 검색 실행
+                                if (friend.location.trim()) {
+                                  handleLocationSearch(friend.id, friend.location, true);
+                                }
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            onBlur={() => {
+                              // 포커스를 잃을 때 좌표가 없는 입력 정리 및 토스트 메시지 표시
                               setTimeout(() => {
+                                // 현재 포커스된 요소가 다른 입력 필드인지 확인
+                                const activeElement = document.activeElement;
+                                const isFocusingAnotherInput = activeElement && 
+                                  activeElement.tagName === 'INPUT' && 
+                                  activeElement.getAttribute('data-friend-id') !== friend.id.toString();
+                                
+                                // 다른 입력 필드로 이동하는 경우 드롭다운 숨기기
+                                if (isFocusingAnotherInput) {
+                                  setShowSearchResults(prev => ({ ...prev, [friend.id]: false }));
+                                  return;
+                                }
+                                
                                 // 검색 결과가 표시되어 있거나 검색 중이면 정리하지 않음
                                 if (showSearchResults[friend.id] || isSearching[friend.id]) {
                                   return;
@@ -343,13 +350,15 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
                                 
                                 if (friend.location && !friend.coordinates) {
                                   console.log(`포커스 아웃 시 좌표가 없는 입력 정리: ${friend.location}`);
+                                  // 포커스 아웃 시 토스트 메시지와 함께 검색 실행
+                                  handleLocationSearch(friend.id, friend.location, true);
                                   setFriends(prev => prev.map(f => 
                                     f.id === friend.id ? { ...f, location: '' } : f
                                   ));
                                 }
                               }, 300); // 검색 결과 클릭을 위한 지연 시간 증가
                             }}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={() => {}}
                           />
                           {isSearching[friend.id] && (
                             <div className={styles.searchSpinner}>🔍</div>
@@ -361,7 +370,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
                         {/* 장소 검색 결과 드롭다운 */}
                         {showSearchResults[friend.id] && searchResults[friend.id] && searchResults[friend.id].length > 0 && (
                           <div className={styles.searchResultsDropdown}>
-                            {searchResults[friend.id].slice(0, 5).map((place, index) => (
+                            {searchResults[friend.id].slice(0, 5).map((place) => (
                               <div
                                 key={place.id}
                                 className={styles.searchResultItem}

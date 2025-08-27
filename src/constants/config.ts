@@ -1,5 +1,8 @@
 export const KAKAO_MAP_APP_KEY = 'a4719916b48fc96916d269b6b35554a4';
 
+// 카카오모빌리티 길찾기 API 키 (실제 API 키로 교체하세요)
+export const KAKAO_MOBILITY_API_KEY = '43eada9de69514725083923fc08b8d7e';
+
 export const DEFAULT_MAP_CENTER = {
   lat: 33.450701,
   lng: 126.570667

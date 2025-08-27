@@ -1,5 +1,21 @@
 import type { StationInfo, PlaceInfo } from '../constants/stationData';
 
+// 수도권 지역 경계 정의 (서울, 경기, 인천)
+const CAPITAL_AREA_BOUNDS = {
+  north: 38.0,  // 북쪽 경계 (파주, 연천 등)
+  south: 36.8,  // 남쪽 경계 (안성, 평택 등)
+  east: 127.5,  // 동쪽 경계 (가평, 포천 등)
+  west: 126.5   // 서쪽 경계 (김포, 인천 등)
+};
+
+// 좌표가 수도권 내에 있는지 확인
+export const isInCapitalArea = (lat: number, lng: number): boolean => {
+  return lat >= CAPITAL_AREA_BOUNDS.south && 
+         lat <= CAPITAL_AREA_BOUNDS.north && 
+         lng >= CAPITAL_AREA_BOUNDS.west && 
+         lng <= CAPITAL_AREA_BOUNDS.east;
+};
+
 // 두 지점 간의 거리 계산 (하버사인 공식)
 export const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371; // 지구의 반지름 (km)
@@ -499,11 +515,21 @@ export const unifiedSearch = async (keyword: string): Promise<UnifiedSearchResul
     // 필터링 적용
     const filteredResults = filterSearchResults(results);
     
+    // 수도권 지역 필터링 적용
+    const capitalAreaResults = filteredResults.filter(result => {
+      const isInCapital = isInCapitalArea(result.coordinates.lat, result.coordinates.lng);
+      if (!isInCapital) {
+        console.log(`수도권 외 지역 필터링: ${result.name} - ${result.address} (${result.coordinates.lat}, ${result.coordinates.lng})`);
+      }
+      return isInCapital;
+    });
+    
     console.log('✅ 통합 검색 완료');
     console.log('필터링 전 결과:', results.length);
-    console.log('필터링 후 결과:', filteredResults.length);
+    console.log('광범위 필터링 후 결과:', filteredResults.length);
+    console.log('수도권 필터링 후 결과:', capitalAreaResults.length);
     
-    return filteredResults;
+    return capitalAreaResults;
   } catch (error) {
     console.error('❌ 통합 검색 실패:', error);
     return [];
