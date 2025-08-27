@@ -531,7 +531,39 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
     };
     
     console.log('길찾기 요청 완료, 총 개수:', routes.length);
-  }, [routes]);
+    
+    // 경로가 생성된 후 지도의 시점을 자동으로 조정
+    if (routes.length > 0 && !disableAutoCenter) {
+      // 모든 경로의 시작점과 끝점을 포함하는 경계 계산
+      const bounds = new window.kakao.maps.LatLngBounds();
+      
+      routes.forEach(route => {
+        bounds.extend(new window.kakao.maps.LatLng(route.from.lat, route.from.lng));
+        bounds.extend(new window.kakao.maps.LatLng(route.to.lat, route.to.lng));
+      });
+      
+      // 경계에 패딩 추가하여 모든 경로가 잘 보이도록 조정
+      const sw = bounds.getSouthWest();
+      const ne = bounds.getNorthEast();
+      
+      // 경로들 간의 거리에 따라 동적으로 패딩 계산
+      const latDiff = ne.getLat() - sw.getLat();
+      const lngDiff = ne.getLng() - sw.getLng();
+      
+      // 거리에 비례하여 패딩 설정 (최소 0.005, 최대 0.02)
+      const latPadding = Math.max(0.005, Math.min(0.02, latDiff * 0.2));
+      const lngPadding = Math.max(0.005, Math.min(0.02, lngDiff * 0.2));
+      
+      const paddedBounds = new window.kakao.maps.LatLngBounds(
+        new window.kakao.maps.LatLng(sw.getLat() - latPadding, sw.getLng() - lngPadding),
+        new window.kakao.maps.LatLng(ne.getLat() + latPadding, ne.getLng() + lngPadding)
+      );
+      
+      // 패딩이 적용된 경계로 맵 영역 설정
+      mapRef.current.setBounds(paddedBounds);
+      console.log('경로 생성 후 맵 영역 자동 조정 완료');
+    }
+  }, [routes, disableAutoCenter]);
 
   const initializeMap = () => {
     const mapContainer = document.getElementById(containerId);

@@ -336,7 +336,7 @@ const Home = () => {
         if (station) {
                   setSelectedStationId(station.id);
           setMapCenter({ lat: station.lat, lng: station.lng });
-          // 역 선택 시 더 자세한 시야를 위해 레벨 조정 (useKakaoMap에서 처리)
+          setMapLevel(4); // 역 선택 시 적절한 레벨로 설정
           
           // 역 마커와 해당 역의 모든 추천 장소 마커 추가
           const places = getPlacesByStationId(station.id);
