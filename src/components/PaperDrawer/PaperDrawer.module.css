@@ -83,9 +83,11 @@
 .defaultContent h3 {
   font-size: 24px;
   font-weight: 600;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   color: #343a40;
 }
+
+
 
 .defaultContent p {
   font-size: 16px;
@@ -321,5 +323,117 @@
   opacity: 0.7;
 }
 
+/* 카테고리 드롭다운 스타일 */
+.categoryDropdownContainer {
+  position: absolute;
+  top: 160px;
+  right: 80px;
+  z-index: 10;
+}
 
+.categoryDropdownButton {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #cbcbcb;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  cursor: pointer;
+  gap: 5px;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
 
+.categoryDropdownEmoji {
+  font-size: 16px;
+}
+
+.categoryDropdownText {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categoryDropdownArrow {
+  font-size: 12px;
+  color: #6c757d;
+  transition: transform 0.3s ease;
+}
+
+.categoryDropdownMenu {
+  position: absolute;
+  top: 100%;
+  border: 1px solid #c3c3c3;
+  border-radius: 5px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.customCategoryDropdownInput {
+  padding: 5px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.customCategoryTextInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #b7b7b7;
+  border-radius: 5px;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.customCategoryTextInput:focus {
+  outline: none;
+  border-color: #54ae57;
+  background: white;
+}
+
+.customCategoryTextInput::placeholder {
+  color: #a7a7a7;
+}
+
+.categoryDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 5px 13px;
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.categoryDropdownItem:last-child {
+  border-bottom: none;
+}
+
+.categoryDropdownItem:hover {
+  background: #f8f9fa;
+}
+
+.categoryDropdownItem.selected {
+  background: #54ae57;
+  color: white;
+}
+
+.categoryItemEmoji {
+  font-size: 16px;
+  min-width: 20px;
+}
+
+.categoryItemLabel {
+  font-size: 14px;
+  font-weight: 500;
+}

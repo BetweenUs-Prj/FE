@@ -5,6 +5,35 @@ import Toast from '../Toast';
 import { unifiedSearch } from '../../utils/kakaoMapUtils';
 import type { UnifiedSearchResult } from '../../utils/kakaoMapUtils';
 
+// 카테고리 타입 정의
+export type MeetingCategory = 
+  | 'DRINKING'    // 술약속
+  | 'COFFEE'      // 커피약속
+  | 'DINING'      // 식사약속
+  | 'MEETING'     // 회의약속
+  | 'DATE'        // 데이트약속
+  | 'STUDY'       // 스터디약속
+  | 'ENTERTAINMENT' // 오락약속
+  | 'SHOPPING'    // 쇼핑약속
+  | 'EXERCISE'    // 운동약속
+  | 'CULTURE'     // 문화약속
+  | 'CUSTOM';     // 기타 (사용자 입력)
+
+// 카테고리 옵션 정의
+export const CATEGORY_OPTIONS: { value: MeetingCategory; label: string; emoji: string }[] = [
+  { value: 'DRINKING', label: '술약속', emoji: '🍺' },
+  { value: 'COFFEE', label: '커피약속', emoji: '☕' },
+  { value: 'DINING', label: '식사약속', emoji: '🍽️' },
+  { value: 'MEETING', label: '회의약속', emoji: '💼' },
+  { value: 'DATE', label: '데이트약속', emoji: '💕' },
+  { value: 'STUDY', label: '스터디약속', emoji: '📚' },
+  { value: 'ENTERTAINMENT', label: '오락약속', emoji: '🎮' },
+  { value: 'SHOPPING', label: '쇼핑약속', emoji: '🛍️' },
+  { value: 'EXERCISE', label: '운동약속', emoji: '💪' },
+  { value: 'CULTURE', label: '문화약속', emoji: '🎭' },
+  { value: 'CUSTOM', label: '기타', emoji: '✏️' }
+];
+
 interface Friend {
   id: number;
   name: string;
@@ -13,7 +42,7 @@ interface Friend {
 }
 
 interface PaperDrawerProps {
-  onFindMiddle?: (friends?: Friend[]) => void;
+  onFindMiddle?: (friends?: Friend[], category?: MeetingCategory, customCategoryText?: string) => void;
   onHideCards?: () => void; // 카드 숨기기 기능 추가
 }
 
@@ -25,6 +54,13 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     { id: 1, name: '나', location: '' },
     { id: 2, name: '친구', location: '' }
   ]);
+  
+  // 카테고리 선택 상태 (기본값으로 설정)
+  const [selectedCategory, setSelectedCategory] = useState<MeetingCategory>('DINING');
+  const [customCategory, setCustomCategory] = useState<string>('');
+  
+  // 드롭다운 상태
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   
   // 장소 검색 관련 상태
   const [searchResults, setSearchResults] = useState<{ [key: number]: UnifiedSearchResult[] }>({});
@@ -172,6 +208,13 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
+      
+      // 카테고리 드롭다운 외부 클릭 감지
+      if (!target.closest(`.${styles.categoryDropdownContainer}`)) {
+        setIsCategoryDropdownOpen(false);
+      }
+      
+      // 검색 결과 드롭다운 외부 클릭 감지
       if (!target.closest(`.${styles.inputContainer}`)) {
         setShowSearchResults({});
         
@@ -232,11 +275,12 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     try {
       console.log('중간거리 찾기 버튼 클릭됨');
       console.log('전송할 좌표 데이터:', friends.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
+
       
       // 중간거리 찾기 버튼 클릭 시 PaperDrawer 토글 및 부모 컴포넌트에 알림
       setIsExpanded(!isExpanded);
       if (onFindMiddle) {
-        onFindMiddle(friends); // 친구 데이터를 직접 전달
+        onFindMiddle(friends, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined); // 친구 데이터와 카테고리를 함께 전달
       }
       
       setHasFoundMiddle(true);
@@ -294,127 +338,189 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
             </div>
           </div>
           <div className={styles.paperDrawerBody}>
+            {/* 오른쪽 상단 카테고리 드롭다운 */}
+            <div className={styles.categoryDropdownContainer}>
+              <button
+                className={styles.categoryDropdownButton}
+                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+              >
+                <span className={styles.categoryDropdownEmoji}>
+                  {CATEGORY_OPTIONS.find(cat => cat.value === selectedCategory)?.emoji}
+                </span>
+                <span className={styles.categoryDropdownText}>
+                  {selectedCategory === 'CUSTOM' && customCategory 
+                    ? customCategory 
+                    : CATEGORY_OPTIONS.find(cat => cat.value === selectedCategory)?.label}
+                </span>
+                <span className={styles.categoryDropdownArrow}>
+                  {isCategoryDropdownOpen ? '▲' : '▼'}
+                </span>
+              </button>
+              
+              {/* 드롭다운 메뉴 */}
+              {isCategoryDropdownOpen && (
+                <div className={styles.categoryDropdownMenu}>
+                  {/* 커스텀 입력 필드 (상단에 배치) */}
+                  <div className={styles.customCategoryDropdownInput}>
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => {
+                        setCustomCategory(e.target.value);
+                        if (e.target.value.trim()) {
+                          setSelectedCategory('CUSTOM');
+                        }
+                      }}
+                      placeholder="직접 입력하기..."
+                      className={styles.customCategoryTextInput}
+                      onFocus={() => setIsCategoryDropdownOpen(true)}
+                      tabIndex={0}
+                    />
+                  </div>
+                  
+                  {/* 구분선 */}
+                  <div className={styles.categoryDropdownDivider}></div>
+                  
+                  {/* 카테고리 옵션들 */}
+                  {CATEGORY_OPTIONS.map((category) => (
+                    <button
+                      key={category.value}
+                      className={`${styles.categoryDropdownItem} ${selectedCategory === category.value ? styles.selected : ''}`}
+                      onClick={() => {
+                        setSelectedCategory(category.value);
+                        if (category.value !== 'CUSTOM') {
+                          setCustomCategory('');
+                        }
+                        setIsCategoryDropdownOpen(false);
+                      }}
+                    >
+                      <span className={styles.categoryItemEmoji}>{category.emoji}</span>
+                      <span className={styles.categoryItemLabel}>{category.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             <div className={styles.defaultContent}>
               <h3>서로의 위치를 적어주세요 !</h3>
-              <div className={styles.friendsContainer}>
-                {friends.map((friend) => (
-                  <div key={friend.id} className={styles.friendItem}>
-                    <div className={styles.friendHeader}>
-                      <div className={styles.friendLabel}>
-                        {friend.id === 1 ? '나' : '친구'}
-                      </div>
-                      <div className={styles.inputContainer}>
-                        <div className={styles.locationInputWrapper}>
-                          <input
-                            type="text"
-                            value={friend.location}
-                            onChange={(e) => handleFriendChange(friend.id, 'location', e.target.value)}
-                            className={`${styles.friendLocationInput} ${friend.coordinates ? styles.validInput : ''}`}
-                            placeholder="위치를 입력해주세요"
-                            data-friend-id={friend.id}
-                            onFocus={(e) => {
-                              e.stopPropagation();
-                              if (friend.location.trim() && searchResults[friend.id]?.length > 0) {
-                                setShowSearchResults(prev => ({ ...prev, [friend.id]: true }));
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                // 엔터 키를 눌렀을 때 토스트 메시지와 함께 검색 실행
-                                if (friend.location.trim()) {
-                                  handleLocationSearch(friend.id, friend.location, true);
-                                }
-                                e.currentTarget.blur();
-                              }
-                            }}
-                            onBlur={() => {
-                              // 포커스를 잃을 때 좌표가 없는 입력 정리 및 토스트 메시지 표시
-                              setTimeout(() => {
-                                // 현재 포커스된 요소가 다른 입력 필드인지 확인
-                                const activeElement = document.activeElement;
-                                const isFocusingAnotherInput = activeElement && 
-                                  activeElement.tagName === 'INPUT' && 
-                                  activeElement.getAttribute('data-friend-id') !== friend.id.toString();
-                                
-                                // 다른 입력 필드로 이동하는 경우 드롭다운 숨기기
-                                if (isFocusingAnotherInput) {
-                                  setShowSearchResults(prev => ({ ...prev, [friend.id]: false }));
-                                  return;
-                                }
-                                
-                                // 검색 결과가 표시되어 있거나 검색 중이면 정리하지 않음
-                                if (showSearchResults[friend.id] || isSearching[friend.id]) {
-                                  return;
-                                }
-                                
-                                if (friend.location && !friend.coordinates) {
-                                  console.log(`포커스 아웃 시 좌표가 없는 입력 정리: ${friend.location}`);
-                                  // 포커스 아웃 시 토스트 메시지와 함께 검색 실행
-                                  handleLocationSearch(friend.id, friend.location, true);
-                                  setFriends(prev => prev.map(f => 
-                                    f.id === friend.id ? { ...f, location: '' } : f
-                                  ));
-                                }
-                              }, 300); // 검색 결과 클릭을 위한 지연 시간 증가
-                            }}
-                            onClick={() => {}}
-                          />
-                          {isSearching[friend.id] && (
-                            <div className={styles.searchSpinner}>🔍</div>
-                          )}
-                        </div>
-                        
-
-                        
-                        {/* 장소 검색 결과 드롭다운 */}
-                        {showSearchResults[friend.id] && searchResults[friend.id] && searchResults[friend.id].length > 0 && (
-                          <div className={styles.searchResultsDropdown}>
-                            {searchResults[friend.id].slice(0, 5).map((place) => (
-                              <div
-                                key={place.id}
-                                className={styles.searchResultItem}
-                                onMouseDown={(e) => {
-                                  e.preventDefault(); // 포커스 아웃 방지
-                                  e.stopPropagation();
-                                }}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handlePlaceSelect(friend.id, place);
-                                }}
-                              >
-                                <div className={styles.placeName}>
-                                  {place.name}
-                                  <span className={styles.searchType}>
-                                    {place.type === 'place' ? '📍' : '🏠'}
-                                  </span>
-                                </div>
-                                <div className={styles.placeAddress}>
-                                  {place.address}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {friend.id !== 1 && friend.id !== 2 && (
-                          <button
-                            onClick={() => handleRemoveFriend(friend.id)}
-                            className={styles.removeFriendBtn}
-                            title="삭제"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button onClick={handleAddFriend} className={styles.addFriendBtn}>
-                  + 친구 추가하기
-                </button>
-              </div>
+                             <div className={styles.friendsContainer}>
+                 {friends.map((friend) => (
+                   <div key={friend.id} className={styles.friendItem}>
+                     <div className={styles.friendHeader}>
+                       <div className={styles.friendLabel}>
+                         {friend.id === 1 ? '나' : '친구'}
+                       </div>
+                       <div className={styles.inputContainer}>
+                         <div className={styles.locationInputWrapper}>
+                           <input
+                             type="text"
+                             value={friend.location}
+                             onChange={(e) => handleFriendChange(friend.id, 'location', e.target.value)}
+                             className={`${styles.friendLocationInput} ${friend.coordinates ? styles.validInput : ''}`}
+                             placeholder="위치를 입력해주세요"
+                             data-friend-id={friend.id}
+                             onFocus={(e) => {
+                               e.stopPropagation();
+                               if (friend.location.trim() && searchResults[friend.id]?.length > 0) {
+                                 setShowSearchResults(prev => ({ ...prev, [friend.id]: true }));
+                               }
+                             }}
+                             onKeyDown={(e) => {
+                               if (e.key === 'Enter') {
+                                 e.preventDefault();
+                                 // 엔터 키를 눌렀을 때 토스트 메시지와 함께 검색 실행
+                                 if (friend.location.trim()) {
+                                   handleLocationSearch(friend.id, friend.location, true);
+                                 }
+                                 e.currentTarget.blur();
+                               }
+                             }}
+                             onBlur={() => {
+                               // 포커스를 잃을 때 좌표가 없는 입력 정리 및 토스트 메시지 표시
+                               setTimeout(() => {
+                                 // 현재 포커스된 요소가 다른 입력 필드인지 확인
+                                 const activeElement = document.activeElement;
+                                 const isFocusingAnotherInput = activeElement && 
+                                   activeElement.tagName === 'INPUT' && 
+                                   activeElement.getAttribute('data-friend-id') !== friend.id.toString();
+                                 
+                                 // 다른 입력 필드로 이동하는 경우 드롭다운 숨기기
+                                 if (isFocusingAnotherInput) {
+                                   setShowSearchResults(prev => ({ ...prev, [friend.id]: false }));
+                                   return;
+                                 }
+                                 
+                                 // 검색 결과가 표시되어 있거나 검색 중이면 정리하지 않음
+                                 if (showSearchResults[friend.id] || isSearching[friend.id]) {
+                                   return;
+                                 }
+                                 
+                                 if (friend.location && !friend.coordinates) {
+                                   console.log(`포커스 아웃 시 좌표가 없는 입력 정리: ${friend.location}`);
+                                   // 포커스 아웃 시 토스트 메시지와 함께 검색 실행
+                                   handleLocationSearch(friend.id, friend.location, true);
+                                   setFriends(prev => prev.map(f => 
+                                     f.id === friend.id ? { ...f, location: '' } : f
+                                   ));
+                                 }
+                               }, 300); // 검색 결과 클릭을 위한 지연 시간 증가
+                             }}
+                             onClick={() => {}}
+                           />
+                           {isSearching[friend.id] && (
+                             <div className={styles.searchSpinner}>🔍</div>
+                           )}
+                         </div>
+                         
+                         {/* 장소 검색 결과 드롭다운 */}
+                         {showSearchResults[friend.id] && searchResults[friend.id] && searchResults[friend.id].length > 0 && (
+                           <div className={styles.searchResultsDropdown}>
+                             {searchResults[friend.id].slice(0, 5).map((place) => (
+                               <div
+                                 key={place.id}
+                                 className={styles.searchResultItem}
+                                 onMouseDown={(e) => {
+                                   e.preventDefault(); // 포커스 아웃 방지
+                                   e.stopPropagation();
+                                 }}
+                                 onClick={(e) => {
+                                   e.preventDefault();
+                                   e.stopPropagation();
+                                   handlePlaceSelect(friend.id, place);
+                                 }}
+                               >
+                                 <div className={styles.placeName}>
+                                   {place.name}
+                                   <span className={styles.searchType}>
+                                     {place.type === 'place' ? '📍' : '🏠'}
+                                   </span>
+                                 </div>
+                                 <div className={styles.placeAddress}>
+                                   {place.address}
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         )}
+                         
+                         {friend.id !== 1 && friend.id !== 2 && (
+                           <button
+                             onClick={() => handleRemoveFriend(friend.id)}
+                             className={styles.removeFriendBtn}
+                             title="삭제"
+                           >
+                             ✕
+                           </button>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+                 <button onClick={handleAddFriend} className={styles.addFriendBtn}>
+                   + 친구 추가하기
+                 </button>
+               </div>
             </div>
           </div>
         </div>

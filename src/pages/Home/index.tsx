@@ -8,6 +8,7 @@ import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
 import MiddlePlaceRecommendCard from '@/components/MiddlePlaceRecommendCard';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
+import type { MeetingCategory } from '@/components/PaperDrawer';
 
 
 interface MiddlePlaceCard {
@@ -96,6 +97,8 @@ const Home = () => {
     location: string;
     coordinates?: { lat: number; lng: number };
   }>>([]); // 사용자 입력 친구 데이터
+  
+
   
 
 
@@ -227,7 +230,7 @@ const Home = () => {
     name: string;
     location: string;
     coordinates?: { lat: number; lng: number };
-  }>) => {
+  }>, category?: MeetingCategory, customCategoryText?: string) => {
     console.log('중간거리 찾기 버튼 클릭됨');
     
     // 친구 데이터가 전달되면 상태 업데이트
@@ -235,6 +238,8 @@ const Home = () => {
       console.log('전달받은 친구 데이터:', friendsData);
       setFriends(friendsData);
     }
+    
+
     
     // 홈 컨텐츠 숨기기 (우리 사이 텍스트 사라짐)
     setShowHomeContent(false);
