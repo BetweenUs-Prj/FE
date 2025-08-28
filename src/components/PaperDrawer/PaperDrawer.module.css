@@ -233,14 +233,35 @@
 }
 
 .findMiddleButton.disabled {
-  background: #cccccc;
-  color: #888888;
-  cursor: not-allowed;
-  transform: translateX(50%) translateY(50%) scale(1);
+  background: #cccccc !important;
+  color: #888888 !important;
+  cursor: not-allowed !important;
+  transform: translateX(50%) translateY(50%) scale(1) !important;
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+  user-select: none !important;
 }
 
 .findMiddleButton.disabled:hover {
-  transform: translateX(50%) translateY(50%) scale(1);
+  transform: translateX(50%) translateY(50%) scale(1) !important;
+  background: #cccccc !important;
+  box-shadow: none !important;
+}
+
+.findMiddleButton:disabled {
+  background: #cccccc !important;
+  color: #888888 !important;
+  cursor: not-allowed !important;
+  transform: translateX(50%) translateY(50%) scale(1) !important;
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+  user-select: none !important;
+}
+
+.findMiddleButton:disabled:hover {
+  transform: translateX(50%) translateY(50%) scale(1) !important;
+  background: #cccccc !important;
+  box-shadow: none !important;
 }
 .findMiddleButtonText {
   font-size: 13px;

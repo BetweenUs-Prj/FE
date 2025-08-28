@@ -8,6 +8,9 @@ import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
 import MiddlePlaceRecommendCard from '@/components/MiddlePlaceRecommendCard';
 import Toast from '@/components/Toast';
+import FriendsModal from '@/components/FriendsModal';
+import ScheduleModal from '@/components/ScheduleModal';
+import MeetingModal from '@/components/MeetingModal';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
 import type { MeetingCategory } from '@/components/PaperDrawer';
 
@@ -245,24 +248,30 @@ const Home = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // TODO: 향후 기능 구현 예정
+  // 모달 핸들러 함수들
   const handleFriendClick = () => {
-    // TODO: 친구 관리 팝업 구현
-    console.log('친구 관리 기능 클릭됨');
-    showToast('친구 관리 기능이 곧 추가될 예정입니다!', 'info');
+    console.log('친구 관리 모달 열기');
+    setShowFriendsModal(true);
   };
   
   const handleScheduleClick = () => {
-    // TODO: 일정 관리 팝업 구현
-    console.log('일정 관리 기능 클릭됨');
-    showToast('일정 관리 기능이 곧 추가될 예정입니다!', 'info');
+    console.log('일정 관리 모달 열기');
+    setShowScheduleModal(true);
   };
   
   const handleMeetingClick = () => {
-    // TODO: 만남 관리 팝업 구현
-    console.log('만남 관리 기능 클릭됨');
-    showToast('만남 관리 기능이 곧 추가될 예정입니다!', 'info');
+    console.log('만남 관리 모달 열기');
+    setShowMeetingModal(true);
   };
+
+  // 중간거리 찾기 실행 중 상태
+  const [isFindingMiddle, setIsFindingMiddle] = useState(false);
+  const [lastFindMiddleTime, setLastFindMiddleTime] = useState(0);
+
+  // 모달 상태
+  const [showFriendsModal, setShowFriendsModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
 
   const handleFindMiddle = async (friendsData?: Array<{
     id: number;
@@ -270,13 +279,33 @@ const Home = () => {
     location: string;
     coordinates?: { lat: number; lng: number };
   }>, category?: MeetingCategory, customCategoryText?: string) => {
-    console.log('중간거리 찾기 버튼 클릭됨');
+    const now = Date.now();
     
-    // 친구 데이터가 전달되면 상태 업데이트
-    if (friendsData) {
-      console.log('전달받은 친구 데이터:', friendsData);
-      setFriends(friendsData);
+    // 1. 클릭 간격 체크 (200ms 이내 연타 방지)
+    if (now - lastFindMiddleTime < 200) {
+      console.log('너무 빠른 중간거리 찾기 요청, 무시됨');
+      return;
     }
+    
+    // 2. 중복 실행 방지
+    if (isFindingMiddle) {
+      console.log('중간거리 찾기가 이미 실행 중입니다.');
+      return;
+    }
+    
+    setLastFindMiddleTime(now);
+    setIsFindingMiddle(true);
+    
+    try {
+      console.log('중간거리 찾기 버튼 클릭됨');
+      console.log('선택된 카테고리:', category);
+      console.log('커스텀 카테고리 텍스트:', customCategoryText);
+      
+      // 친구 데이터가 전달되면 상태 업데이트
+      if (friendsData) {
+        console.log('전달받은 친구 데이터:', friendsData);
+        setFriends(friendsData);
+      }
     
 
     
@@ -339,6 +368,12 @@ const Home = () => {
       setMapCenter({ lat: centerLat, lng: centerLng });
       setMapLevel(6); // 역들과 친구들이 모두 보이도록 더 넓은 레벨 설정
       console.log('맵 중심 설정:', { lat: centerLat, lng: centerLng }, '레벨:', 6);
+    }
+    } catch (error) {
+      console.error('중간거리 찾기 중 오류 발생:', error);
+      showToast('중간거리 찾기 중 오류가 발생했습니다.', 'error');
+    } finally {
+      setIsFindingMiddle(false);
     }
   };
 
@@ -682,6 +717,22 @@ const Home = () => {
         type={toast.type}
         onClose={hideToast}
         duration={3000}
+      />
+
+      {/* 모달들 */}
+      <FriendsModal
+        isVisible={showFriendsModal}
+        onClose={() => setShowFriendsModal(false)}
+      />
+      
+      <ScheduleModal
+        isVisible={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+      />
+      
+      <MeetingModal
+        isVisible={showMeetingModal}
+        onClose={() => setShowMeetingModal(false)}
       />
     </div>
   );

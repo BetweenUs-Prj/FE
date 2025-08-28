@@ -1,6 +1,7 @@
 .homePage {
   width: 100%;
   height: 100vh;
+  min-height: 100vh;
   color: var(--text-primary);
   overflow: hidden;
   position: relative;
@@ -9,7 +10,10 @@
 .mapBackground {
   position: fixed;
   width: 100%;
-  height: 100vh; /* Header가 fixed이므로 전체 높이 사용 */
+  height: 100vh;
+  min-height: 100vh;
+  top: 0;
+  left: 0;
 }
 
 .homeContent {
@@ -20,10 +24,12 @@
   text-align: center;
   z-index: 10;
   background: rgba(255, 255, 255, 0.9);
-  padding: 2vw;
-  border-radius: 1.2vw;
-  backdrop-filter: blur(1vw);
+  padding: clamp(20px, 2vw, 40px);
+  border-radius: clamp(12px, 1.2vw, 24px);
+  backdrop-filter: blur(10px);
   animation: homeContentFadeIn 0.5s ease-out;
+  max-width: 90vw;
+  min-width: 300px;
 }
 
 .homeContent.fadeOut {
@@ -32,13 +38,13 @@
 
 .homeTitle {
   text-align: center;
-  font-size: 3vw;
+  font-size: clamp(24px, 3vw, 48px);
   font-weight: 700;
-  margin-bottom: 1vw;
+  margin-bottom: clamp(8px, 1vw, 16px);
 }
 
 .mapTitle {
-  font-size: 2vw;
+  font-size: clamp(18px, 2vw, 32px);
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
@@ -47,8 +53,8 @@
 .mapDescription {
   text-align: center;
   color: var(--text-secondary);
-  margin-bottom: 1vw;
-  font-size: 1.5vw;
+  margin-bottom: clamp(8px, 1vw, 16px);
+  font-size: clamp(14px, 1.5vw, 24px);
 }
 
 .homeMapContainer {
@@ -150,5 +156,43 @@
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 768px) {
+  .homeContent {
+    padding: 16px;
+    border-radius: 12px;
+    min-width: 280px;
+    max-width: 95vw;
+  }
+  
+  .homeTitle {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  
+  .mapDescription {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .homeContent {
+    padding: 12px;
+    border-radius: 8px;
+    min-width: 260px;
+  }
+  
+  .homeTitle {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  
+  .mapDescription {
+    font-size: 14px;
+    margin-bottom: 8px;
   }
 }

@@ -50,6 +50,8 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFoundMiddle, setHasFoundMiddle] = useState(false); // 중간거리 찾기 완료 상태
+  const [isProcessing, setIsProcessing] = useState(false); // 추가 보호 장치
+  const [lastClickTime, setLastClickTime] = useState(0); // 클릭 시간 추적
   const [friends, setFriends] = useState<Friend[]>([
     { id: 1, name: '나', location: '' },
     { id: 2, name: '친구', location: '' }
@@ -252,7 +254,24 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   };
 
   const handleFindMiddle = async () => {
-    // 모든 친구의 위치가 입력되었는지 확인
+    const now = Date.now();
+    
+    // 1. 클릭 간격 체크 (100ms 이내 연타 방지)
+    if (now - lastClickTime < 100) {
+      console.log('너무 빠른 클릭 감지, 무시됨');
+      return;
+    }
+    
+    // 2. 로딩 중이거나 이미 실행 중이면 중복 실행 방지
+    if (isLoading || isProcessing) {
+      console.log('중간거리 찾기 이미 실행 중입니다.');
+      return;
+    }
+    
+    // 3. 클릭 시간 업데이트
+    setLastClickTime(now);
+    
+    // 4. 모든 친구의 위치가 입력되었는지 확인
     const emptyLocations = friends.filter(friend => !friend.location || !friend.coordinates);
     if (emptyLocations.length > 0) {
       const emptyCount = emptyLocations.length;
@@ -261,7 +280,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       return;
     }
     
-    // 좌표가 없는 입력이 있는지 확인 (임의로 입력한 텍스트)
+    // 5. 좌표가 없는 입력이 있는지 확인 (임의로 입력한 텍스트)
     const invalidFriends = friends.filter(friend => friend.location && !friend.coordinates);
     if (invalidFriends.length > 0) {
       console.log('좌표가 없는 입력 발견:', invalidFriends);
@@ -269,16 +288,16 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       return;
     }
     
-    // 로딩 시작
+    // 6. 모든 보호 장치 통과 후 처리 시작
     setIsLoading(true);
+    setIsProcessing(true);
     
     try {
       console.log('중간거리 찾기 버튼 클릭됨');
       console.log('전송할 좌표 데이터:', friends.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
 
-      
-      // 중간거리 찾기 버튼 클릭 시 PaperDrawer 토글 및 부모 컴포넌트에 알림
-      setIsExpanded(!isExpanded);
+      // 중간거리 찾기 버튼 클릭 시 PaperDrawer 닫기 및 부모 컴포넌트에 알림
+      setIsExpanded(false); // 항상 닫기로 고정
       if (onFindMiddle) {
         onFindMiddle(friends, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined); // 친구 데이터와 카테고리를 함께 전달
       }
@@ -291,6 +310,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     } finally {
       // 로딩 종료
       setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -525,9 +545,10 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
         </div>
         <button 
           onClick={handleFindMiddle} 
-          className={`${styles.findMiddleButton} ${!canFindMiddle() ? styles.disabled : ''}`}
+          onDoubleClick={(e) => e.preventDefault()}
+          className={`${styles.findMiddleButton} ${(!canFindMiddle() || isLoading || isProcessing) ? styles.disabled : ''}`}
           title={getButtonTitle()}
-          disabled={isLoading || !canFindMiddle()}
+          disabled={isLoading || isProcessing || !canFindMiddle()}
         >
           <div className={styles.findMiddleButtonText}>
             {isLoading ? '찾는 중...' : getButtonText()}

@@ -4,17 +4,16 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  height: 8vh;
-  max-height: 80px;
-  padding: 0.2vh 0;
+  height: clamp(60px, 8vh, 80px);
+  padding: clamp(2px, 0.2vh, 4px) 0;
   background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(0.5vw);
+  backdrop-filter: blur(8px);
 }
 
 .headerContainer {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2vw;
+  padding: 0 clamp(16px, 2vw, 32px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -37,7 +36,7 @@
 
 .navMenu {
   display: flex;
-  gap: min(6vw, 60px);
+  gap: clamp(30px, 6vw, 60px);
   align-items: center;
 }
 
@@ -45,7 +44,7 @@
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  font-size: min(2vw, 15px);
+  font-size: clamp(14px, 2vw, 18px);
   transition: color 0.3s ease;
   position: relative;
 }
@@ -61,12 +60,12 @@
 .navLink.active::after {
   content: '';
   position: absolute;
-  bottom: -0.5vw;
+  bottom: clamp(-4px, -0.5vw, -8px);
   left: 0;
   right: 0;
-  height: min(0.2vw, 2px);
+  height: clamp(1px, 0.2vw, 3px);
   background-color: var(--accent-color);
-  border-radius: 0.1vw;
+  border-radius: clamp(1px, 0.1vw, 2px);
 }
 
 .kakaoLoginButton {
@@ -151,6 +150,54 @@
 .logoutButton:active {
   transform: translateY(0);
   box-shadow: 0 0.1vw 0.3vw rgba(255, 107, 107, 0.3);
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 768px) {
+  .header {
+    height: 60px;
+    padding: 2px 0;
+  }
+  
+  .headerContainer {
+    padding: 0 16px;
+  }
+  
+  .navMenu {
+    gap: 20px;
+  }
+  
+  .navLink {
+    font-size: 14px;
+  }
+  
+  .kakaoLoginButton {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    height: 56px;
+  }
+  
+  .headerContainer {
+    padding: 0 12px;
+  }
+  
+  .navMenu {
+    gap: 16px;
+  }
+  
+  .navLink {
+    font-size: 13px;
+  }
+  
+  .kakaoLoginButton {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 }
 
 /* 프로필 드롭다운 메뉴 스타일 */
