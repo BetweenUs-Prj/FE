@@ -7,6 +7,7 @@ import { KAKAO_MAP_APP_KEY } from '../../constants/config';
 import PaperDrawer from '@/components/PaperDrawer';
 import FloatingNav from '@/components/FloatingNav';
 import MiddlePlaceRecommendCard from '@/components/MiddlePlaceRecommendCard';
+import Toast from '@/components/Toast';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
 import type { MeetingCategory } from '@/components/PaperDrawer';
 
@@ -97,6 +98,17 @@ const Home = () => {
     location: string;
     coordinates?: { lat: number; lng: number };
   }>>([]); // 사용자 입력 친구 데이터
+  
+  // 토스트 메시지 상태
+  const [toast, setToast] = useState<{
+    isVisible: boolean;
+    message: string;
+    type: 'info' | 'warning' | 'error' | 'success';
+  }>({
+    isVisible: false,
+    message: '',
+    type: 'info'
+  });
   
 
   
@@ -220,10 +232,37 @@ const Home = () => {
     }
   }, [friends, showCardList]);
 
+  // 토스트 메시지 표시 함수
+  const showToast = (message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
   // TODO: 향후 기능 구현 예정
-  const handleFriendClick = () => {};
-  const handleScheduleClick = () => {};
-  const handleMeetingClick = () => {};
+  const handleFriendClick = () => {
+    // TODO: 친구 관리 팝업 구현
+    console.log('친구 관리 기능 클릭됨');
+    showToast('친구 관리 기능이 곧 추가될 예정입니다!', 'info');
+  };
+  
+  const handleScheduleClick = () => {
+    // TODO: 일정 관리 팝업 구현
+    console.log('일정 관리 기능 클릭됨');
+    showToast('일정 관리 기능이 곧 추가될 예정입니다!', 'info');
+  };
+  
+  const handleMeetingClick = () => {
+    // TODO: 만남 관리 팝업 구현
+    console.log('만남 관리 기능 클릭됨');
+    showToast('만남 관리 기능이 곧 추가될 예정입니다!', 'info');
+  };
 
   const handleFindMiddle = async (friendsData?: Array<{
     id: number;
@@ -635,6 +674,15 @@ const Home = () => {
           </div>
         </div>
       )}
+      
+      {/* 토스트 메시지 */}
+      <Toast
+        isVisible={toast.isVisible}
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+        duration={3000}
+      />
     </div>
   );
 };

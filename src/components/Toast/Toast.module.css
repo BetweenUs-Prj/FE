@@ -1,11 +1,11 @@
 .toast {
   position: fixed;
-  bottom: 20px;
+  top: 80px;
   right: 20px;
+  transform: translateX(100%) scale(0.9);
   z-index: 10000;
   max-width: 280px;
   min-width: 200px;
-  transform: translateX(100%) scale(0.8);
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -21,7 +21,7 @@
 }
 
 .toast.hide {
-  transform: translateX(100%) scale(0.8);
+  transform: translateX(100%) scale(0.9);
   opacity: 0;
 }
 

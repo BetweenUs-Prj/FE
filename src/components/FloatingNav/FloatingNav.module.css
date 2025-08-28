@@ -11,6 +11,7 @@
   gap: 15px;
   padding: 10px;
   transform: none;
+  pointer-events: none; /* 플로팅 버튼과 메뉴 아이템에만 클릭 이벤트 허용 */
 }
 
 /* 플로팅 버튼 */
@@ -30,6 +31,7 @@
   z-index: 1001;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  pointer-events: auto; /* 클릭 이벤트 허용 */
 }
 
 .floatingButton:hover {
@@ -103,6 +105,7 @@
   pointer-events: none;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: none; /* 기본적으로 클릭 불가 */
 }
 
 .navItem.show {

@@ -30,17 +30,17 @@ const FloatingNav: React.FC<FloatingNavProps> = ({
 
   const handleFriendClick = () => {
     onFriendClick?.();
-    handleToggle();
+    // 메뉴 클릭 시에는 닫히지 않도록 handleToggle() 제거
   };
 
   const handleScheduleClick = () => {
     onScheduleClick?.();
-    handleToggle();
+    // 메뉴 클릭 시에는 닫히지 않도록 handleToggle() 제거
   };
 
   const handleMeetingClick = () => {
     onMeetingClick?.();
-    handleToggle();
+    // 메뉴 클릭 시에는 닫히지 않도록 handleToggle() 제거
   };
 
   return (
