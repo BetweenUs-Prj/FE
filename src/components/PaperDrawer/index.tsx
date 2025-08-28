@@ -352,8 +352,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
                     ? customCategory 
                     : CATEGORY_OPTIONS.find(cat => cat.value === selectedCategory)?.label}
                 </span>
-                <span className={styles.categoryDropdownArrow}>
-                  {isCategoryDropdownOpen ? '▲' : '▼'}
+                <span className={`${styles.categoryDropdownArrow} ${isCategoryDropdownOpen ? styles.open : ''}`}>
                 </span>
               </button>
               

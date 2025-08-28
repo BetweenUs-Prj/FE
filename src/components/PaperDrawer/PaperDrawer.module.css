@@ -334,8 +334,7 @@
 .categoryDropdownButton {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #cbcbcb;
+  border: 1.5px solid #cbcbcb;
   border-radius: 8px;
   padding: 5px 10px;
   font-size: 14px;
@@ -360,15 +359,24 @@
 }
 
 .categoryDropdownArrow {
-  font-size: 12px;
-  color: #6c757d;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid #6c757d;
   transition: transform 0.3s ease;
+  margin-left: 4px;
+}
+
+.categoryDropdownArrow.open {
+  transform: rotate(180deg);
 }
 
 .categoryDropdownMenu {
   position: absolute;
   top: 100%;
-  border: 1px solid #c3c3c3;
+  background: rgb(238, 238, 238);
+  border: 1.5px solid #c3c3c3;
   border-radius: 5px;
   max-height: 300px;
   overflow-y: auto;
@@ -388,6 +396,7 @@
   border: 1px solid #b7b7b7;
   border-radius: 5px;
   font-size: 12px;
+  background: rgb(238, 238, 238);
   transition: all 0.3s ease;
 }
 
@@ -407,12 +416,12 @@
   gap: 12px;
   width: 100%;
   padding: 5px 13px;
-  background: white;
+  background: rgb(238, 238, 238);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
-  border-bottom: 1px solid #f8f9fa;
+  border-bottom: 1.5px solid #0f70bf5f;
 }
 
 .categoryDropdownItem:last-child {
