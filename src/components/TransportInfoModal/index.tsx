@@ -246,33 +246,109 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         // 교통수단별 상세 정보
         if (subPath.trafficType === 1) { // 대중교통
           const lane = subPath.lane?.[0];
-          step.line = lane?.busNo || lane?.subwayCode || '지하철';
+          let transportName = '대중교통';
+          let lineInfo = '';
+          
+          // 교통수단별 상세 정보
+          if (lane?.subwayCode) {
+            transportName = '지하철';
+            lineInfo = `${lane.subwayCode}호선`;
+          } else if (lane?.busNo) {
+            transportName = '버스';
+            lineInfo = `${lane.busNo}번`;
+          } else if (lane?.busType === 1) {
+            transportName = '마을버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 2) {
+            transportName = '간선버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 3) {
+            transportName = '지선버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 4) {
+            transportName = '순환버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 5) {
+            transportName = '광역버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 6) {
+            transportName = '인천버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 7) {
+            transportName = '경기버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 8) {
+            transportName = '시외버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 9) {
+            transportName = '공항버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          }
+          
+          step.line = lineInfo || transportName;
           step.station = subPath.startName || subPath.endName;
           step.direction = lane?.direction || '';
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            lane?.busNo || lane?.subwayCode || '지하철'
-          ];
+          
+          // 상세 정보 구성
+          const details = [];
+          if (subPath.startName && subPath.endName) {
+            details.push(`${subPath.startName} → ${subPath.endName}`);
+          }
+          if (lineInfo) {
+            details.push(lineInfo);
+          }
+          if (lane?.direction) {
+            details.push(`${lane.direction} 방향`);
+          }
+          if (subPath.stationCount) {
+            details.push(`${subPath.stationCount}개역`);
+          }
+          
+          step.details = details;
+          
         } else if (subPath.trafficType === 2) { // 자동차
           step.details = [
             `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
             '자동차'
           ];
-        } else { // 도보
+        } else if (subPath.trafficType === 3) { // 도보
           step.details = [
             `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
             '도보'
+          ];
+        } else if (subPath.trafficType === 4) { // 기차
+          const lane = subPath.lane?.[0];
+          step.line = lane?.busNo || '기차';
+          step.station = subPath.startName || subPath.endName;
+          step.direction = lane?.direction || '';
+          step.details = [
+            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
+            lane?.busNo || '기차'
           ];
         }
         
         routeSteps.push(step);
         
-        // 환승 정보 추출
+        // 환승 정보 추출 (대중교통일 때만)
         if (index > 0 && subPath.trafficType === 1) {
           const lane = subPath.lane?.[0];
+          let lineInfo = '';
+          
+          if (lane?.subwayCode) {
+            lineInfo = `${lane.subwayCode}호선`;
+          } else if (lane?.busNo) {
+            lineInfo = `${lane.busNo}번`;
+          } else if (lane?.busType) {
+            const busTypes = {
+              1: '마을버스', 2: '간선버스', 3: '지선버스', 4: '순환버스',
+              5: '광역버스', 6: '인천버스', 7: '경기버스', 8: '시외버스', 9: '공항버스'
+            };
+            lineInfo = `${busTypes[lane.busType as keyof typeof busTypes] || '버스'}${lane.busNo ? ` ${lane.busNo}번` : ''}`;
+          }
+          
           const transferInfo: TransferInfo = {
             station: subPath.startName || '',
-            line: lane?.busNo || lane?.subwayCode || '지하철',
+            line: lineInfo || '대중교통',
             direction: lane?.direction || '',
             time: `${Math.round(subPath.sectionTime / 60)}분`
           };
@@ -336,33 +412,109 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         // 교통수단별 상세 정보
         if (subPath.trafficType === 1) { // 대중교통
           const lane = subPath.lane?.[0];
-          step.line = lane?.busNo || lane?.subwayCode || '지하철';
+          let transportName = '대중교통';
+          let lineInfo = '';
+          
+          // 교통수단별 상세 정보
+          if (lane?.subwayCode) {
+            transportName = '지하철';
+            lineInfo = `${lane.subwayCode}호선`;
+          } else if (lane?.busNo) {
+            transportName = '버스';
+            lineInfo = `${lane.busNo}번`;
+          } else if (lane?.busType === 1) {
+            transportName = '마을버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 2) {
+            transportName = '간선버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 3) {
+            transportName = '지선버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 4) {
+            transportName = '순환버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 5) {
+            transportName = '광역버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 6) {
+            transportName = '인천버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 7) {
+            transportName = '경기버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 8) {
+            transportName = '시외버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          } else if (lane?.busType === 9) {
+            transportName = '공항버스';
+            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
+          }
+          
+          step.line = lineInfo || transportName;
           step.station = subPath.startName || subPath.endName;
           step.direction = lane?.direction || '';
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            lane?.busNo || lane?.subwayCode || '지하철'
-          ];
+          
+          // 상세 정보 구성
+          const details = [];
+          if (subPath.startName && subPath.endName) {
+            details.push(`${subPath.startName} → ${subPath.endName}`);
+          }
+          if (lineInfo) {
+            details.push(lineInfo);
+          }
+          if (lane?.direction) {
+            details.push(`${lane.direction} 방향`);
+          }
+          if (subPath.stationCount) {
+            details.push(`${subPath.stationCount}개역`);
+          }
+          
+          step.details = details;
+          
         } else if (subPath.trafficType === 2) { // 자동차
           step.details = [
             `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
             '자동차'
           ];
-        } else { // 도보
+        } else if (subPath.trafficType === 3) { // 도보
           step.details = [
             `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
             '도보'
+          ];
+        } else if (subPath.trafficType === 4) { // 기차
+          const lane = subPath.lane?.[0];
+          step.line = lane?.busNo || '기차';
+          step.station = subPath.startName || subPath.endName;
+          step.direction = lane?.direction || '';
+          step.details = [
+            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
+            lane?.busNo || '기차'
           ];
         }
         
         routeSteps.push(step);
         
-        // 환승 정보 추출
+        // 환승 정보 추출 (대중교통일 때만)
         if (index > 0 && subPath.trafficType === 1) {
           const lane = subPath.lane?.[0];
+          let lineInfo = '';
+          
+          if (lane?.subwayCode) {
+            lineInfo = `${lane.subwayCode}호선`;
+          } else if (lane?.busNo) {
+            lineInfo = `${lane.busNo}번`;
+          } else if (lane?.busType) {
+            const busTypes = {
+              1: '마을버스', 2: '간선버스', 3: '지선버스', 4: '순환버스',
+              5: '광역버스', 6: '인천버스', 7: '경기버스', 8: '시외버스', 9: '공항버스'
+            };
+            lineInfo = `${busTypes[lane.busType as keyof typeof busTypes] || '버스'}${lane.busNo ? ` ${lane.busNo}번` : ''}`;
+          }
+          
           const transferInfo: TransferInfo = {
             station: subPath.startName || '',
-            line: lane?.busNo || lane?.subwayCode || '지하철',
+            line: lineInfo || '대중교통',
             direction: lane?.direction || '',
             time: `${Math.round(subPath.sectionTime / 60)}분`
           };
@@ -722,10 +874,26 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // 교통수단 아이콘
-  const getTransportIcon = (mode: string) => {
+  const getTransportIcon = (mode: string, line?: string) => {
+    if (mode === 'transit' && line) {
+      if (line.includes('호선')) return '🚇';
+      if (line.includes('버스')) return '🚌';
+      if (line.includes('마을버스')) return '🚐';
+      if (line.includes('간선버스')) return '🚌';
+      if (line.includes('지선버스')) return '🚌';
+      if (line.includes('순환버스')) return '🔄';
+      if (line.includes('광역버스')) return '🚌';
+      if (line.includes('인천버스')) return '🚌';
+      if (line.includes('경기버스')) return '🚌';
+      if (line.includes('시외버스')) return '🚌';
+      if (line.includes('공항버스')) return '✈️';
+      return '🚇';
+    }
+    
     switch (mode) {
       case 'transit': return '🚇';
       case 'car': return '🚗';
+      case 'walk': return '🚶';
       default: return '🚇';
     }
   };
@@ -897,11 +1065,13 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                       <div className={styles.routeSteps}>
                         {route.routeSteps.map((step, stepIndex) => (
                           <div key={stepIndex} className={styles.routeStep}>
-                            <span className={styles.stepIcon}>{getTransportIcon(step.transportMode)}</span>
+                            <span className={styles.stepIcon}>{getTransportIcon(step.transportMode, step.line)}</span>
                             <div className={styles.stepInfo}>
                               <span className={styles.stepName}>
-                                {step.transportMode === 'transit' ? '대중교통' : '자동차'}
-                                {step.line && ` - ${step.line}`}
+                                {step.transportMode === 'transit' ? 
+                                  (step.line ? step.line : '대중교통') : 
+                                  step.transportMode === 'car' ? '자동차' : '도보'
+                                }
                               </span>
                               <div className={styles.stepMeta}>
                                 <span className={styles.stepDuration}>{step.duration}분</span>
@@ -915,6 +1085,16 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                                     {detail}
                                   </span>
                                 ))}
+                                {step.station && (
+                                  <span className={styles.stepDetail}>
+                                    📍 {step.station}
+                                  </span>
+                                )}
+                                {step.direction && (
+                                  <span className={styles.stepDetail}>
+                                    ➡️ {step.direction}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
