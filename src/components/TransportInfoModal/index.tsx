@@ -88,17 +88,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   // 상세 경로 표시 여부
   const [showDetailedRoutes, setShowDetailedRoutes] = useState(false);
   
-  // 하단 섹션 접힘 상태 관리
-  const [isTransportSectionCollapsed, setIsTransportSectionCollapsed] = useState(true);
-  const [isRoutesSectionCollapsed, setIsRoutesSectionCollapsed] = useState(true);
-  
-  // 추천장소 모드일 때 하단 섹션들을 접힌 상태로 설정
-  useEffect(() => {
-    if (isPlaceMode) {
-      setIsTransportSectionCollapsed(true);
-      setIsRoutesSectionCollapsed(true);
-    }
-  }, [isPlaceMode]);
+
   
   // 중복 요청 방지를 위한 ref
   const isGeneratingRef = useRef(false);
@@ -440,76 +430,48 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
           {/* 역 모드: 기능 영역만 표시 */}
           {!isPlaceMode && (
             <div className={styles.functionArea}>
-                {/* 만남 시간 설정 */}
-                <div className={styles.meetingTimeSection}>
-                  <h4>⏰ 만남 시간 설정</h4>
-                  <div className={styles.timeInput}>
-                    <input
-                      type="time"
-                      value={meetingTime}
-                      onChange={(e) => setMeetingTime(e.target.value)}
-                      className={styles.timePicker}
-                    />
-                    <button 
-                      onClick={handleRouteRecalculation}
-                      className={styles.refreshButton}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <div className={styles.spinner} style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
-                          계산 중...
-                        </>
-                      ) : (
-                        '경로 재계산'
-                      )}
-                    </button>
-                  </div>
+              {/* 만남 시간 설정 */}
+              <div className={styles.meetingTimeSection}>
+                <h4>⏰ 만남 시간</h4>
+                <div className={styles.timeInput}>
+                  <input
+                    type="time"
+                    value={meetingTime}
+                    onChange={(e) => setMeetingTime(e.target.value)}
+                    className={styles.timePicker}
+                  />
+                  <button 
+                    onClick={handleRouteRecalculation}
+                    className={styles.refreshButton}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? '계산 중...' : '재계산'}
+                  </button>
                 </div>
+              </div>
 
-                {/* 교통수단 카테고리 선택 */}
-                <div className={styles.transportModeSection}>
-                  <div className={styles.sectionHeader}>
-                    <h4>🚇 교통수단 선택</h4>
-                    <button
-                      className={styles.collapseButton}
-                      onClick={() => setIsTransportSectionCollapsed(!isTransportSectionCollapsed)}
-                    >
-                      {isTransportSectionCollapsed ? '⌄' : '⌃'}
-                    </button>
-                  </div>
-                  
-                  {!isTransportSectionCollapsed && (
-                    <div className={styles.transportButtons}>
-                      <button
-                        className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
-                        onClick={() => setSelectedTransportMode('transit')}
-                      >
-                        🚇 대중교통 (버스+지하철+도보)
-                      </button>
-                      <button
-                        className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
-                        onClick={() => setSelectedTransportMode('car')}
-                      >
-                        🚗 자동차
-                      </button>
-                    </div>
-                  )}
+              {/* 교통수단 선택 */}
+              <div className={styles.transportModeSection}>
+                <h4>🚇 교통수단</h4>
+                <div className={styles.transportButtons}>
+                  <button
+                    className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
+                    onClick={() => setSelectedTransportMode('transit')}
+                  >
+                    🚇 대중교통
+                  </button>
+                  <button
+                    className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
+                    onClick={() => setSelectedTransportMode('car')}
+                  >
+                    🚗 자동차
+                  </button>
                 </div>
+              </div>
 
-                {/* 경로 정보 */}
-                <div className={styles.routesSection}>
-                  <div className={styles.sectionHeader}>
-                    <h4>🚇 경로 정보</h4>
-                    <button
-                      className={styles.collapseButton}
-                      onClick={() => setIsRoutesSectionCollapsed(!isRoutesSectionCollapsed)}
-                    >
-                      {isRoutesSectionCollapsed ? '⌄' : '⌃'}
-                    </button>
-                  </div>
-                  
-                  {!isRoutesSectionCollapsed && (
+              {/* 경로 정보 */}
+              <div className={styles.routesSection}>
+                <h4>🚇 경로 정보</h4>
                   <>
                     {routes.length === 0 && (
                       <div className={styles.emptyState}>
@@ -647,12 +609,11 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                         </div>
                       </div>
                     ))}
-                                    </>
-                )}
+                  </>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
       </div>
     </div>
   );
