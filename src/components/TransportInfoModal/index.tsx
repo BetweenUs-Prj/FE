@@ -40,16 +40,6 @@ interface TransportRoute {
   lastTrainTime?: string;
   routeSteps?: RouteStep[];
   transferInfos?: TransferInfo[];
-  routeOptions?: Array<{
-    transportMode: 'transit' | 'car' | 'walk';
-    duration: number;
-    distance: number;
-    departureTime: string;
-    arrivalTime: string;
-    details: string[];
-    routeSteps?: RouteStep[];
-    transferInfos?: TransferInfo[];
-  }>;
 }
 
 interface TransportInfoModalProps {
@@ -62,6 +52,12 @@ interface TransportInfoModalProps {
   onMapRouteUpdate?: (routeData: any) => void;
   isPlaceMode?: boolean;
   placePosition?: { lat: number; lng: number };
+  placeInfo?: {
+    title: string;
+    category: string;
+    description?: string;
+    duration: string;
+  };
 }
 
 const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
@@ -73,24 +69,28 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   onRouteUpdate,
   onMapRouteUpdate,
   isPlaceMode = false,
-  placePosition
+  placePosition,
+  placeInfo
 }) => {
   const [routes, setRoutes] = useState<TransportRoute[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: window.innerWidth - 420, y: 20 });
   const [meetingTime, setMeetingTime] = useState('18:00');
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   
   // 교통수단 카테고리 선택 (대중교통, 자동차만)
   const [selectedTransportMode, setSelectedTransportMode] = useState<'transit' | 'car'>('transit');
   
-  // 개별 친구별 교통수단 선택 (대중교통, 자동차만)
-  const [individualTransportModes, setIndividualTransportModes] = useState<Record<number, 'transit' | 'car'>>({});
+  // 개별 친구별 교통수단 선택 (대중교통, 자동차만) - 현재 사용하지 않음
+  // const [individualTransportModes, setIndividualTransportModes] = useState<Record<number, 'transit' | 'car'>>({});
   
   // 상세 경로 표시 여부
   const [showDetailedRoutes, setShowDetailedRoutes] = useState(false);
+  
+  // 하단 섹션 접힘 상태 관리
+  const [isTransportSectionCollapsed, setIsTransportSectionCollapsed] = useState(true);
+  const [isRoutesSectionCollapsed, setIsRoutesSectionCollapsed] = useState(true);
   
   // 중복 요청 방지를 위한 ref
   const isGeneratingRef = useRef(false);
@@ -138,7 +138,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       
       lastGeneratedRef.current = currentKey;
     }
-  }, [isVisible]); // friends와 isPlaceMode를 의존성에서 제거
+  }, [isVisible]);
 
   // 거리 계산 함수
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -152,13 +152,6 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     return R * c;
   };
 
-  // 교통수단 결정 함수
-  const determineTransportMode = (distance: number): 'walk' | 'transit' | 'car' => {
-    if (distance <= 1.0) return 'walk';
-    if (distance <= 5.0) return 'transit';
-    return 'car';
-  };
-
   // 시간 계산 함수들
   const calculateDepartureTime = (arrivalTime: string, durationMinutes: number): string => {
     const [hours, minutes] = arrivalTime.split(':').map(Number);
@@ -168,16 +161,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     return `${departureHours.toString().padStart(2, '0')}:${departureMinutes.toString().padStart(2, '0')}`;
   };
 
-  const calculateArrivalTime = (departureTime: string, durationMinutes: number): string => {
-    const [hours, minutes] = departureTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + durationMinutes;
-    const arrivalHours = Math.floor(totalMinutes / 60);
-    const arrivalMinutes = totalMinutes % 60;
-    return `${arrivalHours.toString().padStart(2, '0')}:${arrivalMinutes.toString().padStart(2, '0')}`;
-  };
-
   const getLastTrainTime = (): string => {
-    // 지하철 막차 시간 (대략적인 시간)
     return '24:00';
   };
 
@@ -202,339 +186,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     return coords;
   };
 
-  // ODsay API 응답에서 상세 경로 정보 추출 함수
-  const extractOdsayRouteInfo = (odsayRoute: any) => {
-    console.log('extractOdsayRouteInfo 호출:', odsayRoute);
-    
-    const coords: { lat: number; lng: number }[] = [];
-    const routeSteps: RouteStep[] = [];
-    const transferInfos: TransferInfo[] = [];
-    
-    if (odsayRoute.subPath && odsayRoute.subPath.length > 0) {
-      odsayRoute.subPath.forEach((subPath: any, index: number) => {
-        // 좌표 추출
-        if (subPath.coords && subPath.coords.length > 0) {
-          subPath.coords.forEach((coord: any) => {
-            let lat: number, lng: number;
-            
-            if (typeof coord === 'object') {
-              lat = parseFloat(coord.lat || coord.y || coord[1] || coord.latitude);
-              lng = parseFloat(coord.lng || coord.x || coord[0] || coord.longitude);
-            } else if (Array.isArray(coord)) {
-              lat = parseFloat(coord[1] || coord[0]);
-              lng = parseFloat(coord[0] || coord[1]);
-            } else {
-              lat = parseFloat(coord);
-              lng = parseFloat(coord);
-            }
-            
-            if (!isNaN(lat) && !isNaN(lng)) {
-              coords.push({ lat, lng });
-            }
-          });
-        }
-        
-        // 경로 단계 정보 추출
-        const step: RouteStep = {
-          transportMode: subPath.trafficType === 1 ? 'transit' : 
-                        subPath.trafficType === 2 ? 'car' : 'walk',
-          duration: Math.round(subPath.sectionTime / 60),
-          distance: Math.round(subPath.distance / 1000 * 10) / 10,
-          details: []
-        };
-        
-        // 교통수단별 상세 정보
-        if (subPath.trafficType === 1) { // 대중교통
-          const lane = subPath.lane?.[0];
-          let transportName = '대중교통';
-          let lineInfo = '';
-          
-          // 교통수단별 상세 정보
-          if (lane?.subwayCode) {
-            transportName = '지하철';
-            lineInfo = `${lane.subwayCode}호선`;
-          } else if (lane?.busNo) {
-            transportName = '버스';
-            lineInfo = `${lane.busNo}번`;
-          } else if (lane?.busType === 1) {
-            transportName = '마을버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 2) {
-            transportName = '간선버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 3) {
-            transportName = '지선버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 4) {
-            transportName = '순환버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 5) {
-            transportName = '광역버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 6) {
-            transportName = '인천버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 7) {
-            transportName = '경기버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 8) {
-            transportName = '시외버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 9) {
-            transportName = '공항버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          }
-          
-          step.line = lineInfo || transportName;
-          step.station = subPath.startName || subPath.endName;
-          step.direction = lane?.direction || '';
-          
-          // 상세 정보 구성
-          const details = [];
-          if (subPath.startName && subPath.endName) {
-            details.push(`${subPath.startName} → ${subPath.endName}`);
-          }
-          if (lineInfo) {
-            details.push(lineInfo);
-          }
-          if (lane?.direction) {
-            details.push(`${lane.direction} 방향`);
-          }
-          if (subPath.stationCount) {
-            details.push(`${subPath.stationCount}개역`);
-          }
-          
-          step.details = details;
-          
-        } else if (subPath.trafficType === 2) { // 자동차
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            '자동차'
-          ];
-        } else if (subPath.trafficType === 3) { // 도보
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            '도보'
-          ];
-        } else if (subPath.trafficType === 4) { // 기차
-          const lane = subPath.lane?.[0];
-          step.line = lane?.busNo || '기차';
-          step.station = subPath.startName || subPath.endName;
-          step.direction = lane?.direction || '';
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            lane?.busNo || '기차'
-          ];
-        }
-        
-        routeSteps.push(step);
-        
-        // 환승 정보 추출 (대중교통일 때만)
-        if (index > 0 && subPath.trafficType === 1) {
-          const lane = subPath.lane?.[0];
-          let lineInfo = '';
-          
-          if (lane?.subwayCode) {
-            lineInfo = `${lane.subwayCode}호선`;
-          } else if (lane?.busNo) {
-            lineInfo = `${lane.busNo}번`;
-          } else if (lane?.busType) {
-            const busTypes = {
-              1: '마을버스', 2: '간선버스', 3: '지선버스', 4: '순환버스',
-              5: '광역버스', 6: '인천버스', 7: '경기버스', 8: '시외버스', 9: '공항버스'
-            };
-            lineInfo = `${busTypes[lane.busType as keyof typeof busTypes] || '버스'}${lane.busNo ? ` ${lane.busNo}번` : ''}`;
-          }
-          
-          const transferInfo: TransferInfo = {
-            station: subPath.startName || '',
-            line: lineInfo || '대중교통',
-            direction: lane?.direction || '',
-            time: `${Math.round(subPath.sectionTime / 60)}분`
-          };
-          transferInfos.push(transferInfo);
-        }
-      });
-    }
-    
-    // 좌표가 없으면 시작점과 끝점만 추가
-    if (coords.length === 0) {
-      coords.push({ lat: stationPosition.lat, lng: stationPosition.lng });
-      if (placePosition) {
-        coords.push({ lat: placePosition.lat, lng: placePosition.lng });
-      }
-    }
-    
-    return { coords, routeSteps, transferInfos };
-  };
-
-  // ODsay API 응답에서 친구 경로 상세 정보 추출 함수
-  const extractOdsayRouteInfoForFriend = (odsayRoute: any, friendPosition: { lat: number; lng: number }, stationPosition: { lat: number; lng: number }) => {
-    console.log('extractOdsayRouteInfoForFriend 호출:', odsayRoute);
-    
-    const coords: { lat: number; lng: number }[] = [];
-    const routeSteps: RouteStep[] = [];
-    const transferInfos: TransferInfo[] = [];
-    
-    if (odsayRoute.subPath && odsayRoute.subPath.length > 0) {
-      odsayRoute.subPath.forEach((subPath: any, index: number) => {
-        // 좌표 추출
-        if (subPath.coords && subPath.coords.length > 0) {
-          subPath.coords.forEach((coord: any) => {
-            let lat: number, lng: number;
-            
-            if (typeof coord === 'object') {
-              lat = parseFloat(coord.lat || coord.y || coord[1] || coord.latitude);
-              lng = parseFloat(coord.lng || coord.x || coord[0] || coord.longitude);
-            } else if (Array.isArray(coord)) {
-              lat = parseFloat(coord[1] || coord[0]);
-              lng = parseFloat(coord[0] || coord[1]);
-            } else {
-              lat = parseFloat(coord);
-              lng = parseFloat(coord);
-            }
-            
-            if (!isNaN(lat) && !isNaN(lng)) {
-              coords.push({ lat, lng });
-            }
-          });
-        }
-        
-        // 경로 단계 정보 추출
-        const step: RouteStep = {
-          transportMode: subPath.trafficType === 1 ? 'transit' : 
-                        subPath.trafficType === 2 ? 'car' : 'walk',
-          duration: Math.round(subPath.sectionTime / 60),
-          distance: Math.round(subPath.distance / 1000 * 10) / 10,
-          details: []
-        };
-        
-        // 교통수단별 상세 정보
-        if (subPath.trafficType === 1) { // 대중교통
-          const lane = subPath.lane?.[0];
-          let transportName = '대중교통';
-          let lineInfo = '';
-          
-          // 교통수단별 상세 정보
-          if (lane?.subwayCode) {
-            transportName = '지하철';
-            lineInfo = `${lane.subwayCode}호선`;
-          } else if (lane?.busNo) {
-            transportName = '버스';
-            lineInfo = `${lane.busNo}번`;
-          } else if (lane?.busType === 1) {
-            transportName = '마을버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 2) {
-            transportName = '간선버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 3) {
-            transportName = '지선버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 4) {
-            transportName = '순환버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 5) {
-            transportName = '광역버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 6) {
-            transportName = '인천버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 7) {
-            transportName = '경기버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 8) {
-            transportName = '시외버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          } else if (lane?.busType === 9) {
-            transportName = '공항버스';
-            lineInfo = lane.busNo ? `${lane.busNo}번` : '';
-          }
-          
-          step.line = lineInfo || transportName;
-          step.station = subPath.startName || subPath.endName;
-          step.direction = lane?.direction || '';
-          
-          // 상세 정보 구성
-          const details = [];
-          if (subPath.startName && subPath.endName) {
-            details.push(`${subPath.startName} → ${subPath.endName}`);
-          }
-          if (lineInfo) {
-            details.push(lineInfo);
-          }
-          if (lane?.direction) {
-            details.push(`${lane.direction} 방향`);
-          }
-          if (subPath.stationCount) {
-            details.push(`${subPath.stationCount}개역`);
-          }
-          
-          step.details = details;
-          
-        } else if (subPath.trafficType === 2) { // 자동차
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            '자동차'
-          ];
-        } else if (subPath.trafficType === 3) { // 도보
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            '도보'
-          ];
-        } else if (subPath.trafficType === 4) { // 기차
-          const lane = subPath.lane?.[0];
-          step.line = lane?.busNo || '기차';
-          step.station = subPath.startName || subPath.endName;
-          step.direction = lane?.direction || '';
-          step.details = [
-            `${subPath.startName || '출발지'} → ${subPath.endName || '도착지'}`,
-            lane?.busNo || '기차'
-          ];
-        }
-        
-        routeSteps.push(step);
-        
-        // 환승 정보 추출 (대중교통일 때만)
-        if (index > 0 && subPath.trafficType === 1) {
-          const lane = subPath.lane?.[0];
-          let lineInfo = '';
-          
-          if (lane?.subwayCode) {
-            lineInfo = `${lane.subwayCode}호선`;
-          } else if (lane?.busNo) {
-            lineInfo = `${lane.busNo}번`;
-          } else if (lane?.busType) {
-            const busTypes = {
-              1: '마을버스', 2: '간선버스', 3: '지선버스', 4: '순환버스',
-              5: '광역버스', 6: '인천버스', 7: '경기버스', 8: '시외버스', 9: '공항버스'
-            };
-            lineInfo = `${busTypes[lane.busType as keyof typeof busTypes] || '버스'}${lane.busNo ? ` ${lane.busNo}번` : ''}`;
-          }
-          
-          const transferInfo: TransferInfo = {
-            station: subPath.startName || '',
-            line: lineInfo || '대중교통',
-            direction: lane?.direction || '',
-            time: `${Math.round(subPath.sectionTime / 60)}분`
-          };
-          transferInfos.push(transferInfo);
-        }
-      });
-    }
-    
-    // 좌표가 없으면 시작점과 끝점만 추가
-    if (coords.length === 0) {
-      coords.push({ lat: friendPosition.lat, lng: friendPosition.lng });
-      coords.push({ lat: stationPosition.lat, lng: stationPosition.lng });
-    }
-    
-    return { coords, routeSteps, transferInfos };
-  };
-
-  // 추천장소 경로 생성 (ODsay API 사용)
+  // 추천장소 경로 생성 (시뮬레이션 모드)
   const generatePlaceRoutes = async () => {
-    if (isGeneratingRef.current) return; // 중복 실행 방지
+    if (isGeneratingRef.current) return;
     
     console.log('generatePlaceRoutes 호출됨:', { placePosition, stationPosition, selectedTransportMode });
     if (!placePosition) return;
@@ -543,130 +197,21 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     setIsLoading(true);
     
     try {
-      const ODSAY_API_KEY = '5nKwyoYj9RBYlD6OSMG7Aw';
-      
-      // 교통수단에 따른 API 파라미터 설정
-      let searchPathType = '1'; // 기본값: 대중교통
-      let sopt = '1'; // 최단시간 우선
-      
-      if (selectedTransportMode === 'car') {
-        searchPathType = '2'; // 자동차
-        sopt = '1'; // 최단시간 우선
-      } else {
-        // 대중교통 (버스+지하철+도보 조합 고려)
-        searchPathType = '1';
-        sopt = '1'; // 최단시간 우선
-      }
-      
-      // ODsay API 호출
-      const params = new URLSearchParams({
-        apiKey: ODSAY_API_KEY,
-        SX: stationPosition.lng.toString(),
-        SY: stationPosition.lat.toString(),
-        EX: placePosition.lng.toString(),
-        EY: placePosition.lat.toString(),
-        Sopt: sopt,
-        SearchPathType: searchPathType,
-        SearchType: '1', // 실시간
-        output: 'json'
-      });
-      
-      const response = await fetch(`https://api.odsay.com/v1/api/searchPubTransPathT?${params}`);
-      const data = await response.json();
-      
-      console.log('ODsay API 응답:', data);
-      
-      if (data.result && data.result.path && data.result.path.length > 0) {
-        const odsayRoute = data.result.path[0];
-        const routeInfo = odsayRoute.info;
-        
-        const duration = Math.round(routeInfo.totalTime / 60);
-        const departureTime = calculateDepartureTime(meetingTime, duration);
-        const arrivalTime = meetingTime;
-        
-        const { coords, routeSteps, transferInfos } = extractOdsayRouteInfo(odsayRoute);
-        
-        // 교통수단에 따른 transportMode 설정
-        let transportMode: 'transit' | 'car' = selectedTransportMode;
-        
-        const route: TransportRoute = {
-          friendId: 0,
-          friendName: `${stationName} → 추천장소`,
-          transportMode,
-          duration,
-          distance: Math.round(routeInfo.totalDistance / 1000 * 10) / 10, // km 단위로 변환
-          details: [stationName, '추천장소'],
-          coords,
-          departureTime,
-          arrivalTime,
-          lastTrainTime: transportMode === 'transit' ? getLastTrainTime() : undefined,
-          routeSteps,
-          transferInfos,
-          routeOptions: [
-            {
-              transportMode,
-              duration,
-              distance: Math.round(routeInfo.totalDistance / 1000 * 10) / 10,
-              departureTime,
-              arrivalTime,
-              details: [stationName, '추천장소'],
-              routeSteps,
-              transferInfos
-            }
-          ]
-        };
-        
-        console.log('추천장소 경로 설정 (ODsay 성공):', route);
-        setRoutes([route]);
-        updateMapRoutes([route]);
-      } else {
-        console.log('ODsay API 응답에 경로 데이터가 없음:', data);
-        // ODsay API 실패 시 시뮬레이션 데이터 사용
-        const distance = calculateDistance(
-          stationPosition.lat, stationPosition.lng,
-          placePosition.lat, placePosition.lng
-        );
-        
-        const duration = Math.round(distance * (selectedTransportMode === 'transit' ? 3 : 2));
-        
-        // 시뮬레이션용 상세 경로 생성
-        const routeSteps: RouteStep[] = [{
-          transportMode: selectedTransportMode,
-          duration,
-          distance: Math.round(distance * 10) / 10,
-          details: [stationName, '추천장소']
-        }];
-        
-        const route: TransportRoute = {
-          friendId: 0,
-          friendName: `${stationName} → 추천장소`,
-          transportMode: selectedTransportMode,
-          duration,
-          distance: Math.round(distance * 10) / 10,
-          details: [stationName, '추천장소'],
-          coords: generateRouteCoords(stationPosition, placePosition),
-          routeSteps,
-          transferInfos: selectedTransportMode === 'transit' ? [{
-            station: stationName,
-            line: '지하철',
-            direction: '추천장소 방향',
-            time: `${duration}분`
-          }] : []
-        };
-        
-        console.log('추천장소 경로 설정 (시뮬레이션):', route);
-        setRoutes([route]);
-        updateMapRoutes([route]);
-      }
-    } catch (error) {
-      console.error('ODsay API 오류:', error);
-      // 오류 시 시뮬레이션 데이터 사용
       const distance = calculateDistance(
         stationPosition.lat, stationPosition.lng,
         placePosition.lat, placePosition.lng
       );
       
       const duration = Math.round(distance * (selectedTransportMode === 'transit' ? 3 : 2));
+      const departureTime = calculateDepartureTime(meetingTime, duration);
+      
+      // 시뮬레이션용 상세 경로 생성
+      const routeSteps: RouteStep[] = [{
+        transportMode: selectedTransportMode,
+        duration,
+        distance: Math.round(distance * 10) / 10,
+        details: [stationName, '추천장소']
+      }];
       
       const route: TransportRoute = {
         friendId: 0,
@@ -675,9 +220,20 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         duration,
         distance: Math.round(distance * 10) / 10,
         details: [stationName, '추천장소'],
-        coords: generateRouteCoords(stationPosition, placePosition)
+        coords: generateRouteCoords(stationPosition, placePosition),
+        departureTime,
+        arrivalTime: meetingTime,
+        lastTrainTime: selectedTransportMode === 'transit' ? getLastTrainTime() : undefined,
+        routeSteps,
+        transferInfos: selectedTransportMode === 'transit' ? [{
+          station: stationName,
+          line: '지하철',
+          direction: '추천장소 방향',
+          time: `${duration}분`
+        }] : []
       };
       
+      console.log('추천장소 경로 설정 (시뮬레이션):', route);
       setRoutes([route]);
       updateMapRoutes([route]);
     } finally {
@@ -686,9 +242,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     }
   };
 
-  // 친구들 경로 생성 (ODsay API 사용)
+  // 친구들 경로 생성 (시뮬레이션 모드)
   const generateFriendRoutes = async () => {
-    if (isGeneratingRef.current) return; // 중복 실행 방지
+    if (isGeneratingRef.current) return;
     
     console.log('generateFriendRoutes 호출됨:', { friendsCount: friends.length });
     
@@ -696,96 +252,10 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     setIsLoading(true);
     
     try {
-      const friendRoutesPromises = friends.map(async (friend) => {
-        // 개별 친구의 교통수단 선택 확인
-        const friendTransportMode = individualTransportModes[friend.id] || selectedTransportMode;
-        
-        try {
-          const ODSAY_API_KEY = '5nKwyoYj9RBYlD6OSMG7Aw';
-          
-          // 교통수단에 따른 API 파라미터 설정
-          let searchPathType = '1'; // 기본값: 대중교통
-          let sopt = '1'; // 최단시간 우선
-          
-          if (friendTransportMode === 'car') {
-            searchPathType = '2'; // 자동차
-            sopt = '1'; // 최단시간 우선
-          } else {
-            // 대중교통 (버스+지하철+도보 조합 고려)
-            searchPathType = '1';
-            sopt = '1'; // 최단시간 우선
-          }
-          
-          // ODsay API 호출
-          const params = new URLSearchParams({
-            apiKey: ODSAY_API_KEY,
-            SX: friend.position.lng.toString(),
-            SY: friend.position.lat.toString(),
-            EX: stationPosition.lng.toString(),
-            EY: stationPosition.lat.toString(),
-            Sopt: sopt,
-            SearchPathType: searchPathType,
-            SearchType: '1', // 실시간
-            output: 'json'
-          });
-          
-          const response = await fetch(`https://api.odsay.com/v1/api/searchPubTransPathT?${params}`);
-          const data = await response.json();
-          
-          console.log(`ODsay API 응답 (${friend.name}):`, data);
-          
-          if (data.result && data.result.path && data.result.path.length > 0) {
-            const odsayRoute = data.result.path[0];
-            const routeInfo = odsayRoute.info;
-            
-            const duration = Math.round(routeInfo.totalTime / 60);
-            const departureTime = calculateDepartureTime(meetingTime, duration);
-            const arrivalTime = meetingTime;
-            
-            const { coords, routeSteps, transferInfos } = extractOdsayRouteInfoForFriend(odsayRoute, friend.position, stationPosition);
-            
-            // 교통수단에 따른 transportMode 설정
-            let transportMode: 'transit' | 'car' = friendTransportMode;
-            
-            return {
-              friendId: friend.id,
-              friendName: friend.name,
-              transportMode,
-              duration,
-              distance: Math.round(routeInfo.totalDistance / 1000 * 10) / 10, // km 단위로 변환
-              details: [friend.name, stationName],
-              coords,
-              departureTime,
-              arrivalTime,
-              lastTrainTime: transportMode === 'transit' ? getLastTrainTime() : undefined,
-              routeSteps,
-              transferInfos,
-              routeOptions: [
-                {
-                  transportMode,
-                  duration,
-                  distance: Math.round(routeInfo.totalDistance / 1000 * 10) / 10,
-                  departureTime,
-                  arrivalTime,
-                  details: [friend.name, stationName],
-                  routeSteps,
-                  transferInfos
-                }
-              ]
-            };
-                  } else {
-          console.log(`ODsay API 응답에 경로 데이터가 없음 (${friend.name}):`, data);
-          // ODsay API 실패 시 시뮬레이션 데이터 사용
-          return generateSimulatedRoute(friend, friendTransportMode);
-        }
-        } catch (error) {
-          console.error(`ODsay API 오류 (${friend.name}):`, error);
-          // 오류 시 시뮬레이션 데이터 사용
-          return generateSimulatedRoute(friend, friendTransportMode);
-        }
-      });
+          const friendRoutes = friends.map((friend) => {
+      return generateSimulatedRoute(friend, selectedTransportMode);
+    });
       
-      const friendRoutes = await Promise.all(friendRoutesPromises);
       setRoutes(friendRoutes);
       updateMapRoutes(friendRoutes);
     } finally {
@@ -794,7 +264,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     }
   };
 
-  // 시뮬레이션 경로 생성 (fallback용)
+  // 시뮬레이션 경로 생성
   const generateSimulatedRoute = (friend: Friend, transportMode: 'transit' | 'car' = 'transit') => {
     const distance = calculateDistance(
       friend.position.lat, friend.position.lng,
@@ -802,6 +272,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     );
     
     const duration = Math.round(distance * (transportMode === 'transit' ? 3 : 2));
+    const departureTime = calculateDepartureTime(meetingTime, duration);
     
     // 시뮬레이션용 상세 경로 생성
     const routeSteps: RouteStep[] = [{
@@ -819,6 +290,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       distance: Math.round(distance * 10) / 10,
       details: [friend.name, stationName],
       coords: generateRouteCoords(friend.position, stationPosition),
+      departureTime,
+      arrivalTime: meetingTime,
+      lastTrainTime: transportMode === 'transit' ? getLastTrainTime() : undefined,
       routeSteps,
       transferInfos: transportMode === 'transit' ? [{
         station: friend.name,
@@ -878,15 +352,6 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     if (mode === 'transit' && line) {
       if (line.includes('호선')) return '🚇';
       if (line.includes('버스')) return '🚌';
-      if (line.includes('마을버스')) return '🚐';
-      if (line.includes('간선버스')) return '🚌';
-      if (line.includes('지선버스')) return '🚌';
-      if (line.includes('순환버스')) return '🔄';
-      if (line.includes('광역버스')) return '🚌';
-      if (line.includes('인천버스')) return '🚌';
-      if (line.includes('경기버스')) return '🚌';
-      if (line.includes('시외버스')) return '🚌';
-      if (line.includes('공항버스')) return '✈️';
       return '🚇';
     }
     
@@ -903,27 +368,20 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     if (isVisible && routes.length > 0) {
       handleRouteRecalculation();
     }
-  }, [selectedTransportMode, individualTransportModes]);
+  }, [selectedTransportMode]);
 
   // 경로 재계산 핸들러
   const handleRouteRecalculation = useCallback(async () => {
-    if (isLoading || isGeneratingRef.current) return; // 이미 로딩 중이면 무시
+    if (isLoading || isGeneratingRef.current) return;
     
     if (isPlaceMode) {
       await generatePlaceRoutes();
     } else {
       await generateFriendRoutes();
     }
-  }, [isLoading, isPlaceMode, selectedTransportMode, individualTransportModes]); // 의존성 추가
+  }, [isLoading, isPlaceMode, selectedTransportMode]);
 
   if (!isVisible) return null;
-
-  console.log('TransportInfoModal 렌더링:', {
-    isVisible,
-    position,
-    routes: routes.length,
-    stationName
-  });
 
   return (
     <div 
@@ -936,7 +394,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       <div className={styles.modal}>
         {/* 헤더 */}
         <div className={styles.header} onMouseDown={handleMouseDown}>
-          <h3 className={styles.title}>🚇 {stationName} 교통 정보</h3>
+          <h3 className={styles.title}>
+            {isPlaceMode ? `📍 ${placeInfo?.title || '추천장소'}` : `🚇 ${stationName} 교통 정보`}
+          </h3>
           <button className={styles.closeButton} onClick={onClose}>
             ✕
           </button>
@@ -944,6 +404,25 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
 
         {/* 컨텐츠 */}
         <div className={styles.content}>
+          {/* 장소 정보 (PlaceMode일 때만 표시) */}
+          {isPlaceMode && placeInfo && (
+            <div className={styles.placeInfoSection}>
+              <h4>📍 장소 정보</h4>
+              <div className={styles.placeCard}>
+                <div className={styles.placeHeader}>
+                  <h5>{placeInfo.title}</h5>
+                  <span className={styles.placeCategory}>{placeInfo.category}</span>
+                </div>
+                {placeInfo.description && (
+                  <p className={styles.placeDescription}>{placeInfo.description}</p>
+                )}
+                <div className={styles.placeMeta}>
+                  <span>⏱️ {placeInfo.duration}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 만남 시간 설정 */}
           <div className={styles.meetingTimeSection}>
             <h4>⏰ 만남 시간 설정</h4>
@@ -973,163 +452,186 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
 
           {/* 교통수단 카테고리 선택 */}
           <div className={styles.transportModeSection}>
-            <h4>🚇 교통수단 선택</h4>
-            <div className={styles.transportButtons}>
+            <div className={styles.sectionHeader}>
+              <h4>🚇 교통수단 선택</h4>
               <button
-                className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
-                onClick={() => setSelectedTransportMode('transit')}
+                className={styles.collapseButton}
+                onClick={() => setIsTransportSectionCollapsed(!isTransportSectionCollapsed)}
               >
-                🚇 대중교통 (버스+지하철+도보)
-              </button>
-              <button
-                className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
-                onClick={() => setSelectedTransportMode('car')}
-              >
-                🚗 자동차
+                {isTransportSectionCollapsed ? '⌄' : '⌃'}
               </button>
             </div>
+            
+            {!isTransportSectionCollapsed && (
+              <div className={styles.transportButtons}>
+                <button
+                  className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
+                  onClick={() => setSelectedTransportMode('transit')}
+                >
+                  🚇 대중교통 (버스+지하철+도보)
+                </button>
+                <button
+                  className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
+                  onClick={() => setSelectedTransportMode('car')}
+                >
+                  🚗 자동차
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 경로 정보 */}
           <div className={styles.routesSection}>
-            <h4>🚇 경로 정보</h4>
+            <div className={styles.sectionHeader}>
+              <h4>🚇 경로 정보</h4>
+              <button
+                className={styles.collapseButton}
+                onClick={() => setIsRoutesSectionCollapsed(!isRoutesSectionCollapsed)}
+              >
+                {isRoutesSectionCollapsed ? '⌄' : '⌃'}
+              </button>
+            </div>
             
-            {routes.length === 0 && (
-              <div className={styles.emptyState}>
-                <p>경로 정보가 없습니다</p>
-              </div>
-            )}
-            
-            {routes.map((route, routeIndex) => (
-              <div key={route.friendId} className={styles.routeCard}>
-                <div className={styles.routeHeader}>
-                  <h5>{route.friendName}</h5>
-                  <div className={styles.routeSummary}>
-                    <span>⏱️ {route.duration}분</span>
-                    <span>📏 {route.distance}km</span>
-                  </div>
-                </div>
-                
-                {/* 출발/도착 시간 정보 */}
-                {route.departureTime && route.arrivalTime && (
-                  <div className={styles.timeInfo}>
-                    <div className={styles.timeRow}>
-                      <span className={styles.timeLabel}>출발:</span>
-                      <span className={styles.timeValue}>{route.departureTime}</span>
-                    </div>
-                    <div className={styles.timeRow}>
-                      <span className={styles.timeLabel}>도착:</span>
-                      <span className={styles.timeValue}>{route.arrivalTime}</span>
-                    </div>
+            {!isRoutesSectionCollapsed && (
+              <>
+                {routes.length === 0 && (
+                  <div className={styles.emptyState}>
+                    <p>경로 정보가 없습니다</p>
                   </div>
                 )}
                 
-                {/* 막차 정보 */}
-                {route.lastTrainTime && (
-                  <div className={styles.lastTrainInfo}>
-                    <span className={styles.lastTrainLabel}>🚇 막차:</span>
-                    <span className={styles.lastTrainTime}>{route.lastTrainTime}</span>
-                  </div>
-                )}
-
-                {/* 환승 정보 */}
-                {route.transferInfos && route.transferInfos.length > 0 && (
-                  <div className={styles.transferSection}>
-                    <h6>🔄 환승 정보</h6>
-                    {route.transferInfos.map((transfer, index) => (
-                      <div key={index} className={styles.transferInfo}>
-                        <div className={styles.transferStation}>
-                          <strong>{transfer.station}</strong>
+                {routes.map((route) => (
+                  <div key={route.friendId} className={styles.routeCard}>
+                    <div className={styles.routeHeader}>
+                      <h5>{route.friendName}</h5>
+                      <div className={styles.routeSummary}>
+                        <span>⏱️ {route.duration}분</span>
+                        <span>📏 {route.distance}km</span>
+                      </div>
+                    </div>
+                    
+                    {/* 출발/도착 시간 정보 */}
+                    {route.departureTime && route.arrivalTime && (
+                      <div className={styles.timeInfo}>
+                        <div className={styles.timeRow}>
+                          <span className={styles.timeLabel}>출발:</span>
+                          <span className={styles.timeValue}>{route.departureTime}</span>
                         </div>
-                        <div className={styles.transferDetails}>
-                          <span>{transfer.line}</span>
-                          <span>{transfer.direction}</span>
-                          <span>{transfer.time}</span>
+                        <div className={styles.timeRow}>
+                          <span className={styles.timeLabel}>도착:</span>
+                          <span className={styles.timeValue}>{route.arrivalTime}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* 상세 경로 토글 버튼 */}
-                {route.routeSteps && route.routeSteps.length > 0 && (
-                  <div className={styles.detailedRouteSection}>
-                    <button
-                      className={styles.toggleDetailedRoute}
-                      onClick={() => setShowDetailedRoutes(!showDetailedRoutes)}
-                    >
-                      {showDetailedRoutes ? '▼' : '▶'} 상세 경로 보기
-                    </button>
+                    )}
                     
-                    {showDetailedRoutes && (
-                      <div className={styles.routeSteps}>
-                        {route.routeSteps.map((step, stepIndex) => (
-                          <div key={stepIndex} className={styles.routeStep}>
-                            <span className={styles.stepIcon}>{getTransportIcon(step.transportMode, step.line)}</span>
-                            <div className={styles.stepInfo}>
-                              <span className={styles.stepName}>
-                                {step.transportMode === 'transit' ? 
-                                  (step.line ? step.line : '대중교통') : 
-                                  step.transportMode === 'car' ? '자동차' : '도보'
-                                }
-                              </span>
-                              <div className={styles.stepMeta}>
-                                <span className={styles.stepDuration}>{step.duration}분</span>
-                                <span className={styles.stepSeparator}>•</span>
-                                <span className={styles.stepDistance}>{step.distance}km</span>
-                              </div>
-                              
-                              <div className={styles.stepDetails}>
-                                {step.details.map((detail, index) => (
-                                  <span key={index} className={styles.stepDetail}>
-                                    {detail}
-                                  </span>
-                                ))}
-                                {step.station && (
-                                  <span className={styles.stepDetail}>
-                                    📍 {step.station}
-                                  </span>
-                                )}
-                                {step.direction && (
-                                  <span className={styles.stepDetail}>
-                                    ➡️ {step.direction}
-                                  </span>
-                                )}
-                              </div>
+                    {/* 막차 정보 */}
+                    {route.lastTrainTime && (
+                      <div className={styles.lastTrainInfo}>
+                        <span className={styles.lastTrainLabel}>🚇 막차:</span>
+                        <span className={styles.lastTrainTime}>{route.lastTrainTime}</span>
+                      </div>
+                    )}
+
+                    {/* 환승 정보 */}
+                    {route.transferInfos && route.transferInfos.length > 0 && (
+                      <div className={styles.transferSection}>
+                        <h6>🔄 환승 정보</h6>
+                        {route.transferInfos.map((transfer, index) => (
+                          <div key={index} className={styles.transferInfo}>
+                            <div className={styles.transferStation}>
+                              <strong>{transfer.station}</strong>
+                            </div>
+                            <div className={styles.transferDetails}>
+                              <span>{transfer.line}</span>
+                              <span>{transfer.direction}</span>
+                              <span>{transfer.time}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
-                  </div>
-                )}
-                
-                {/* 기본 경로 요약 */}
-                <div className={styles.routeDetails}>
-                  <div className={styles.routeStep}>
-                    <span className={styles.stepIcon}>{getTransportIcon(route.transportMode)}</span>
-                    <div className={styles.stepInfo}>
-                      <span className={styles.stepName}>
-                        {route.transportMode === 'transit' ? '대중교통' : '자동차'}
-                      </span>
-                      <div className={styles.stepMeta}>
-                        <span className={styles.stepDuration}>{route.duration}분</span>
-                        <span className={styles.stepSeparator}>•</span>
-                        <span className={styles.stepDistance}>{route.distance}km</span>
+                    
+                    {/* 상세 경로 토글 버튼 */}
+                    {route.routeSteps && route.routeSteps.length > 0 && (
+                      <div className={styles.detailedRouteSection}>
+                        <button
+                          className={styles.toggleDetailedRoute}
+                          onClick={() => setShowDetailedRoutes(!showDetailedRoutes)}
+                        >
+                          {showDetailedRoutes ? '▼' : '▶'} 상세 경로 보기
+                        </button>
+                        
+                        {showDetailedRoutes && (
+                          <div className={styles.routeSteps}>
+                            {route.routeSteps.map((step, stepIndex) => (
+                              <div key={stepIndex} className={styles.routeStep}>
+                                <span className={styles.stepIcon}>{getTransportIcon(step.transportMode, step.line)}</span>
+                                <div className={styles.stepInfo}>
+                                  <span className={styles.stepName}>
+                                    {step.transportMode === 'transit' ? 
+                                      (step.line ? step.line : '대중교통') : 
+                                      step.transportMode === 'car' ? '자동차' : '도보'
+                                    }
+                                  </span>
+                                  <div className={styles.stepMeta}>
+                                    <span className={styles.stepDuration}>{step.duration}분</span>
+                                    <span className={styles.stepSeparator}>•</span>
+                                    <span className={styles.stepDistance}>{step.distance}km</span>
+                                  </div>
+                                  
+                                  <div className={styles.stepDetails}>
+                                    {step.details.map((detail, index) => (
+                                      <span key={index} className={styles.stepDetail}>
+                                        {detail}
+                                      </span>
+                                    ))}
+                                    {step.station && (
+                                      <span className={styles.stepDetail}>
+                                        📍 {step.station}
+                                      </span>
+                                    )}
+                                    {step.direction && (
+                                      <span className={styles.stepDetail}>
+                                        ➡️ {step.direction}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      
-                      <div className={styles.stepDetails}>
-                        {route.details.map((detail, index) => (
-                          <span key={index} className={styles.stepDetail}>
-                            {detail}
+                    )}
+                    
+                    {/* 기본 경로 요약 */}
+                    <div className={styles.routeDetails}>
+                      <div className={styles.routeStep}>
+                        <span className={styles.stepIcon}>{getTransportIcon(route.transportMode)}</span>
+                        <div className={styles.stepInfo}>
+                          <span className={styles.stepName}>
+                            {route.transportMode === 'transit' ? '대중교통' : '자동차'}
                           </span>
-                        ))}
+                          <div className={styles.stepMeta}>
+                            <span className={styles.stepDuration}>{route.duration}분</span>
+                            <span className={styles.stepSeparator}>•</span>
+                            <span className={styles.stepDistance}>{route.distance}km</span>
+                          </div>
+                          
+                          <div className={styles.stepDetails}>
+                            {route.details.map((detail, index) => (
+                              <span key={index} className={styles.stepDetail}>
+                                {detail}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
+              </>
+            )}
           </div>
         </div>
       </div>

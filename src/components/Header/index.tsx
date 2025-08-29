@@ -65,16 +65,16 @@ const Header: React.FC = () => {
     setShowProfileMenu(false);
   };
 
-  const handleMenuClick = (menuName: string) => {
-    if (!isLoggedIn) {
-      showToast('회원 전용 기능입니다. 로그인 후 이용해주세요.', 'warning');
-      return;
-    }
-    
-    // TODO: 각 메뉴별 팝업 구현
-    showToast(`${menuName} 기능이 곧 추가될 예정입니다!`, 'info');
-    setShowProfileMenu(false);
-  };
+  // const handleMenuClick = (menuName: string) => {
+  //   if (!isLoggedIn) {
+  //     showToast('회원 전용 기능입니다. 로그인 후 이용해주세요.', 'warning');
+  //     return;
+  //   }
+  //   
+  //   // TODO: 각 메뉴별 팝업 구현
+  //   showToast(`${menuName} 기능이 곧 추가될 예정입니다!`, 'info');
+  //   setShowProfileMenu(false);
+  // };
 
   // 외부 클릭 감지
   React.useEffect(() => {

@@ -21,7 +21,6 @@ interface MiddlePlaceRecommendCardProps {
 const MiddlePlaceRecommendCard: React.FC<MiddlePlaceRecommendCardProps> = ({
   isVisible,
   onCardClick,
-  onCardHover,
   onResetSelection,
   cards,
   currentView,

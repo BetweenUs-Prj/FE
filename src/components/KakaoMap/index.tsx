@@ -4,13 +4,9 @@ import { useKakaoMap } from '../../hooks/useKakaoMap';
 
 interface MarkerInfo {
   id: string;
-  position: {
-    lat: number;
-    lng: number;
-  };
-  title: string;
-  type?: 'station' | 'place' | 'friend';
-  isHighlighted?: boolean;
+  position: { lat: number; lng: number };
+  title?: string;
+  content?: string;
   isVisible?: boolean;
 }
 
@@ -39,7 +35,7 @@ interface KakaoMapProps {
   
   // 마커 관련 props
   markers?: MarkerInfo[];     // 표시할 마커 목록
-  onMarkerClick?: (markerId: string) => void; // 마커 클릭 시 호출되는 함수
+  onMarkerClick?: (marker: MarkerInfo) => void; // 마커 클릭 시 호출되는 함수
   
   // 경로 관련 props
   routes?: RouteInfo[];       // 표시할 경로 목록

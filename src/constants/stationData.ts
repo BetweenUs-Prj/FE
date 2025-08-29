@@ -21,6 +21,7 @@ export interface StationWithPlaces {
   places: PlaceInfo[];
 }
 
+// TODO: 백엔드 API로 받을 예정 - 현재는 하드코딩된 데이터 유지
 // 주요 서울 지하철역 정보 데이터 (6개 역)
 export const STATION_DATA: StationInfo[] = [
   { id: 1, name: "강남역", lat: 37.497942, lng: 127.027621, duration: "15분", line: "2호선" },
@@ -31,6 +32,7 @@ export const STATION_DATA: StationInfo[] = [
   { id: 6, name: "시청역", lat: 37.565598, lng: 126.976812, duration: "10분", line: "1호선" }
 ];
 
+// TODO: 백엔드 API로 받을 예정 - 현재는 하드코딩된 데이터 유지
 // 역별 추천 장소 데이터 (각 역당 6개씩) - 실제 출구 기준 도보 거리
 export const STATION_PLACES_DATA: Record<number, PlaceInfo[]> = {
   1: [ // 강남역
@@ -83,6 +85,7 @@ export const STATION_PLACES_DATA: Record<number, PlaceInfo[]> = {
   ]
 };
 
+// TODO: 백엔드 API 연동 시 이 함수들을 API 호출로 교체
 // 역 정보 조회 함수
 export const getStationById = (id: number): StationInfo | undefined => {
   return STATION_DATA.find(station => station.id === id);
