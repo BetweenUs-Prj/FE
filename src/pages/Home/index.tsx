@@ -170,7 +170,10 @@ const Home = () => {
       
       <TransportInfoModal
         isVisible={showTransportModal}
-        onClose={() => setShowTransportModal(false)}
+        onClose={() => {
+          console.log('TransportInfoModal 닫기');
+          setShowTransportModal(false);
+        }}
         stationName={selectedStationInfo?.name || ''}
         stationPosition={selectedStationInfo?.position || { lat: 0, lng: 0 }}
         friends={friends.map(friend => ({

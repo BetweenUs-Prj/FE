@@ -90,6 +90,34 @@
   color: white;
 }
 
+.headerButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto !important;
+}
+
+.collapseAllButton {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+}
+
+.collapseAllButton:hover {
+  background: #4f46e5;
+  color: white;
+}
+
 .content {
   flex: 1;
   overflow-y: auto;
@@ -98,7 +126,20 @@
   padding-bottom: 32px;
   scrollbar-width: thin;
   scrollbar-color: #d1d5db #f9fafb;
-  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mainArea {
+  flex-shrink: 0;
+}
+
+.functionArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .content::-webkit-scrollbar {

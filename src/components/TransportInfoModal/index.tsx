@@ -92,6 +92,14 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   const [isTransportSectionCollapsed, setIsTransportSectionCollapsed] = useState(true);
   const [isRoutesSectionCollapsed, setIsRoutesSectionCollapsed] = useState(true);
   
+  // 추천장소 모드일 때 하단 섹션들을 접힌 상태로 설정
+  useEffect(() => {
+    if (isPlaceMode) {
+      setIsTransportSectionCollapsed(true);
+      setIsRoutesSectionCollapsed(true);
+    }
+  }, [isPlaceMode]);
+  
   // 중복 요청 방지를 위한 ref
   const isGeneratingRef = useRef(false);
   const lastGeneratedRef = useRef<string>('');
@@ -131,10 +139,11 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       if (isPlaceMode) {
         console.log('추천장소 경로 생성 시작');
         generatePlaceRoutes();
-      } else if (friends.length > 0) {
-        console.log('친구들 경로 생성 시작');
-        generateFriendRoutes();
-      }
+              } else {
+          // 친구들 경로 생성
+          console.log('친구들 경로 생성 시작');
+          generateFriendRoutes();
+        }
       
       lastGeneratedRef.current = currentKey;
     }
@@ -402,237 +411,247 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
           </button>
         </div>
 
-        {/* 컨텐츠 */}
+                {/* 컨텐츠 */}
         <div className={styles.content}>
-          {/* 장소 정보 (PlaceMode일 때만 표시) */}
-          {isPlaceMode && placeInfo && (
-            <div className={styles.placeInfoSection}>
-              <h4>📍 장소 정보</h4>
-              <div className={styles.placeCard}>
-                <div className={styles.placeHeader}>
-                  <h5>{placeInfo.title}</h5>
-                  <span className={styles.placeCategory}>{placeInfo.category}</span>
+          {/* 추천장소 모드: 메인 영역만 표시 */}
+          {isPlaceMode && (
+            <div className={styles.mainArea}>
+              {/* 장소 정보 */}
+              {placeInfo && (
+                <div className={styles.placeInfoSection}>
+                  <h4>📍 장소 정보</h4>
+                  <div className={styles.placeCard}>
+                    <div className={styles.placeHeader}>
+                      <h5>{placeInfo.title}</h5>
+                      <span className={styles.placeCategory}>{placeInfo.category}</span>
+                    </div>
+                    {placeInfo.description && (
+                      <p className={styles.placeDescription}>{placeInfo.description}</p>
+                    )}
+                    <div className={styles.placeMeta}>
+                      <span>⏱️ {placeInfo.duration}</span>
+                    </div>
+                  </div>
                 </div>
-                {placeInfo.description && (
-                  <p className={styles.placeDescription}>{placeInfo.description}</p>
-                )}
-                <div className={styles.placeMeta}>
-                  <span>⏱️ {placeInfo.duration}</span>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
-          {/* 만남 시간 설정 */}
-          <div className={styles.meetingTimeSection}>
-            <h4>⏰ 만남 시간 설정</h4>
-            <div className={styles.timeInput}>
-              <input
-                type="time"
-                value={meetingTime}
-                onChange={(e) => setMeetingTime(e.target.value)}
-                className={styles.timePicker}
-              />
-              <button 
-                onClick={handleRouteRecalculation}
-                className={styles.refreshButton}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <div className={styles.spinner} style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
-                    계산 중...
-                  </>
-                ) : (
-                  '경로 재계산'
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* 교통수단 카테고리 선택 */}
-          <div className={styles.transportModeSection}>
-            <div className={styles.sectionHeader}>
-              <h4>🚇 교통수단 선택</h4>
-              <button
-                className={styles.collapseButton}
-                onClick={() => setIsTransportSectionCollapsed(!isTransportSectionCollapsed)}
-              >
-                {isTransportSectionCollapsed ? '⌄' : '⌃'}
-              </button>
-            </div>
-            
-            {!isTransportSectionCollapsed && (
-              <div className={styles.transportButtons}>
-                <button
-                  className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
-                  onClick={() => setSelectedTransportMode('transit')}
-                >
-                  🚇 대중교통 (버스+지하철+도보)
-                </button>
-                <button
-                  className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
-                  onClick={() => setSelectedTransportMode('car')}
-                >
-                  🚗 자동차
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 경로 정보 */}
-          <div className={styles.routesSection}>
-            <div className={styles.sectionHeader}>
-              <h4>🚇 경로 정보</h4>
-              <button
-                className={styles.collapseButton}
-                onClick={() => setIsRoutesSectionCollapsed(!isRoutesSectionCollapsed)}
-              >
-                {isRoutesSectionCollapsed ? '⌄' : '⌃'}
-              </button>
-            </div>
-            
-            {!isRoutesSectionCollapsed && (
-              <>
-                {routes.length === 0 && (
-                  <div className={styles.emptyState}>
-                    <p>경로 정보가 없습니다</p>
+          {/* 역 모드: 기능 영역만 표시 */}
+          {!isPlaceMode && (
+            <div className={styles.functionArea}>
+                {/* 만남 시간 설정 */}
+                <div className={styles.meetingTimeSection}>
+                  <h4>⏰ 만남 시간 설정</h4>
+                  <div className={styles.timeInput}>
+                    <input
+                      type="time"
+                      value={meetingTime}
+                      onChange={(e) => setMeetingTime(e.target.value)}
+                      className={styles.timePicker}
+                    />
+                    <button 
+                      onClick={handleRouteRecalculation}
+                      className={styles.refreshButton}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className={styles.spinner} style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                          계산 중...
+                        </>
+                      ) : (
+                        '경로 재계산'
+                      )}
+                    </button>
                   </div>
-                )}
-                
-                {routes.map((route) => (
-                  <div key={route.friendId} className={styles.routeCard}>
-                    <div className={styles.routeHeader}>
-                      <h5>{route.friendName}</h5>
-                      <div className={styles.routeSummary}>
-                        <span>⏱️ {route.duration}분</span>
-                        <span>📏 {route.distance}km</span>
-                      </div>
-                    </div>
-                    
-                    {/* 출발/도착 시간 정보 */}
-                    {route.departureTime && route.arrivalTime && (
-                      <div className={styles.timeInfo}>
-                        <div className={styles.timeRow}>
-                          <span className={styles.timeLabel}>출발:</span>
-                          <span className={styles.timeValue}>{route.departureTime}</span>
-                        </div>
-                        <div className={styles.timeRow}>
-                          <span className={styles.timeLabel}>도착:</span>
-                          <span className={styles.timeValue}>{route.arrivalTime}</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* 막차 정보 */}
-                    {route.lastTrainTime && (
-                      <div className={styles.lastTrainInfo}>
-                        <span className={styles.lastTrainLabel}>🚇 막차:</span>
-                        <span className={styles.lastTrainTime}>{route.lastTrainTime}</span>
-                      </div>
-                    )}
+                </div>
 
-                    {/* 환승 정보 */}
-                    {route.transferInfos && route.transferInfos.length > 0 && (
-                      <div className={styles.transferSection}>
-                        <h6>🔄 환승 정보</h6>
-                        {route.transferInfos.map((transfer, index) => (
-                          <div key={index} className={styles.transferInfo}>
-                            <div className={styles.transferStation}>
-                              <strong>{transfer.station}</strong>
+                {/* 교통수단 카테고리 선택 */}
+                <div className={styles.transportModeSection}>
+                  <div className={styles.sectionHeader}>
+                    <h4>🚇 교통수단 선택</h4>
+                    <button
+                      className={styles.collapseButton}
+                      onClick={() => setIsTransportSectionCollapsed(!isTransportSectionCollapsed)}
+                    >
+                      {isTransportSectionCollapsed ? '⌄' : '⌃'}
+                    </button>
+                  </div>
+                  
+                  {!isTransportSectionCollapsed && (
+                    <div className={styles.transportButtons}>
+                      <button
+                        className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
+                        onClick={() => setSelectedTransportMode('transit')}
+                      >
+                        🚇 대중교통 (버스+지하철+도보)
+                      </button>
+                      <button
+                        className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
+                        onClick={() => setSelectedTransportMode('car')}
+                      >
+                        🚗 자동차
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 경로 정보 */}
+                <div className={styles.routesSection}>
+                  <div className={styles.sectionHeader}>
+                    <h4>🚇 경로 정보</h4>
+                    <button
+                      className={styles.collapseButton}
+                      onClick={() => setIsRoutesSectionCollapsed(!isRoutesSectionCollapsed)}
+                    >
+                      {isRoutesSectionCollapsed ? '⌄' : '⌃'}
+                    </button>
+                  </div>
+                  
+                  {!isRoutesSectionCollapsed && (
+                  <>
+                    {routes.length === 0 && (
+                      <div className={styles.emptyState}>
+                        <p>경로 정보가 없습니다</p>
+                      </div>
+                    )}
+                    
+                    {routes.map((route) => (
+                      <div key={route.friendId} className={styles.routeCard}>
+                        <div className={styles.routeHeader}>
+                          <h5>{route.friendName}</h5>
+                          <div className={styles.routeSummary}>
+                            <span>⏱️ {route.duration}분</span>
+                            <span>📏 {route.distance}km</span>
+                          </div>
+                        </div>
+                        
+                        {/* 출발/도착 시간 정보 */}
+                        {route.departureTime && route.arrivalTime && (
+                          <div className={styles.timeInfo}>
+                            <div className={styles.timeRow}>
+                              <span className={styles.timeLabel}>출발:</span>
+                              <span className={styles.timeValue}>{route.departureTime}</span>
                             </div>
-                            <div className={styles.transferDetails}>
-                              <span>{transfer.line}</span>
-                              <span>{transfer.direction}</span>
-                              <span>{transfer.time}</span>
+                            <div className={styles.timeRow}>
+                              <span className={styles.timeLabel}>도착:</span>
+                              <span className={styles.timeValue}>{route.arrivalTime}</span>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* 상세 경로 토글 버튼 */}
-                    {route.routeSteps && route.routeSteps.length > 0 && (
-                      <div className={styles.detailedRouteSection}>
-                        <button
-                          className={styles.toggleDetailedRoute}
-                          onClick={() => setShowDetailedRoutes(!showDetailedRoutes)}
-                        >
-                          {showDetailedRoutes ? '▼' : '▶'} 상세 경로 보기
-                        </button>
+                        )}
                         
-                        {showDetailedRoutes && (
-                          <div className={styles.routeSteps}>
-                            {route.routeSteps.map((step, stepIndex) => (
-                              <div key={stepIndex} className={styles.routeStep}>
-                                <span className={styles.stepIcon}>{getTransportIcon(step.transportMode, step.line)}</span>
-                                <div className={styles.stepInfo}>
-                                  <span className={styles.stepName}>
-                                    {step.transportMode === 'transit' ? 
-                                      (step.line ? step.line : '대중교통') : 
-                                      step.transportMode === 'car' ? '자동차' : '도보'
-                                    }
-                                  </span>
-                                  <div className={styles.stepMeta}>
-                                    <span className={styles.stepDuration}>{step.duration}분</span>
-                                    <span className={styles.stepSeparator}>•</span>
-                                    <span className={styles.stepDistance}>{step.distance}km</span>
-                                  </div>
-                                  
-                                  <div className={styles.stepDetails}>
-                                    {step.details.map((detail, index) => (
-                                      <span key={index} className={styles.stepDetail}>
-                                        {detail}
-                                      </span>
-                                    ))}
-                                    {step.station && (
-                                      <span className={styles.stepDetail}>
-                                        📍 {step.station}
-                                      </span>
-                                    )}
-                                    {step.direction && (
-                                      <span className={styles.stepDetail}>
-                                        ➡️ {step.direction}
-                                      </span>
-                                    )}
-                                  </div>
+                        {/* 막차 정보 */}
+                        {route.lastTrainTime && (
+                          <div className={styles.lastTrainInfo}>
+                            <span className={styles.lastTrainLabel}>🚇 막차:</span>
+                            <span className={styles.lastTrainTime}>{route.lastTrainTime}</span>
+                          </div>
+                        )}
+
+                        {/* 환승 정보 */}
+                        {route.transferInfos && route.transferInfos.length > 0 && (
+                          <div className={styles.transferSection}>
+                            <h6>🔄 환승 정보</h6>
+                            {route.transferInfos.map((transfer, index) => (
+                              <div key={index} className={styles.transferInfo}>
+                                <div className={styles.transferStation}>
+                                  <strong>{transfer.station}</strong>
+                                </div>
+                                <div className={styles.transferDetails}>
+                                  <span>{transfer.line}</span>
+                                  <span>{transfer.direction}</span>
+                                  <span>{transfer.time}</span>
                                 </div>
                               </div>
                             ))}
                           </div>
                         )}
-                      </div>
-                    )}
-                    
-                    {/* 기본 경로 요약 */}
-                    <div className={styles.routeDetails}>
-                      <div className={styles.routeStep}>
-                        <span className={styles.stepIcon}>{getTransportIcon(route.transportMode)}</span>
-                        <div className={styles.stepInfo}>
-                          <span className={styles.stepName}>
-                            {route.transportMode === 'transit' ? '대중교통' : '자동차'}
-                          </span>
-                          <div className={styles.stepMeta}>
-                            <span className={styles.stepDuration}>{route.duration}분</span>
-                            <span className={styles.stepSeparator}>•</span>
-                            <span className={styles.stepDistance}>{route.distance}km</span>
+                        
+                        {/* 상세 경로 토글 버튼 */}
+                        {route.routeSteps && route.routeSteps.length > 0 && (
+                          <div className={styles.detailedRouteSection}>
+                            <button
+                              className={styles.toggleDetailedRoute}
+                              onClick={() => setShowDetailedRoutes(!showDetailedRoutes)}
+                            >
+                              {showDetailedRoutes ? '▼' : '▶'} 상세 경로 보기
+                            </button>
+                            
+                            {showDetailedRoutes && (
+                              <div className={styles.routeSteps}>
+                                {route.routeSteps.map((step, stepIndex) => (
+                                  <div key={stepIndex} className={styles.routeStep}>
+                                    <span className={styles.stepIcon}>{getTransportIcon(step.transportMode, step.line)}</span>
+                                    <div className={styles.stepInfo}>
+                                      <span className={styles.stepName}>
+                                        {step.transportMode === 'transit' ? 
+                                          (step.line ? step.line : '대중교통') : 
+                                          step.transportMode === 'car' ? '자동차' : '도보'
+                                        }
+                                      </span>
+                                      <div className={styles.stepMeta}>
+                                        <span className={styles.stepDuration}>{step.duration}분</span>
+                                        <span className={styles.stepSeparator}>•</span>
+                                        <span className={styles.stepDistance}>{step.distance}km</span>
+                                      </div>
+                                      
+                                      <div className={styles.stepDetails}>
+                                        {step.details.map((detail, index) => (
+                                          <span key={index} className={styles.stepDetail}>
+                                            {detail}
+                                          </span>
+                                        ))}
+                                        {step.station && (
+                                          <span className={styles.stepDetail}>
+                                            📍 {step.station}
+                                          </span>
+                                        )}
+                                        {step.direction && (
+                                          <span className={styles.stepDetail}>
+                                            ➡️ {step.direction}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          
-                          <div className={styles.stepDetails}>
-                            {route.details.map((detail, index) => (
-                              <span key={index} className={styles.stepDetail}>
-                                {detail}
+                        )}
+                        
+                        {/* 기본 경로 요약 */}
+                        <div className={styles.routeDetails}>
+                          <div className={styles.routeStep}>
+                            <span className={styles.stepIcon}>{getTransportIcon(route.transportMode)}</span>
+                            <div className={styles.stepInfo}>
+                              <span className={styles.stepName}>
+                                {route.transportMode === 'transit' ? '대중교통' : '자동차'}
                               </span>
-                            ))}
+                              <div className={styles.stepMeta}>
+                                <span className={styles.stepDuration}>{route.duration}분</span>
+                                <span className={styles.stepSeparator}>•</span>
+                                <span className={styles.stepDistance}>{route.distance}km</span>
+                              </div>
+                              
+                              <div className={styles.stepDetails}>
+                                {route.details.map((detail, index) => (
+                                  <span key={index} className={styles.stepDetail}>
+                                    {detail}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
+                    ))}
+                                    </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

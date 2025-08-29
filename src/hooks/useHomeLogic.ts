@@ -278,35 +278,50 @@ export const useHomeLogic = () => {
         const station = getStationById(clickedCard.id);
         if (station) {
           setSelectedStationId(station.id);
-          setMapCenter({ lat: station.lat, lng: station.lng });
-          setMapLevel(4);
           
-          const places = getPlacesByStationId(station.id);
-          const placeMarkers = places.map(place => ({
-            id: `place-${place.id}`,
-            position: { lat: place.lat, lng: place.lng },
-            title: place.title,
-            type: 'place' as const
+          // 🎯 역 클릭 시: 친구들에서 역으로의 경로를 바로 생성
+          const friendMarkers = convertFriendsToMarkers(friends);
+          const stationMarker = {
+            id: `station-${station.id}`,
+            position: { lat: station.lat, lng: station.lng },
+            title: station.name,
+            type: 'station' as const,
+            isVisible: true,
+            isHighlighted: true // 선택된 역은 강조 표시
+          };
+          
+          // 친구 마커와 선택된 역 마커 표시
+          const allMarkers = [...friendMarkers, stationMarker];
+          setMapMarkers(allMarkers);
+          
+          // 친구들에서 역으로의 경로 생성
+          const friendRoutes = friends.map(friend => ({
+            from: { lat: friend.coordinates?.lat || 37.5665, lng: friend.coordinates?.lng || 126.9780 },
+            to: { lat: station.lat, lng: station.lng },
+            color: '#4A90E2' // 파란색 (대중교통 경로)
           }));
           
-          const friendMarkers = convertFriendsToMarkers(friends);
-          const allMarkers = [
-            ...friendMarkers,
-            {
-              id: `station-${station.id}`,
-              position: { lat: station.lat, lng: station.lng },
-              title: station.name,
-              type: 'station' as const,
-              isVisible: true,
-              isHighlighted: false
-            },
-            ...placeMarkers.map(place => ({
-              ...place,
-              isVisible: true,
-              isHighlighted: false
-            }))
+          setMapRoutes(friendRoutes);
+          
+          // 맵 중심을 친구들과 역의 중앙으로 설정
+          const allPoints = [
+            ...friendMarkers.map(marker => marker.position),
+            stationMarker.position
           ];
-          setMapMarkers(allMarkers);
+          
+          if (allPoints.length > 0) {
+            const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+            const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+            setMapCenter({ lat: centerLat, lng: centerLng });
+            setMapLevel(6); // 친구들과 역이 모두 보이도록 적절한 레벨
+          }
+          
+          // TransportInfoModal 열기 (친구들에서 역으로의 경로)
+          console.log('역 클릭 - TransportInfoModal 열기:', {
+            stationName: station.name,
+            stationPosition: { lat: station.lat, lng: station.lng },
+            friendsCount: friends.length
+          });
           
           setSelectedStationInfo({
             name: station.name,
@@ -314,6 +329,9 @@ export const useHomeLogic = () => {
           });
           setShowTransportModal(true);
           
+          console.log('TransportInfoModal 상태 설정 완료');
+          
+          // 추천 장소 카드로 변경
           const placeCards = generatePlaceCards(clickedCard.id);
           setCards(placeCards);
           setCurrentView('places');
@@ -355,13 +373,10 @@ export const useHomeLogic = () => {
         }
       } else if (clickedCard.type === 'place') {
         if (selectedCardId === clickedCard.id) {
+          // 🎯 이미 선택된 장소를 다시 클릭하면 원상복귀 (친구들에서 역으로의 경로 복원)
           setSelectedCardId(null);
           
-          const station = getStationById(selectedStationId || 0);
-          if (station) {
-            setMapCenter({ lat: station.lat, lng: station.lng });
-          }
-          
+          // 친구들과 역, 모든 장소 마커를 다시 표시
           const currentStation = getStationById(selectedStationId || 0);
           if (currentStation) {
             const places = getPlacesByStationId(currentStation.id);
@@ -381,42 +396,72 @@ export const useHomeLogic = () => {
               title: currentStation.name,
               type: 'station' as const,
               isVisible: true,
-              isHighlighted: false
+              isHighlighted: true // 역은 계속 강조 표시
             };
             
             const allMarkers = [...friendMarkers, stationMarker, ...placeMarkers];
             setMapMarkers(allMarkers);
+            
+            // 친구들에서 역으로의 경로 복원
+            const friendRoutes = friends.map(friend => ({
+              from: { lat: friend.coordinates?.lat || 37.5665, lng: friend.coordinates?.lng || 126.9780 },
+              to: { lat: currentStation.lat, lng: currentStation.lng },
+              color: '#4A90E2'
+            }));
+            
+            setMapRoutes(friendRoutes);
+            
+            // 맵 중심을 친구들과 역의 중앙으로 복원
+            const allPoints = [
+              ...friendMarkers.map(marker => marker.position),
+              stationMarker.position
+            ];
+            
+            if (allPoints.length > 0) {
+              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+              setMapCenter({ lat: centerLat, lng: centerLng });
+              setMapLevel(6);
+            }
           }
         } else {
+          // 🎯 새로운 장소 선택 시: 역과 해당 장소 간의 경로만 표시
           const places = getPlacesByStationId(selectedStationId || 0);
           const selectedPlace = places.find(place => place.id === clickedCard.id);
           if (selectedPlace) {
-            const selectedStation = getStationById(selectedStationId || 0);
-            if (selectedStation) {
-              setMapCenter({ lat: selectedStation.lat, lng: selectedStation.lng });
-              setMapLevel(2);
-            } else {
-              setMapCenter({ lat: selectedPlace.lat, lng: selectedPlace.lng });
-              setMapLevel(2);
-            }
-            
-            setSelectedCardId(clickedCard.id);
-            
-            setMapMarkers(prevMarkers => 
-              prevMarkers.map(marker => {
-                const isSelectedPlace = marker.id === `place-${selectedPlace.id}`;
-                const isFriend = marker.type === 'friend';
-                
-                return {
-                  ...marker,
-                  isHighlighted: isSelectedPlace,
-                  isVisible: isSelectedPlace || isFriend
-                };
-              })
-            );
-            
             const currentStation = getStationById(selectedStationId || 0);
             if (currentStation && selectedPlace) {
+              setSelectedCardId(clickedCard.id);
+              
+              // 역과 선택된 장소만 표시하고 강조
+              const stationMarker = {
+                id: `station-${currentStation.id}`,
+                position: { lat: currentStation.lat, lng: currentStation.lng },
+                title: currentStation.name,
+                type: 'station' as const,
+                isVisible: true,
+                isHighlighted: true
+              };
+              
+              const selectedPlaceMarker = {
+                id: `place-${selectedPlace.id}`,
+                position: { lat: selectedPlace.lat, lng: selectedPlace.lng },
+                title: selectedPlace.title,
+                type: 'place' as const,
+                isVisible: true,
+                isHighlighted: true
+              };
+              
+              // 역과 선택된 장소만 표시
+              setMapMarkers([stationMarker, selectedPlaceMarker]);
+              
+              // 맵 중심을 역과 장소의 중앙으로 설정
+              const centerLat = (currentStation.lat + selectedPlace.lat) / 2;
+              const centerLng = (currentStation.lng + selectedPlace.lng) / 2;
+              setMapCenter({ lat: centerLat, lng: centerLng });
+              setMapLevel(4); // 역과 장소가 잘 보이도록 적절한 레벨
+              
+              // 역에서 장소로의 경로 생성
               const stationToPlaceRoute = {
                 from: { lat: currentStation.lat, lng: currentStation.lng },
                 to: { lat: selectedPlace.lat, lng: selectedPlace.lng },
@@ -425,6 +470,7 @@ export const useHomeLogic = () => {
               
               setMapRoutes([stationToPlaceRoute]);
               
+              // TransportInfoModal 열기 (역에서 장소로의 경로)
               setSelectedStationInfo({
                 name: `${currentStation.name} → ${selectedPlace.title}`,
                 position: { lat: currentStation.lat, lng: currentStation.lng },
