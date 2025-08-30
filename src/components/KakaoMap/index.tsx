@@ -108,7 +108,18 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
     <div 
       id={containerId}
       className={`kakao-map-container ${className}`}
-      style={style}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        overflow: 'hidden',
+        willChange: 'auto',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        ...style
+      }}
     />
   );
 };

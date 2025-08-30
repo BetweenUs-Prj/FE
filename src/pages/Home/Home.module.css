@@ -58,12 +58,21 @@
 }
 
 .homeMapContainer {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
+  /* CSS 깨짐 방지를 위한 안전장치 */
+  will-change: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* 지도 컨테이너 크기 고정 */
+  min-width: 100vw;
+  min-height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
 }
 
 /* 삼육대학교 이스터 에그 스타일 */

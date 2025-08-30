@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 // import { KAKAO_MOBILITY_API_KEY } from '../constants/config';
 
 interface MarkerInfo {
@@ -39,6 +39,8 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
   const markersRef = useRef<any[]>([]);
   const routesRef = useRef<any[]>([]); // 경로 라인들을 저장할 ref
   
+
+  
   // 각 친구별 고유 색상 배열
   const friendColors = [
     '#FF6B6B', // 빨간색
@@ -52,6 +54,81 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
     '#BB8FCE', // 보라색
     '#85C1E9'  // 하늘색
   ];
+
+
+
+  // 이벤트 리스너 참조 저장
+  const eventListenersRef = useRef<any[]>([]);
+
+  // 지도 이벤트 리스너 적용 (메모리 누수 방지)
+  const applyMapEventListeners = useCallback(() => {
+    if (!mapRef.current) return;
+
+    // 기존 이벤트 리스너들 모두 제거
+    eventListenersRef.current.forEach(listener => {
+      if (listener && listener.map && listener.event) {
+        try {
+          window.kakao.maps.event.removeListener(listener.map, listener.event, listener.handler);
+        } catch (error) {
+          console.warn('이벤트 리스너 제거 실패:', error);
+        }
+      }
+    });
+    eventListenersRef.current = [];
+
+    // 새로운 이벤트 리스너 추가
+    const dragendHandler = () => {
+      // 드래그 완료 시 필요한 로직만
+    };
+
+    const zoomChangedHandler = () => {
+      // 줌 변경 시 필요한 로직만
+    };
+
+    // 이벤트 리스너 등록 및 참조 저장
+    const dragendListener = window.kakao.maps.event.addListener(mapRef.current, 'dragend', dragendHandler);
+    const zoomListener = window.kakao.maps.event.addListener(mapRef.current, 'zoom_changed', zoomChangedHandler);
+
+    // 리스너 참조 저장
+    eventListenersRef.current.push(
+      { map: mapRef.current, event: 'dragend', handler: dragendHandler, listener: dragendListener },
+      { map: mapRef.current, event: 'zoom_changed', handler: zoomChangedHandler, listener: zoomListener }
+    );
+  }, []);
+
+  // 브라우저 크기 변화 감지 및 지도 재조정 (타임아웃 누수 방지)
+  useEffect(() => {
+    let resizeTimeoutId: NodeJS.Timeout | null = null;
+
+    const handleResize = () => {
+      if (mapRef.current) {
+        // 이전 타임아웃 취소
+        if (resizeTimeoutId) {
+          clearTimeout(resizeTimeoutId);
+        }
+
+        // 새로운 타임아웃 설정
+        resizeTimeoutId = setTimeout(() => {
+          if (mapRef.current) {
+            try {
+              mapRef.current.relayout();
+            } catch (error) {
+              console.error('지도 재조정 중 오류:', error);
+            }
+          }
+        }, 100);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutId) {
+        clearTimeout(resizeTimeoutId);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // 이미 스크립트가 로드되어 있는지 확인
@@ -76,74 +153,135 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
 
     // 클린업 함수
     return () => {
+      // 이벤트 리스너들 정리
+      eventListenersRef.current.forEach(listener => {
+        if (listener && listener.map && listener.event) {
+          try {
+            window.kakao.maps.event.removeListener(listener.map, listener.event, listener.handler);
+          } catch (error) {
+            console.warn('이벤트 리스너 정리 실패:', error);
+          }
+        }
+      });
+      eventListenersRef.current = [];
+
+      // 마커들 정리
+      markersRef.current.forEach(marker => {
+        if (marker) {
+          try {
+            marker.setMap(null);
+          } catch (error) {
+            console.warn('마커 정리 실패:', error);
+          }
+        }
+      });
+      markersRef.current = [];
+
+      // 경로들 정리
+      routesRef.current.forEach(route => {
+        if (route) {
+          try {
+            route.setMap(null);
+          } catch (error) {
+            console.warn('경로 정리 실패:', error);
+          }
+        }
+      });
+      routesRef.current = [];
+
+      // 맵 인스턴스 정리
       if (mapRef.current) {
         mapRef.current = null;
       }
     };
   }, [containerId, options, appKey]);
 
-  // options 변경 시 맵 업데이트 (중심점과 레벨 모두 업데이트)
+  // options 변경 시 맵 업데이트 (동기적 처리)
   useEffect(() => {
     if (mapRef.current && options) {
-      const center = new window.kakao.maps.LatLng(options.center.lat, options.center.lng);
-      mapRef.current.setCenter(center);
-      
-      if (options.level !== undefined) {
-        mapRef.current.setLevel(options.level);
+      try {
+        const center = new window.kakao.maps.LatLng(options.center.lat, options.center.lng);
+        mapRef.current.setCenter(center);
+        
+        if (options.level !== undefined) {
+          mapRef.current.setLevel(options.level);
+        }
+      } catch (error) {
+        console.error('맵 업데이트 중 오류:', error);
       }
-      
-      console.log('맵 옵션 업데이트 완료:', options);
     }
   }, [options]);
 
-  // 마커 관리 useEffect
+  // 마커 관리 useEffect (동기적 처리)
   useEffect(() => {
     if (!mapRef.current || !markers) return;
 
-    // 기존 마커들 제거
-    markersRef.current.forEach(marker => {
-      marker.setMap(null);
-    });
-    markersRef.current = [];
-
-    // 새로운 마커들 추가
-    markers.forEach(markerInfo => {
-      if (!markerInfo.isVisible) return;
-
-      const position = new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng);
-      
-      const marker = new window.kakao.maps.Marker({
-        position: position,
-        map: mapRef.current
-      });
-
-      // 인포윈도우 생성 (제목이나 내용이 있는 경우)
-      if (markerInfo.title || markerInfo.content) {
-        const infowindow = new window.kakao.maps.InfoWindow({
-          content: `
-            <div style="padding:10px;min-width:200px;">
-              ${markerInfo.title ? `<h3 style="margin:0 0 5px 0;font-size:14px;">${markerInfo.title}</h3>` : ''}
-              ${markerInfo.content ? `<p style="margin:0;font-size:12px;">${markerInfo.content}</p>` : ''}
-            </div>
-          `
-        });
-
-        // 클릭 이벤트 추가
-        window.kakao.maps.event.addListener(marker, 'click', () => {
-          infowindow.open(mapRef.current, marker);
-          if (onMarkerClick) {
-            onMarkerClick(markerInfo);
+    try {
+      // 기존 마커들 제거
+      markersRef.current.forEach(marker => {
+        if (marker) {
+          try {
+            marker.setMap(null);
+          } catch (error) {
+            console.warn('마커 제거 실패:', error);
           }
+        }
+      });
+      markersRef.current = [];
+
+      // 새로운 마커들 추가
+      markers.forEach(markerInfo => {
+        if (!markerInfo.isVisible) return;
+
+        const position = new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng);
+        
+        const marker = new window.kakao.maps.Marker({
+          position: position,
+          map: mapRef.current
         });
 
-        // 마커에 인포윈도우 참조 저장
-        (marker as any).infowindow = infowindow;
-      }
+        // 인포윈도우 생성 (제목이나 내용이 있는 경우)
+        if (markerInfo.title || markerInfo.content) {
+          const infowindow = new window.kakao.maps.InfoWindow({
+            content: `
+              <div style="padding:10px;min-width:200px;">
+                ${markerInfo.title ? `<h3 style="margin:0 0 5px 0;font-size:14px;">${markerInfo.title}</h3>` : ''}
+                ${markerInfo.content ? `<p style="margin:0;font-size:12px;">${markerInfo.content}</p>` : ''}
+              </div>
+            `
+          });
 
-      markersRef.current.push(marker);
-    });
+          // 클릭 이벤트 추가
+          window.kakao.maps.event.addListener(marker, 'click', () => {
+            infowindow.open(mapRef.current, marker);
+            if (onMarkerClick) {
+              onMarkerClick(markerInfo);
+            }
+          });
 
-    console.log('마커 업데이트 완료:', markers.length);
+          // 마커에 인포윈도우 참조 저장
+          (marker as any).infowindow = infowindow;
+        }
+
+        markersRef.current.push(marker);
+      });
+    } catch (error) {
+      console.error('마커 업데이트 중 오류:', error);
+    }
+
+    // 클린업 함수
+    return () => {
+      markersRef.current.forEach(marker => {
+        if (marker) {
+          try {
+            marker.setMap(null);
+          } catch (error) {
+            console.warn('마커 정리 실패:', error);
+          }
+        }
+      });
+      markersRef.current = [];
+    };
   }, [markers, onMarkerClick]);
 
   // 경로 관리 useEffect
@@ -249,6 +387,19 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
   const initializeMap = () => {
     const mapContainer = document.getElementById(containerId);
     if (mapContainer && window.kakao && window.kakao.maps) {
+      // 이미 맵 인스턴스가 존재하면 재사용
+      if (mapRef.current) {
+        console.log('기존 맵 인스턴스 재사용');
+        return;
+      }
+      
+      // 컨테이너 크기를 명시적으로 설정
+      mapContainer.style.width = '100vw';
+      mapContainer.style.height = '100vh';
+      mapContainer.style.position = 'fixed';
+      mapContainer.style.top = '0';
+      mapContainer.style.left = '0';
+      
       const mapOption = {
         center: new window.kakao.maps.LatLng(options.center.lat, options.center.lng),
         level: options.level || 8, // 기본 레벨을 8로 설정
@@ -260,8 +411,20 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       };
       
       mapRef.current = new window.kakao.maps.Map(mapContainer, mapOption);
+      
+      // 지도 초기화 후 이벤트 리스너 적용
+      applyMapEventListeners();
+      
+      // 지도 크기 재조정 (동기적 처리)
+      if (mapRef.current) {
+        mapRef.current.relayout();
+      }
+      
+      console.log('새로운 맵 인스턴스 생성 완료');
     }
   };
+
+
 
   return { map: mapRef.current };
 };

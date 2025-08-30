@@ -75,69 +75,49 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   const [routes, setRoutes] = useState<TransportRoute[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: window.innerWidth - 420, y: 20 });
+  const [position, setPosition] = useState(() => {
+    const maxX = window.innerWidth - 420;
+    const maxY = window.innerHeight - 400;
+    return {
+      x: Math.max(20, Math.min(maxX, window.innerWidth - 420)),
+      y: Math.max(20, Math.min(maxY, 90)) // 더 상단으로 위치 조정
+    };
+  });
   const [meetingTime, setMeetingTime] = useState('18:00');
   const [isLoading, setIsLoading] = useState(false);
   
   // 교통수단 카테고리 선택 (대중교통, 자동차만)
   const [selectedTransportMode, setSelectedTransportMode] = useState<'transit' | 'car'>('transit');
   
-  // 개별 친구별 교통수단 선택 (대중교통, 자동차만) - 현재 사용하지 않음
-  // const [individualTransportModes, setIndividualTransportModes] = useState<Record<number, 'transit' | 'car'>>({});
-  
-  // 상세 경로 표시 여부
-  const [showDetailedRoutes, setShowDetailedRoutes] = useState(false);
-  
-
-  
   // 중복 요청 방지를 위한 ref
   const isGeneratingRef = useRef(false);
   const lastGeneratedRef = useRef<string>('');
 
-  // 위치 설정 및 모달 상태 초기화
+  // 모달 상태 초기화
   useEffect(() => {
-    if (isVisible) {
-      setPosition({ 
-        x: window.innerWidth - 420, 
-        y: 40 
-      });
-    } else {
-      // 모달이 닫힐 때 상태 초기화
+    if (!isVisible) {
       setIsLoading(false);
       isGeneratingRef.current = false;
       lastGeneratedRef.current = '';
     }
   }, [isVisible]);
 
-  // 모달이 열릴 때 자동으로 경로 계산 (한 번만 실행)
+  // 모달이 열릴 때 자동으로 경로 계산
   useEffect(() => {
-    console.log('TransportInfoModal useEffect:', {
-      isVisible,
-      isPlaceMode,
-      friendsLength: friends.length,
-      stationName
-    });
-    
     if (isVisible && !isGeneratingRef.current) {
       const currentKey = `${isPlaceMode}-${friends.length}-${stationName}-${meetingTime}`;
       
-      // 이미 같은 조건으로 생성된 경우 스킵
-      if (lastGeneratedRef.current === currentKey) {
-        return;
-      }
+      if (lastGeneratedRef.current === currentKey) return;
       
       if (isPlaceMode) {
-        console.log('추천장소 경로 생성 시작');
         generatePlaceRoutes();
-              } else {
-          // 친구들 경로 생성
-          console.log('친구들 경로 생성 시작');
-          generateFriendRoutes();
-        }
+      } else {
+        generateFriendRoutes();
+      }
       
       lastGeneratedRef.current = currentKey;
     }
-  }, [isVisible]);
+  }, [isVisible, isPlaceMode, friends.length, stationName, meetingTime]);
 
   // 거리 계산 함수
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -185,12 +165,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     return coords;
   };
 
-  // 추천장소 경로 생성 (시뮬레이션 모드)
+  // 추천장소 경로 생성
   const generatePlaceRoutes = async () => {
-    if (isGeneratingRef.current) return;
-    
-    console.log('generatePlaceRoutes 호출됨:', { placePosition, stationPosition, selectedTransportMode });
-    if (!placePosition) return;
+    if (isGeneratingRef.current || !placePosition) return;
     
     isGeneratingRef.current = true;
     setIsLoading(true);
@@ -204,7 +181,6 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       const duration = Math.round(distance * (selectedTransportMode === 'transit' ? 3 : 2));
       const departureTime = calculateDepartureTime(meetingTime, duration);
       
-      // 시뮬레이션용 상세 경로 생성
       const routeSteps: RouteStep[] = [{
         transportMode: selectedTransportMode,
         duration,
@@ -232,7 +208,6 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         }] : []
       };
       
-      console.log('추천장소 경로 설정 (시뮬레이션):', route);
       setRoutes([route]);
       updateMapRoutes([route]);
     } finally {
@@ -241,19 +216,17 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     }
   };
 
-  // 친구들 경로 생성 (시뮬레이션 모드)
+  // 친구들 경로 생성
   const generateFriendRoutes = async () => {
     if (isGeneratingRef.current) return;
-    
-    console.log('generateFriendRoutes 호출됨:', { friendsCount: friends.length });
     
     isGeneratingRef.current = true;
     setIsLoading(true);
     
     try {
-          const friendRoutes = friends.map((friend) => {
-      return generateSimulatedRoute(friend, selectedTransportMode);
-    });
+      const friendRoutes = friends.map((friend) => 
+        generateSimulatedRoute(friend, selectedTransportMode)
+      );
       
       setRoutes(friendRoutes);
       updateMapRoutes(friendRoutes);
@@ -263,7 +236,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     }
   };
 
-  // 시뮬레이션 경로 생성
+  // 경로 생성
   const generateSimulatedRoute = (friend: Friend, transportMode: 'transit' | 'car' = 'transit') => {
     const distance = calculateDistance(
       friend.position.lat, friend.position.lng,
@@ -273,7 +246,6 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     const duration = Math.round(distance * (transportMode === 'transit' ? 3 : 2));
     const departureTime = calculateDepartureTime(meetingTime, duration);
     
-    // 시뮬레이션용 상세 경로 생성
     const routeSteps: RouteStep[] = [{
       transportMode,
       duration,
@@ -324,9 +296,16 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      
+      // 화면 경계 내에서만 이동하도록 제한
+      const maxX = window.innerWidth - 420; // 모달 너비
+      const maxY = window.innerHeight - 400; // 모달 높이 (추정)
+      
       setPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
+        x: Math.max(20, Math.min(newX, maxX)),
+        y: Math.max(20, Math.min(newY, maxY))
       });
     }
   }, [isDragging, dragOffset]);
@@ -345,6 +324,22 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // 브라우저 크기 변경 시 모달 위치 조정
+  useEffect(() => {
+    const handleResize = () => {
+      const maxX = window.innerWidth - 420;
+      const maxY = window.innerHeight - 400;
+      
+      setPosition(prev => ({
+        x: Math.max(20, Math.min(prev.x, maxX)),
+        y: Math.max(20, Math.min(prev.y, maxY))
+      }));
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 교통수단 아이콘
   const getTransportIcon = (mode: string, line?: string) => {
@@ -367,7 +362,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     if (isVisible && routes.length > 0) {
       handleRouteRecalculation();
     }
-  }, [selectedTransportMode]);
+  }, [selectedTransportMode, isVisible, routes.length]);
 
   // 경로 재계산 핸들러
   const handleRouteRecalculation = useCallback(async () => {
@@ -378,7 +373,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     } else {
       await generateFriendRoutes();
     }
-  }, [isLoading, isPlaceMode, selectedTransportMode]);
+  }, [isLoading, isPlaceMode, selectedTransportMode, generatePlaceRoutes, generateFriendRoutes]);
 
   if (!isVisible) return null;
 
@@ -401,12 +396,10 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
           </button>
         </div>
 
-                {/* 컨텐츠 */}
+        {/* 컨텐츠 */}
         <div className={styles.content}>
-          {/* 추천장소 모드: 메인 영역만 표시 */}
-          {isPlaceMode && (
+          {isPlaceMode ? (
             <div className={styles.mainArea}>
-              {/* 장소 정보 */}
               {placeInfo && (
                 <div className={styles.placeInfoSection}>
                   <h4>📍 장소 정보</h4>
@@ -425,10 +418,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                 </div>
               )}
             </div>
-          )}
-
-          {/* 역 모드: 기능 영역만 표시 */}
-          {!isPlaceMode && (
+          ) : (
             <div className={styles.functionArea}>
               {/* 만남 시간 설정 */}
               <div className={styles.meetingTimeSection}>
@@ -472,148 +462,47 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
               {/* 경로 정보 */}
               <div className={styles.routesSection}>
                 <h4>🚇 경로 정보</h4>
-                  <>
-                    {routes.length === 0 && (
-                      <div className={styles.emptyState}>
-                        <p>경로 정보가 없습니다</p>
-                      </div>
-                    )}
-                    
+                {routes.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <p>경로 정보가 없습니다</p>
+                  </div>
+                ) : (
+                  <div className={styles.routesList}>
                     {routes.map((route) => (
                       <div key={route.friendId} className={styles.routeCard}>
                         <div className={styles.routeHeader}>
-                          <h5>{route.friendName}</h5>
-                          <div className={styles.routeSummary}>
-                            <span>⏱️ {route.duration}분</span>
-                            <span>📏 {route.distance}km</span>
+                          <div className={styles.routeInfo}>
+                            <h5>{route.friendName}</h5>
+                            <div className={styles.routeMeta}>
+                              <span>⏱️ {route.duration}분</span>
+                              <span>📏 {route.distance}km</span>
+                              {route.lastTrainTime && (
+                                <span className={styles.lastTrainBadge}>막차 {route.lastTrainTime}</span>
+                              )}
+                            </div>
                           </div>
+                          {route.departureTime && route.arrivalTime && (
+                            <div className={styles.timeInfo}>
+                              <span>{route.departureTime} → {route.arrivalTime}</span>
+                            </div>
+                          )}
                         </div>
                         
-                        {/* 출발/도착 시간 정보 */}
-                        {route.departureTime && route.arrivalTime && (
-                          <div className={styles.timeInfo}>
-                            <div className={styles.timeRow}>
-                              <span className={styles.timeLabel}>출발:</span>
-                              <span className={styles.timeValue}>{route.departureTime}</span>
-                            </div>
-                            <div className={styles.timeRow}>
-                              <span className={styles.timeLabel}>도착:</span>
-                              <span className={styles.timeValue}>{route.arrivalTime}</span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* 막차 정보 */}
-                        {route.lastTrainTime && (
-                          <div className={styles.lastTrainInfo}>
-                            <span className={styles.lastTrainLabel}>🚇 막차:</span>
-                            <span className={styles.lastTrainTime}>{route.lastTrainTime}</span>
-                          </div>
-                        )}
-
-                        {/* 환승 정보 */}
-                        {route.transferInfos && route.transferInfos.length > 0 && (
-                          <div className={styles.transferSection}>
-                            <h6>🔄 환승 정보</h6>
-                            {route.transferInfos.map((transfer, index) => (
-                              <div key={index} className={styles.transferInfo}>
-                                <div className={styles.transferStation}>
-                                  <strong>{transfer.station}</strong>
-                                </div>
-                                <div className={styles.transferDetails}>
-                                  <span>{transfer.line}</span>
-                                  <span>{transfer.direction}</span>
-                                  <span>{transfer.time}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* 상세 경로 토글 버튼 */}
-                        {route.routeSteps && route.routeSteps.length > 0 && (
-                          <div className={styles.detailedRouteSection}>
-                            <button
-                              className={styles.toggleDetailedRoute}
-                              onClick={() => setShowDetailedRoutes(!showDetailedRoutes)}
-                            >
-                              {showDetailedRoutes ? '▼' : '▶'} 상세 경로 보기
-                            </button>
-                            
-                            {showDetailedRoutes && (
-                              <div className={styles.routeSteps}>
-                                {route.routeSteps.map((step, stepIndex) => (
-                                  <div key={stepIndex} className={styles.routeStep}>
-                                    <span className={styles.stepIcon}>{getTransportIcon(step.transportMode, step.line)}</span>
-                                    <div className={styles.stepInfo}>
-                                      <span className={styles.stepName}>
-                                        {step.transportMode === 'transit' ? 
-                                          (step.line ? step.line : '대중교통') : 
-                                          step.transportMode === 'car' ? '자동차' : '도보'
-                                        }
-                                      </span>
-                                      <div className={styles.stepMeta}>
-                                        <span className={styles.stepDuration}>{step.duration}분</span>
-                                        <span className={styles.stepSeparator}>•</span>
-                                        <span className={styles.stepDistance}>{step.distance}km</span>
-                                      </div>
-                                      
-                                      <div className={styles.stepDetails}>
-                                        {step.details.map((detail, index) => (
-                                          <span key={index} className={styles.stepDetail}>
-                                            {detail}
-                                          </span>
-                                        ))}
-                                        {step.station && (
-                                          <span className={styles.stepDetail}>
-                                            📍 {step.station}
-                                          </span>
-                                        )}
-                                        {step.direction && (
-                                          <span className={styles.stepDetail}>
-                                            ➡️ {step.direction}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* 기본 경로 요약 */}
-                        <div className={styles.routeDetails}>
-                          <div className={styles.routeStep}>
-                            <span className={styles.stepIcon}>{getTransportIcon(route.transportMode)}</span>
-                            <div className={styles.stepInfo}>
-                              <span className={styles.stepName}>
-                                {route.transportMode === 'transit' ? '대중교통' : '자동차'}
-                              </span>
-                              <div className={styles.stepMeta}>
-                                <span className={styles.stepDuration}>{route.duration}분</span>
-                                <span className={styles.stepSeparator}>•</span>
-                                <span className={styles.stepDistance}>{route.distance}km</span>
-                              </div>
-                              
-                              <div className={styles.stepDetails}>
-                                {route.details.map((detail, index) => (
-                                  <span key={index} className={styles.stepDetail}>
-                                    {detail}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                        {/* 간단한 경로 요약 */}
+                        <div className={styles.routeSummary}>
+                          <span className={styles.transportIcon}>{getTransportIcon(route.transportMode)}</span>
+                          <span className={styles.routeText}>
+                            {route.details.join(' → ')}
+                          </span>
                         </div>
                       </div>
                     ))}
-                  </>
-                </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

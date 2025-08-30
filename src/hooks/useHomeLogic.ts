@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
 
 interface MiddlePlaceCard {
@@ -88,7 +88,7 @@ export const useHomeLogic = () => {
   const [showTransportModal, setShowTransportModal] = useState(false);
   const [selectedStationInfo, setSelectedStationInfo] = useState<StationInfo | null>(null);
 
-  // 지도 상호작용 상태
+  // 지도 상호작용 상태 (동적 제어)
   const [mapInteraction, setMapInteraction] = useState({
     zoomable: false,
     scrollwheel: false,
@@ -96,6 +96,39 @@ export const useHomeLogic = () => {
     disableDoubleClickZoom: true,
     disableDoubleTapZoom: true
   });
+
+  // 맵 상호작용 제어 함수
+  const enableMapInteraction = useCallback(() => {
+    setMapInteraction({
+      zoomable: true,
+      scrollwheel: true,
+      draggable: true,
+      disableDoubleClickZoom: false,
+      disableDoubleTapZoom: false
+    });
+  }, []);
+
+  const disableMapInteraction = useCallback(() => {
+    setMapInteraction({
+      zoomable: false,
+      scrollwheel: false,
+      draggable: false,
+      disableDoubleClickZoom: true,
+      disableDoubleTapZoom: true
+    });
+  }, []);
+
+  // 지도 중심 설정 함수 (디바운싱 적용)
+  const setMapCenterDebounced = useCallback((center: { lat: number; lng: number }) => {
+    setMapCenter(center);
+  }, []);
+
+  // 지도 레벨 설정 함수 (디바운싱 적용)
+  const setMapLevelDebounced = useCallback((level: number) => {
+    console.log('setMapLevelDebounced 호출됨:', level);
+    setMapLevel(level);
+  }, []);
+
 
   // 토스트 메시지 상태
   const [toast, setToast] = useState<{
@@ -207,13 +240,8 @@ export const useHomeLogic = () => {
       }
       
       setShowHomeContent(false);
-      setMapInteraction({
-        zoomable: true,
-        scrollwheel: true,
-        draggable: true,
-        disableDoubleClickZoom: false,
-        disableDoubleTapZoom: false
-      });
+      // 카드가 표시되면 맵 상호작용 활성화
+      enableMapInteraction();
       
       const stationCards = generateStationCards();
       setCards(stationCards);
@@ -242,19 +270,19 @@ export const useHomeLogic = () => {
         ...friendMarkers.map(marker => marker.position)
       ];
       
-      if (allPoints.length > 0) {
-        const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-        const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-        setMapCenter({ lat: centerLat, lng: centerLng });
-        setMapLevel(6);
-      }
+                    if (allPoints.length > 0) {
+                const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+                const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+                setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+                setMapLevelDebounced(6);
+              }
     } catch (error) {
       console.error('중간거리 찾기 중 오류 발생:', error);
       showToast('중간거리 찾기 중 오류가 발생했습니다.', 'error');
     } finally {
       setIsFindingMiddle(false);
     }
-  }, [lastFindMiddleTime, isFindingMiddle, generateStationCards, convertFriendsToMarkers, showToast]);
+  }, [lastFindMiddleTime, isFindingMiddle, generateStationCards, convertFriendsToMarkers, showToast, enableMapInteraction]);
 
   const handleHideCards = useCallback(() => {
     setShowCardList(false);
@@ -265,11 +293,29 @@ export const useHomeLogic = () => {
       (window as any).resetMiddlePlaceCardSelection();
     }
     
+    // 카드가 숨겨지면 맵 상호작용 비활성화
+    disableMapInteraction();
+    
     setMapMarkers([]);
     setMapRoutes([]);
-  }, []);
+  }, [disableMapInteraction]);
 
   const handleCardClick = useCallback((cardId: number) => {
+    // 연속 클릭 방지 (1.2초)
+    const now = Date.now();
+    if (now - (handleCardClick as any).lastClickTime < 1200) {
+      console.log('중복 클릭 방지');
+      return;
+    }
+    (handleCardClick as any).lastClickTime = now;
+    
+    // 처리 중 상태 확인
+    if ((handleCardClick as any).isProcessing) {
+      console.log('이미 처리 중인 클릭이 있습니다');
+      return;
+    }
+    (handleCardClick as any).isProcessing = true;
+    
     const clickedCard = cards.find(card => card.id === cardId);
     if (!clickedCard) return;
 
@@ -290,51 +336,47 @@ export const useHomeLogic = () => {
             isHighlighted: true // 선택된 역은 강조 표시
           };
           
-          // 친구 마커와 선택된 역 마커 표시
+          // 상태 업데이트 최적화 (배치 처리)
           const allMarkers = [...friendMarkers, stationMarker];
-          setMapMarkers(allMarkers);
-          
-          // 친구들에서 역으로의 경로 생성
           const friendRoutes = friends.map(friend => ({
             from: { lat: friend.coordinates?.lat || 37.5665, lng: friend.coordinates?.lng || 126.9780 },
             to: { lat: station.lat, lng: station.lng },
             color: '#4A90E2' // 파란색 (대중교통 경로)
           }));
           
-          setMapRoutes(friendRoutes);
-          
-          // 맵 중심을 친구들과 역의 중앙으로 설정
           const allPoints = [
             ...friendMarkers.map(marker => marker.position),
             stationMarker.position
           ];
           
-          if (allPoints.length > 0) {
-            const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-            const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-            setMapCenter({ lat: centerLat, lng: centerLng });
-            setMapLevel(6); // 친구들과 역이 모두 보이도록 적절한 레벨
-          }
-          
-          // TransportInfoModal 열기 (친구들에서 역으로의 경로)
-          console.log('역 클릭 - TransportInfoModal 열기:', {
-            stationName: station.name,
-            stationPosition: { lat: station.lat, lng: station.lng },
-            friendsCount: friends.length
+          // React 18의 자동 배치 업데이트 활용
+          React.startTransition(() => {
+            // 맵 상호작용 활성화
+            enableMapInteraction();
+            
+            // 맵 관련 상태 업데이트
+            setMapMarkers(allMarkers);
+            setMapRoutes(friendRoutes);
+            
+            if (allPoints.length > 0) {
+              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+              setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+              setMapLevelDebounced(6);
+            }
+            
+            // UI 관련 상태 업데이트
+            setSelectedStationInfo({
+              name: station.name,
+              position: { lat: station.lat, lng: station.lng }
+            });
+            setShowTransportModal(true);
+            
+            // 추천 장소 카드로 변경
+            const placeCards = generatePlaceCards(clickedCard.id);
+            setCards(placeCards);
+            setCurrentView('places');
           });
-          
-          setSelectedStationInfo({
-            name: station.name,
-            position: { lat: station.lat, lng: station.lng }
-          });
-          setShowTransportModal(true);
-          
-          console.log('TransportInfoModal 상태 설정 완료');
-          
-          // 추천 장소 카드로 변경
-          const placeCards = generatePlaceCards(clickedCard.id);
-          setCards(placeCards);
-          setCurrentView('places');
         }
       }
     } else {
@@ -357,20 +399,27 @@ export const useHomeLogic = () => {
         
         const friendMarkers = convertFriendsToMarkers(friends);
         const allMarkers = [...friendMarkers, ...stationMarkers];
-        setMapMarkers(allMarkers);
-        setMapRoutes([]);
         
         const allPoints = [
           ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
           ...friends.filter(friend => friend.coordinates).map(friend => friend.coordinates!)
         ];
         
-        if (allPoints.length > 0) {
-          const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-          const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-          setMapCenter({ lat: centerLat, lng: centerLng });
-          setMapLevel(7);
-        }
+        // React 18의 자동 배치 업데이트 활용
+        React.startTransition(() => {
+          // 맵 상호작용 활성화
+          enableMapInteraction();
+          
+          setMapMarkers(allMarkers);
+          setMapRoutes([]);
+          
+          if (allPoints.length > 0) {
+            const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+            const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+            setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+            setMapLevelDebounced(7);
+          }
+        });
       } else if (clickedCard.type === 'place') {
         if (selectedCardId === clickedCard.id) {
           // 🎯 이미 선택된 장소를 다시 클릭하면 원상복귀 (친구들에서 역으로의 경로 복원)
@@ -400,6 +449,10 @@ export const useHomeLogic = () => {
             };
             
             const allMarkers = [...friendMarkers, stationMarker, ...placeMarkers];
+            
+            // 맵 상호작용 활성화
+            enableMapInteraction();
+            
             setMapMarkers(allMarkers);
             
             // 친구들에서 역으로의 경로 복원
@@ -420,8 +473,8 @@ export const useHomeLogic = () => {
             if (allPoints.length > 0) {
               const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
               const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-              setMapCenter({ lat: centerLat, lng: centerLng });
-              setMapLevel(6);
+                              setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+                setMapLevelDebounced(6);
             }
           }
         } else {
@@ -431,9 +484,7 @@ export const useHomeLogic = () => {
           if (selectedPlace) {
             const currentStation = getStationById(selectedStationId || 0);
             if (currentStation && selectedPlace) {
-              setSelectedCardId(clickedCard.id);
-              
-              // 역과 선택된 장소만 표시하고 강조
+              // 모든 상태를 한 번에 계산
               const stationMarker = {
                 id: `station-${currentStation.id}`,
                 position: { lat: currentStation.lat, lng: currentStation.lng },
@@ -452,43 +503,64 @@ export const useHomeLogic = () => {
                 isHighlighted: true
               };
               
-              // 역과 선택된 장소만 표시
-              setMapMarkers([stationMarker, selectedPlaceMarker]);
+              const friendMarkers = convertFriendsToMarkers(friends);
+              const allPoints = [
+                ...friendMarkers.map(marker => marker.position),
+                stationMarker.position,
+                selectedPlaceMarker.position
+              ];
               
-              // 맵 중심을 역과 장소의 중앙으로 설정
-              const centerLat = (currentStation.lat + selectedPlace.lat) / 2;
-              const centerLng = (currentStation.lng + selectedPlace.lng) / 2;
-              setMapCenter({ lat: centerLat, lng: centerLng });
-              setMapLevel(4); // 역과 장소가 잘 보이도록 적절한 레벨
+              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
               
-              // 역에서 장소로의 경로 생성
+              const friendRoutes = friends.map(friend => ({
+                from: { lat: friend.coordinates?.lat || 37.5665, lng: friend.coordinates?.lng || 126.9780 },
+                to: { lat: currentStation.lat, lng: currentStation.lng },
+                color: '#4A90E2'
+              }));
+              
               const stationToPlaceRoute = {
                 from: { lat: currentStation.lat, lng: currentStation.lng },
                 to: { lat: selectedPlace.lat, lng: selectedPlace.lng },
-                color: '#4A90E2'
+                color: '#FF6B6B'
               };
               
-              setMapRoutes([stationToPlaceRoute]);
-              
-              // TransportInfoModal 열기 (역에서 장소로의 경로)
-              setSelectedStationInfo({
-                name: `${currentStation.name} → ${selectedPlace.title}`,
-                position: { lat: currentStation.lat, lng: currentStation.lng },
-                placePosition: { lat: selectedPlace.lat, lng: selectedPlace.lng },
-                placeInfo: {
-                  title: selectedPlace.title,
-                  category: selectedPlace.category,
-                  description: `${selectedPlace.title}는 ${selectedPlace.category} 카테고리의 장소입니다.`,
-                  duration: selectedPlace.duration
-                }
+              // 상태 업데이트를 배치로 처리
+              Promise.resolve().then(() => {
+                // 맵 상호작용 활성화
+                enableMapInteraction();
+                
+                setSelectedCardId(clickedCard.id);
+                setMapMarkers([...friendMarkers, stationMarker, selectedPlaceMarker]);
+                setMapRoutes([...friendRoutes, stationToPlaceRoute]);
+                setSelectedStationInfo({
+                  name: `${currentStation.name} → ${selectedPlace.title}`,
+                  position: { lat: currentStation.lat, lng: currentStation.lng },
+                  placePosition: { lat: selectedPlace.lat, lng: selectedPlace.lng },
+                  placeInfo: {
+                    title: selectedPlace.title,
+                    category: selectedPlace.category,
+                    description: `${selectedPlace.title}는 ${selectedPlace.category} 카테고리의 장소입니다.`,
+                    duration: selectedPlace.duration
+                  }
+                });
+                setShowTransportModal(true);
               });
-              setShowTransportModal(true);
+              
+              // 맵 중심과 레벨은 별도로 설정
+              Promise.resolve().then(() => {
+                setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+                setMapLevelDebounced(5);
+              });
             }
           }
         }
       }
     }
-  }, [cards, currentView, selectedCardId, selectedStationId, friends, convertFriendsToMarkers, generatePlaceCards, generateStationCards]);
+    
+    // 처리 완료 후 상태 리셋
+    (handleCardClick as any).isProcessing = false;
+  }, [cards, currentView, selectedCardId, selectedStationId, friends, convertFriendsToMarkers, generatePlaceCards, generateStationCards, setMapCenterDebounced, setMapLevelDebounced, enableMapInteraction]);
 
   // Effects
   useEffect(() => {
@@ -527,6 +599,8 @@ export const useHomeLogic = () => {
     }
   }, [friends, showCardList]);
 
+
+
   return {
     // 상태
     showCardList,
@@ -548,7 +622,11 @@ export const useHomeLogic = () => {
     selectedStationInfo,
     showFriendsModal,
     showScheduleModal,
-    showMeetingModal,
+        showMeetingModal,
+    
+    // 디바운싱 함수들
+    setMapCenterDebounced,
+    setMapLevelDebounced,
     
     // 액션
     setShowCardList,
@@ -573,6 +651,10 @@ export const useHomeLogic = () => {
     handleFindMiddle,
     handleHideCards,
     handleCardClick,
+    
+    // 맵 상호작용 제어
+    enableMapInteraction,
+    disableMapInteraction,
     
     // 유틸리티
     generateStationCards,
