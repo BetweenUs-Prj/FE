@@ -458,8 +458,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                             selectedTransportMode
                           });
                         }
-                        // TransportInfoModal 닫기
-                        onClose();
+                        // TransportInfoModal은 닫지 않음 (ScheduleConfirmModal이 닫힐 때 닫힘)
                       }}
                     >
                       📅 약속 추가하기

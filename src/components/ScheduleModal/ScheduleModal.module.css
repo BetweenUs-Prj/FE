@@ -109,7 +109,13 @@
   border-radius: 8px;
   padding: 16px;
   border: 1px solid #e9ecef;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  max-height: 200px; /* 기본 높이 제한 */
+}
+
+.scheduleCard.expanded {
+  max-height: 1000px; /* 확장 시 높이 제한 */
 }
 
 .scheduleCard:hover {
@@ -117,14 +123,12 @@
 }
 
 .scheduleHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  position: relative;
   margin-bottom: 12px;
 }
 
 .scheduleInfo {
-  flex: 1;
+  padding-right: 140px; /* 게임 버튼 공간 확보 */
 }
 
 .scheduleTitle {
@@ -161,7 +165,20 @@
   font-weight: 600;
 }
 
+.gameButtons {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  min-width: 120px;
+}
+
 .removeButton {
+  position: absolute;
+  top: 0;
+  right: 0;
   background: #f44336;
   color: white;
   border: none;
@@ -175,6 +192,57 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.gameButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.gameButtonMain {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.gameButtonMain:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.gameButtonMain.ready {
+  background: #059669;
+}
+
+.gameButtonMain.ready:hover {
+  background: #047857;
+}
+
+.gameStatus {
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.readyCount {
+  color: #059669;
+  font-weight: 600;
+}
+
+.totalCount {
+  color: #6b7280;
 }
 
 .removeButton:hover {
@@ -225,6 +293,136 @@
   margin: 0;
 }
 
+/* 🎯 상세 정보 섹션 */
+.detailSection {
+  margin-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detailGroup {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.detailGroup h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detailLabel {
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 80px;
+}
+
+.detailValue {
+  color: #111827;
+  font-weight: 500;
+}
+
+.detailDescription {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.detailParticipants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detailParticipant {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.detailRoutes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRoute {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.detailRouteHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.detailRouteName {
+  font-weight: 600;
+  color: #111827;
+}
+
+.detailRouteTime {
+  background: #3b82f6;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.detailRouteDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailRouteDistance {
+  font-size: 14px;
+  color: #059669;
+  font-weight: 500;
+}
+
+.detailRoutePath {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .modal {
@@ -249,11 +447,51 @@
     gap: 12px;
   }
   
+  .scheduleInfo {
+    padding-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .gameButtons {
+    position: static;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    min-width: auto;
+  }
+  
+  .removeButton {
+    position: static;
+    align-self: flex-end;
+  }
+  
+  .gameButton {
+    flex: 1;
+  }
+  
+  .gameButtonMain {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
   .scheduleMeta {
     gap: 8px;
   }
   
   .removeButton {
     align-self: flex-end;
+  }
+  
+  .detailSection {
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+  
+  .detailContent {
+    gap: 16px;
+  }
+  
+  .detailGroup {
+    padding: 12px;
   }
 }

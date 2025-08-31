@@ -99,6 +99,9 @@ export const useHomeLogic = () => {
     draggable: false
   });
 
+  // 자동 중심 조정 비활성화 상태
+  const [disableAutoCenter, setDisableAutoCenter] = useState(false);
+
   // 맵 상호작용 제어 함수
   const enableMapInteraction = useCallback(() => {
     console.log('🎯 enableMapInteraction 호출됨 - 맵 상호작용 활성화');
@@ -143,6 +146,7 @@ export const useHomeLogic = () => {
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMeetingModal, setShowMeetingModal] = useState(false);
+
 
   // 유틸리티 함수들
   const generateStationCards = useCallback((): MiddlePlaceCard[] => {
@@ -532,7 +536,8 @@ export const useHomeLogic = () => {
                 setMapMarkers([stationMarker, selectedPlaceMarker]); // 🎯 친구 마커 제거
                 setMapRoutes([stationToPlaceRoute]); // 🎯 친구 경로 제거
                 setMapCenterDebounced({ lat: centerLat, lng: centerLng });
-                setMapLevelDebounced(3); // 🎯 줌 레벨을 3으로 변경
+                setMapLevelDebounced(1); // 🎯 줌 레벨을 1로 변경 (더 가깝게)
+                setDisableAutoCenter(true); // 🎯 자동 중심 조정 비활성화
                 
                 setSelectedStationInfo({
                   name: `${currentStation.name} → ${selectedPlace.title}`,
@@ -613,18 +618,16 @@ export const useHomeLogic = () => {
       routes: data.routes
     };
     
-    console.log('🎯 새 일정 생성:', newSchedule);
-    
+    console.log('🎯 일정 추가 중:', newSchedule);
     setSchedules(prev => {
       const updatedSchedules = [...prev, newSchedule];
       console.log('🎯 업데이트된 일정 목록:', updatedSchedules);
       return updatedSchedules;
     });
     
-    showToast('일정이 추가되었습니다!', 'success');
-    
-    // TransportInfoModal 닫기
-    setShowTransportModal(false);
+    // ScheduleConfirmModal도 열기
+    setScheduleData(data);
+    setShowScheduleConfirmModal(true);
   };
 
   const handleSendInvitation = () => {
@@ -637,6 +640,8 @@ export const useHomeLogic = () => {
     // 플로팅 네비바의 일정 관리 페이지 열기
     setShowScheduleConfirmModal(false);
     setShowScheduleModal(true);
+    // TransportInfoModal도 닫기
+    setShowTransportModal(false);
   };
 
   // 일정 관리 핸들러
@@ -663,6 +668,8 @@ export const useHomeLogic = () => {
     setSchedules(prev => prev.filter(schedule => schedule.id !== id));
     showToast('일정이 삭제되었습니다.', 'success');
   }, [showToast]);
+
+
 
   const handleCloseScheduleConfirmModal = useCallback(() => {
     // 약속 추가 확인 모달을 닫고 TransportInfoModal을 다시 열기
@@ -701,6 +708,7 @@ export const useHomeLogic = () => {
     // 디바운싱 함수들
     setMapCenterDebounced,
     setMapLevelDebounced,
+    disableAutoCenter,
     
     // 액션
     setShowCardList,
@@ -716,6 +724,7 @@ export const useHomeLogic = () => {
     setShowFriendsModal,
     setShowScheduleModal,
     setShowMeetingModal,
+
     
     // 핸들러
     showToast,
@@ -732,6 +741,7 @@ export const useHomeLogic = () => {
     handleCloseScheduleConfirmModal,
     handleAddScheduleToCalendar,
     handleRemoveSchedule,
+
     
     // 맵 상호작용 제어
     enableMapInteraction,

@@ -13,6 +13,7 @@ import ScheduleModal from '@/components/ScheduleModal';
 import MeetingModal from '@/components/MeetingModal';
 import TransportInfoModal from '@/components/TransportInfoModal';
 import ScheduleConfirmModal from '@/components/ScheduleConfirmModal';
+
 import { useHomeLogic } from '@/hooks/useHomeLogic';
 
 const Home = () => {
@@ -40,6 +41,7 @@ const Home = () => {
     showScheduleModal,
     showMeetingModal,
     schedules,
+
     
     // 핸들러
     hideToast,
@@ -53,13 +55,15 @@ const Home = () => {
     handleSendInvitation,
     handleGoToSchedule,
     handleCloseScheduleConfirmModal,
-    handleRemoveSchedule = () => {},
+    handleRemoveSchedule,
+
     
     // 액션
     setShowFriendsModal,
     setShowScheduleModal,
     setShowMeetingModal,
-    setShowTransportModal
+    setShowTransportModal,
+
   } = useHomeLogic();
 
   return (
@@ -169,6 +173,7 @@ const Home = () => {
         onClose={() => setShowScheduleModal(false)}
         schedules={schedules}
         onRemoveSchedule={handleRemoveSchedule}
+
       />
       
       <MeetingModal
@@ -210,6 +215,8 @@ const Home = () => {
         onSendInvitation={handleSendInvitation}
         onGoToSchedule={handleGoToSchedule}
       />
+
+
     </div>
   );
 };

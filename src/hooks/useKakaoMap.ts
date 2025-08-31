@@ -199,13 +199,15 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       try {
         console.log('🎯 맵 옵션 업데이트:', {
           draggable: options.draggable,
-          zoomable: options.zoomable
+          zoomable: options.zoomable,
+          level: options.level
         });
         
         const center = new window.kakao.maps.LatLng(options.center.lat, options.center.lng);
         mapRef.current.setCenter(center);
         
         if (options.level !== undefined) {
+          console.log('🎯 맵 레벨 설정:', options.level);
           mapRef.current.setLevel(options.level);
         }
         

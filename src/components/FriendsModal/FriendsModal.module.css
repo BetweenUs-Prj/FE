@@ -68,10 +68,67 @@
   transform: scale(1.1);
 }
 
+/* 탭 컨테이너 */
+.tabContainer {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabButton {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 16px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+
+.tabButton:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.tabButton.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: white;
+}
+
+.tabButton.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: white;
+}
+
 .content {
-  padding: 24px;
-  max-height: calc(80vh - 80px);
+  padding: 20px;
+  max-height: calc(80vh - 140px);
   overflow-y: auto;
+}
+
+.tabContent {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .addSection {
@@ -100,110 +157,245 @@
 .friendsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .friendCard {
   background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  transition: background-color 0.2s ease;
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: all 0.2s ease;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid #e9ecef;
+  margin-bottom: 2px;
 }
 
 .friendCard:hover {
   background: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .friendInfo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: #6c757d;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .details {
   flex: 1;
+  min-width: 0;
 }
 
-.friendName {
-  font-size: 16px;
+.friendName, .requestName {
+  font-size: 15px;
   font-weight: 600;
   color: #333;
-  margin: 0 0 4px 0;
+  margin: 0 0 3px 0;
+  line-height: 1.2;
 }
 
-.friendEmail {
+.friendEmail, .requestEmail {
   font-size: 12px;
   color: #666;
   margin: 0 0 2px 0;
+  line-height: 1.3;
 }
 
 .friendPhone {
-  font-size: 12px;
-  color: #666;
+  font-size: 11px;
+  color: #888;
   margin: 0;
+  line-height: 1.3;
+}
+
+.requestMessage {
+  font-size: 12px;
+  color: #007bff;
+  margin: 0 0 2px 0;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.requestTime {
+  font-size: 10px;
+  color: #999;
+  margin: 0;
+  line-height: 1.3;
 }
 
 .status {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  margin-left: 8px;
 }
 
 .statusDot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .statusText {
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  margin-left: 12px;
 }
-
-
 
 .removeButton {
   background: #f44336;
   color: white;
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.3s ease;
+  font-size: 11px;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .removeButton:hover {
   background: #d32f2f;
-  transform: scale(1.1);
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+/* 친구 요청 관련 스타일 */
+.requestsList, .sentRequestsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requestCard, .sentRequestCard {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e9ecef;
+  margin-bottom: 2px;
+}
+
+.requestCard:hover, .sentRequestCard:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.requestInfo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.requestStatus {
+  display: flex;
+  align-items: center;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.requestActions {
+  display: flex;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.acceptButton {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.acceptButton:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.rejectButton {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.rejectButton:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+.cancelButton {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cancelButton:hover {
+  background: #f57c00;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
 }
 
 .emptyState {
@@ -238,6 +430,7 @@
   
   .content {
     padding: 16px;
+    max-height: calc(90vh - 140px);
   }
   
   .header {
@@ -247,19 +440,49 @@
   .title {
     font-size: 20px;
   }
-  
-  .friendCard {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
+
+  .tabButton {
+    padding: 12px 8px;
+    font-size: 13px;
   }
   
-  .friendInfo {
+  .friendCard, .requestCard, .sentRequestCard {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 12px 14px;
+  }
+  
+  .friendInfo, .requestInfo {
     flex-direction: column;
     gap: 8px;
   }
   
-  .actions {
+  .actions, .requestActions {
     justify-content: center;
+    margin-left: 0;
+  }
+
+  .status {
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .friendName, .requestName {
+    font-size: 14px;
+  }
+
+  .friendEmail, .requestEmail {
+    font-size: 11px;
+  }
+
+  .friendPhone, .requestTime {
+    font-size: 10px;
   }
 }
