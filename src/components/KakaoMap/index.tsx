@@ -29,7 +29,6 @@ interface KakaoMapProps {
   // 상호작용 설정
   draggable?: boolean;        // 지도 드래그 가능 여부
   zoomable?: boolean;         // 지도 확대/축소 가능 여부
-  scrollwheel?: boolean;      // 마우스 휠로 확대/축소 가능 여부
   disableDoubleClickZoom?: boolean;  // 더블클릭 확대 비활성화
   disableDoubleTapZoom?: boolean;    // 더블탭 확대 비활성화
   
@@ -72,7 +71,6 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
   // 상호작용 설정
   draggable = true,   // 지도 드래그 가능 여부 (기본값: true)
   zoomable = true,    // 지도 확대/축소 가능 여부 (기본값: true)
-  scrollwheel = true, // 마우스 휠로 확대/축소 가능 여부 (기본값: true)
   disableDoubleClickZoom = false,  // 더블클릭 확대 비활성화 (기본값: false)
   disableDoubleTapZoom = false,    // 더블탭 확대 비활성화 (기본값: false)
   
@@ -93,7 +91,6 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
       level,
       draggable,
       zoomable,
-      scrollwheel,
       disableDoubleClickZoom,
       disableDoubleTapZoom
     },

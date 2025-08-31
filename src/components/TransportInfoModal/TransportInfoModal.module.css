@@ -1077,4 +1077,117 @@
   }
 }
 
+/* 🎯 장소 모드 스타일 */
+.placeModeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.placeDetailSection {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.placeHeader {
+  margin-bottom: 16px;
+}
+
+.placeTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.placeCategory {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.placeDescription h5,
+.recommendationReason h5,
+.transportInfo h5 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeDescription p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.recommendationReason ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendationReason li {
+  padding: 8px 0;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recommendationReason li:last-child {
+  border-bottom: none;
+}
+
+.transportDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transportDetails span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.addScheduleSection {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.addScheduleButton {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.addScheduleButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 255, 255, 0.2);
+}
+
 

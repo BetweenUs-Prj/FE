@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './TransportInfoModal.module.css';
+import { calculateDistance } from '../../utils/kakaoMapUtils';
 
 interface Friend {
   id: number;
@@ -58,6 +59,14 @@ interface TransportInfoModalProps {
     description?: string;
     duration: string;
   };
+  onAddSchedule?: (scheduleData: {
+    placeInfo: any;
+    stationName: string;
+    friends: Friend[];
+    routes: TransportRoute[];
+    meetingTime: string;
+    selectedTransportMode: string;
+  }) => void;
 }
 
 const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
@@ -70,7 +79,8 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   onMapRouteUpdate,
   isPlaceMode = false,
   placePosition,
-  placeInfo
+  placeInfo,
+  onAddSchedule
 }) => {
   const [routes, setRoutes] = useState<TransportRoute[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -119,17 +129,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     }
   }, [isVisible, isPlaceMode, friends.length, stationName, meetingTime]);
 
-  // 거리 계산 함수
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
+
 
   // 시간 계산 함수들
   const calculateDepartureTime = (arrivalTime: string, durationMinutes: number): string => {
@@ -173,39 +173,39 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     setIsLoading(true);
     
     try {
-      const distance = calculateDistance(
-        stationPosition.lat, stationPosition.lng,
-        placePosition.lat, placePosition.lng
-      );
-      
-      const duration = Math.round(distance * (selectedTransportMode === 'transit' ? 3 : 2));
+        const distance = calculateDistance(
+          stationPosition.lat, stationPosition.lng,
+          placePosition.lat, placePosition.lng
+        );
+        
+        const duration = Math.round(distance * (selectedTransportMode === 'transit' ? 3 : 2));
       const departureTime = calculateDepartureTime(meetingTime, duration);
-      
-      const routeSteps: RouteStep[] = [{
-        transportMode: selectedTransportMode,
-        duration,
-        distance: Math.round(distance * 10) / 10,
-        details: [stationName, '추천장소']
-      }];
-      
-      const route: TransportRoute = {
-        friendId: 0,
-        friendName: `${stationName} → 추천장소`,
-        transportMode: selectedTransportMode,
-        duration,
-        distance: Math.round(distance * 10) / 10,
-        details: [stationName, '추천장소'],
-        coords: generateRouteCoords(stationPosition, placePosition),
+        
+        const routeSteps: RouteStep[] = [{
+          transportMode: selectedTransportMode,
+          duration,
+          distance: Math.round(distance * 10) / 10,
+          details: [stationName, '추천장소']
+        }];
+        
+        const route: TransportRoute = {
+          friendId: 0,
+          friendName: `${stationName} → 추천장소`,
+          transportMode: selectedTransportMode,
+          duration,
+          distance: Math.round(distance * 10) / 10,
+          details: [stationName, '추천장소'],
+          coords: generateRouteCoords(stationPosition, placePosition),
         departureTime,
         arrivalTime: meetingTime,
         lastTrainTime: selectedTransportMode === 'transit' ? getLastTrainTime() : undefined,
-        routeSteps,
-        transferInfos: selectedTransportMode === 'transit' ? [{
-          station: stationName,
-          line: '지하철',
-          direction: '추천장소 방향',
-          time: `${duration}분`
-        }] : []
+          routeSteps,
+          transferInfos: selectedTransportMode === 'transit' ? [{
+            station: stationName,
+            line: '지하철',
+            direction: '추천장소 방향',
+            time: `${duration}분`
+          }] : []
       };
       
       setRoutes([route]);
@@ -359,10 +359,11 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
 
   // 교통수단 선택 변경 시 자동 경로 재계산
   useEffect(() => {
-    if (isVisible && routes.length > 0) {
+    // place 모드일 때는 경로 재계산하지 않음
+    if (isVisible && routes.length > 0 && !isPlaceMode) {
       handleRouteRecalculation();
     }
-  }, [selectedTransportMode, isVisible, routes.length]);
+  }, [selectedTransportMode, isVisible, routes.length, isPlaceMode]);
 
   // 경로 재계산 핸들러
   const handleRouteRecalculation = useCallback(async () => {
@@ -399,93 +400,137 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         {/* 컨텐츠 */}
         <div className={styles.content}>
           {isPlaceMode ? (
-            <div className={styles.mainArea}>
+            <div className={styles.placeModeContent}>
               {placeInfo && (
-                <div className={styles.placeInfoSection}>
-                  <h4>📍 장소 정보</h4>
-                  <div className={styles.placeCard}>
+                <>
+                  {/* 🎯 장소 상세 정보 */}
+                  <div className={styles.placeDetailSection}>
                     <div className={styles.placeHeader}>
-                      <h5>{placeInfo.title}</h5>
+                      <h4 className={styles.placeTitle}>{placeInfo.title}</h4>
                       <span className={styles.placeCategory}>{placeInfo.category}</span>
                     </div>
-                    {placeInfo.description && (
-                      <p className={styles.placeDescription}>{placeInfo.description}</p>
-                    )}
-                    <div className={styles.placeMeta}>
-                      <span>⏱️ {placeInfo.duration}</span>
+                    
+                    {/* 🎯 상세 설명 */}
+                    <div className={styles.placeDescription}>
+                      <h5>📍 장소 소개</h5>
+                      <p>{placeInfo.description || `${placeInfo.title}는 ${placeInfo.category} 카테고리의 인기 장소입니다.`}</p>
+                    </div>
+                    
+                    {/* 🎯 추천 이유 */}
+                    <div className={styles.recommendationReason}>
+                      <h5>🎯 추천 이유</h5>
+                      <ul>
+                        <li>🚇 역에서 도보 {placeInfo.duration} 거리에 위치</li>
+                        <li>📍 중간 지점으로 접근성이 좋음</li>
+                        <li>⭐ {placeInfo.category} 카테고리에서 인기 있는 장소</li>
+                        <li>🕐 만남 시간에 적합한 운영 시간</li>
+                      </ul>
+                    </div>
+                    
+                    {/* 🎯 교통 정보 */}
+                    <div className={styles.transportInfo}>
+                      <h5>🚇 교통 정보</h5>
+                      <div className={styles.transportDetails}>
+                        <span>⏱️ 역에서 도보 {placeInfo.duration}</span>
+                        <span>📏 거리: 약 {routes[0]?.distance || '0'}km</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                  
+                  {/* 🎯 약속 추가 버튼 */}
+                  <div className={styles.addScheduleSection}>
+                    <button 
+                      className={styles.addScheduleButton}
+                      onClick={() => {
+                        // 약속 추가 팝업 표시
+                        if (onAddSchedule) {
+                          onAddSchedule({
+                            placeInfo,
+                            stationName,
+                            friends,
+                            routes,
+                            meetingTime,
+                            selectedTransportMode
+                          });
+                        }
+                        // TransportInfoModal 닫기
+                        onClose();
+                      }}
+                    >
+                      📅 약속 추가하기
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           ) : (
             <div className={styles.functionArea}>
-              {/* 만남 시간 설정 */}
-              <div className={styles.meetingTimeSection}>
+          {/* 만남 시간 설정 */}
+          <div className={styles.meetingTimeSection}>
                 <h4>⏰ 만남 시간</h4>
-                <div className={styles.timeInput}>
-                  <input
-                    type="time"
-                    value={meetingTime}
-                    onChange={(e) => setMeetingTime(e.target.value)}
-                    className={styles.timePicker}
-                  />
-                  <button 
-                    onClick={handleRouteRecalculation}
-                    className={styles.refreshButton}
-                    disabled={isLoading}
-                  >
+            <div className={styles.timeInput}>
+              <input
+                type="time"
+                value={meetingTime}
+                onChange={(e) => setMeetingTime(e.target.value)}
+                className={styles.timePicker}
+              />
+              <button 
+                onClick={handleRouteRecalculation}
+                className={styles.refreshButton}
+                disabled={isLoading}
+              >
                     {isLoading ? '계산 중...' : '재계산'}
-                  </button>
-                </div>
-              </div>
+              </button>
+            </div>
+          </div>
 
               {/* 교통수단 선택 */}
-              <div className={styles.transportModeSection}>
+          <div className={styles.transportModeSection}>
                 <h4>🚇 교통수단</h4>
-                <div className={styles.transportButtons}>
-                  <button
-                    className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
-                    onClick={() => setSelectedTransportMode('transit')}
-                  >
+            <div className={styles.transportButtons}>
+              <button
+                className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
+                onClick={() => setSelectedTransportMode('transit')}
+              >
                     🚇 대중교통
-                  </button>
-                  <button
-                    className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
-                    onClick={() => setSelectedTransportMode('car')}
-                  >
-                    🚗 자동차
-                  </button>
-                </div>
-              </div>
+              </button>
+              <button
+                className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
+                onClick={() => setSelectedTransportMode('car')}
+              >
+                🚗 자동차
+              </button>
+            </div>
+          </div>
 
-              {/* 경로 정보 */}
-              <div className={styles.routesSection}>
-                <h4>🚇 경로 정보</h4>
+          {/* 경로 정보 */}
+          <div className={styles.routesSection}>
+            <h4>🚇 경로 정보</h4>
                 {routes.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <p>경로 정보가 없습니다</p>
-                  </div>
+              <div className={styles.emptyState}>
+                <p>경로 정보가 없습니다</p>
+              </div>
                 ) : (
                   <div className={styles.routesList}>
                     {routes.map((route) => (
-                      <div key={route.friendId} className={styles.routeCard}>
-                        <div className={styles.routeHeader}>
+              <div key={route.friendId} className={styles.routeCard}>
+                <div className={styles.routeHeader}>
                           <div className={styles.routeInfo}>
-                            <h5>{route.friendName}</h5>
+                  <h5>{route.friendName}</h5>
                             <div className={styles.routeMeta}>
-                              <span>⏱️ {route.duration}분</span>
-                              <span>📏 {route.distance}km</span>
+                    <span>⏱️ {route.duration}분</span>
+                    <span>📏 {route.distance}km</span>
                               {route.lastTrainTime && (
                                 <span className={styles.lastTrainBadge}>막차 {route.lastTrainTime}</span>
                               )}
-                            </div>
-                          </div>
-                          {route.departureTime && route.arrivalTime && (
-                            <div className={styles.timeInfo}>
+                  </div>
+                </div>
+                {route.departureTime && route.arrivalTime && (
+                  <div className={styles.timeInfo}>
                               <span>{route.departureTime} → {route.arrivalTime}</span>
-                            </div>
-                          )}
+                  </div>
+                )}
                         </div>
                         
                         {/* 간단한 경로 요약 */}
@@ -500,7 +545,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+          </div>
           )}
         </div>
       </div>

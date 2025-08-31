@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
 
 interface MiddlePlaceCard {
@@ -87,11 +87,12 @@ export const useHomeLogic = () => {
   const [lastFindMiddleTime, setLastFindMiddleTime] = useState(0);
   const [showTransportModal, setShowTransportModal] = useState(false);
   const [selectedStationInfo, setSelectedStationInfo] = useState<StationInfo | null>(null);
+  const [showScheduleConfirmModal, setShowScheduleConfirmModal] = useState(false);
+  const [scheduleData, setScheduleData] = useState<any>(null);
 
-  // 지도 상호작용 상태 (동적 제어)
+  // 지도 상호작용 상태 (동적 제어) - 🎯 초기값을 비활성화로 변경
   const [mapInteraction, setMapInteraction] = useState({
     zoomable: false,
-    scrollwheel: false,
     draggable: false,
     disableDoubleClickZoom: true,
     disableDoubleTapZoom: true
@@ -99,9 +100,9 @@ export const useHomeLogic = () => {
 
   // 맵 상호작용 제어 함수
   const enableMapInteraction = useCallback(() => {
+    console.log('🎯 enableMapInteraction 호출됨 - 맵 상호작용 활성화');
     setMapInteraction({
       zoomable: true,
-      scrollwheel: true,
       draggable: true,
       disableDoubleClickZoom: false,
       disableDoubleTapZoom: false
@@ -109,9 +110,9 @@ export const useHomeLogic = () => {
   }, []);
 
   const disableMapInteraction = useCallback(() => {
+    console.log('🎯 disableMapInteraction 호출됨 - 맵 상호작용 비활성화');
     setMapInteraction({
       zoomable: false,
-      scrollwheel: false,
       draggable: false,
       disableDoubleClickZoom: true,
       disableDoubleTapZoom: true
@@ -260,22 +261,28 @@ export const useHomeLogic = () => {
         isHighlighted: false
       }));
       
-      const friendMarkers = convertFriendsToMarkers(friends);
+      // 🎯 친구 데이터가 전달되었으면 사용, 아니면 기존 friends 상태 사용
+      const currentFriends = friendsData || friends;
+      const friendMarkers = convertFriendsToMarkers(currentFriends);
       const allMarkers = [...friendMarkers, ...stationMarkers];
       setMapMarkers(allMarkers);
       setMapRoutes([]);
       
+      // 🎯 동적 줌 레벨 계산을 위한 포인트 수집
       const allPoints = [
         ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
         ...friendMarkers.map(marker => marker.position)
       ];
       
-                    if (allPoints.length > 0) {
-                const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-                const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-                setMapCenterDebounced({ lat: centerLat, lng: centerLng });
-                setMapLevelDebounced(6);
-              }
+      // 🎯 자동 영역 조정을 위해 중심점만 설정 (줌 레벨은 자동 조정됨)
+      if (allPoints.length > 0) {
+        const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+        const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+        setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+        
+        console.log('🎯 중간거리 찾기 - 마커 자동 영역 조정 활성화');
+        // 줌 레벨은 useKakaoMap에서 자동으로 조정됨
+      }
     } catch (error) {
       console.error('중간거리 찾기 중 오류 발생:', error);
       showToast('중간거리 찾기 중 오류가 발생했습니다.', 'error');
@@ -293,7 +300,7 @@ export const useHomeLogic = () => {
       (window as any).resetMiddlePlaceCardSelection();
     }
     
-    // 카드가 숨겨지면 맵 상호작용 비활성화
+    // 🎯 카드가 숨겨지면 맵 상호작용 비활성화 (초기 상태로 복원)
     disableMapInteraction();
     
     setMapMarkers([]);
@@ -503,21 +510,14 @@ export const useHomeLogic = () => {
                 isHighlighted: true
               };
               
-              const friendMarkers = convertFriendsToMarkers(friends);
-              const allPoints = [
-                ...friendMarkers.map(marker => marker.position),
+              // 🎯 역과 추천 장소만 표시하도록 수정
+              const routePoints = [
                 stationMarker.position,
                 selectedPlaceMarker.position
               ];
               
-              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-              
-              const friendRoutes = friends.map(friend => ({
-                from: { lat: friend.coordinates?.lat || 37.5665, lng: friend.coordinates?.lng || 126.9780 },
-                to: { lat: currentStation.lat, lng: currentStation.lng },
-                color: '#4A90E2'
-              }));
+              const centerLat = routePoints.reduce((sum, point) => sum + point.lat, 0) / routePoints.length;
+              const centerLng = routePoints.reduce((sum, point) => sum + point.lng, 0) / routePoints.length;
               
               const stationToPlaceRoute = {
                 from: { lat: currentStation.lat, lng: currentStation.lng },
@@ -525,14 +525,18 @@ export const useHomeLogic = () => {
                 color: '#FF6B6B'
               };
               
-              // 상태 업데이트를 배치로 처리
-              Promise.resolve().then(() => {
+              // 🎯 깔끔한 상태 전환 (Promise.resolve() 제거)
+              React.startTransition(() => {
                 // 맵 상호작용 활성화
                 enableMapInteraction();
                 
+                // 모든 상태를 한 번에 업데이트
                 setSelectedCardId(clickedCard.id);
-                setMapMarkers([...friendMarkers, stationMarker, selectedPlaceMarker]);
-                setMapRoutes([...friendRoutes, stationToPlaceRoute]);
+                setMapMarkers([stationMarker, selectedPlaceMarker]); // 🎯 친구 마커 제거
+                setMapRoutes([stationToPlaceRoute]); // 🎯 친구 경로 제거
+                setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+                setMapLevelDebounced(3); // 🎯 줌 레벨을 3으로 변경
+                
                 setSelectedStationInfo({
                   name: `${currentStation.name} → ${selectedPlace.title}`,
                   position: { lat: currentStation.lat, lng: currentStation.lng },
@@ -545,12 +549,6 @@ export const useHomeLogic = () => {
                   }
                 });
                 setShowTransportModal(true);
-              });
-              
-              // 맵 중심과 레벨은 별도로 설정
-              Promise.resolve().then(() => {
-                setMapCenterDebounced({ lat: centerLat, lng: centerLng });
-                setMapLevelDebounced(5);
               });
             }
           }
@@ -599,6 +597,30 @@ export const useHomeLogic = () => {
     }
   }, [friends, showCardList]);
 
+  // 🎯 약속 추가 관련 함수들
+  const handleAddSchedule = (data: any) => {
+    setScheduleData(data);
+    setShowScheduleConfirmModal(true);
+  };
+
+  const handleSendInvitation = () => {
+    // TODO: 초대장 보내기 로직 구현
+    showToast('초대장이 발송되었습니다!', 'success');
+    setShowScheduleConfirmModal(false);
+  };
+
+  const handleGoToSchedule = () => {
+    // 플로팅 네비바의 일정 관리 페이지 열기
+    setShowScheduleConfirmModal(false);
+    setShowScheduleModal(true);
+  };
+
+  const handleCloseScheduleConfirmModal = () => {
+    // 약속 추가 확인 모달을 닫고 TransportInfoModal을 다시 열기
+    setShowScheduleConfirmModal(false);
+    setShowTransportModal(true);
+  };
+
 
 
   return {
@@ -620,9 +642,11 @@ export const useHomeLogic = () => {
     toast,
     showTransportModal,
     selectedStationInfo,
+    showScheduleConfirmModal,
+    scheduleData,
     showFriendsModal,
     showScheduleModal,
-        showMeetingModal,
+    showMeetingModal,
     
     // 디바운싱 함수들
     setMapCenterDebounced,
@@ -638,6 +662,7 @@ export const useHomeLogic = () => {
     setFriends,
     setShowTransportModal,
     setSelectedStationInfo,
+    setShowScheduleConfirmModal,
     setShowFriendsModal,
     setShowScheduleModal,
     setShowMeetingModal,
@@ -651,6 +676,10 @@ export const useHomeLogic = () => {
     handleFindMiddle,
     handleHideCards,
     handleCardClick,
+    handleAddSchedule,
+    handleSendInvitation,
+    handleGoToSchedule,
+    handleCloseScheduleConfirmModal,
     
     // 맵 상호작용 제어
     enableMapInteraction,

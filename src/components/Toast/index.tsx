@@ -36,7 +36,18 @@ const Toast: React.FC<ToastProps> = ({
   if (!isVisible && !isShowing) return null;
 
   const getIcon = () => {
-    return '❌'; // 모든 메시지에 오류 아이콘 사용
+    switch (type) {
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+        return 'ℹ️';
+      default:
+        return 'ℹ️';
+    }
   };
 
   return (

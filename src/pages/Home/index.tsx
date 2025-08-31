@@ -12,6 +12,7 @@ import FriendsModal from '@/components/FriendsModal';
 import ScheduleModal from '@/components/ScheduleModal';
 import MeetingModal from '@/components/MeetingModal';
 import TransportInfoModal from '@/components/TransportInfoModal';
+import ScheduleConfirmModal from '@/components/ScheduleConfirmModal';
 import { useHomeLogic } from '@/hooks/useHomeLogic';
 
 const Home = () => {
@@ -33,6 +34,8 @@ const Home = () => {
     toast,
     showTransportModal,
     selectedStationInfo,
+    showScheduleConfirmModal,
+    scheduleData,
     showFriendsModal,
     showScheduleModal,
     showMeetingModal,
@@ -45,6 +48,10 @@ const Home = () => {
     handleFindMiddle,
     handleHideCards,
     handleCardClick,
+    handleAddSchedule,
+    handleSendInvitation,
+    handleGoToSchedule,
+    handleCloseScheduleConfirmModal,
     
     // 액션
     setShowFriendsModal,
@@ -57,12 +64,11 @@ const Home = () => {
     <div className={styles.homePage}>
       <Header />
       <div className={styles.mapBackground}>
-        <KakaoMap
+                <KakaoMap
           containerId="home-map"
           center={mapCenter}
           level={mapLevel}
           zoomable={mapInteraction.zoomable}
-          scrollwheel={mapInteraction.scrollwheel}
           disableDoubleClickZoom={mapInteraction.disableDoubleClickZoom}
           disableDoubleTapZoom={mapInteraction.disableDoubleTapZoom}
           draggable={mapInteraction.draggable}
@@ -191,6 +197,16 @@ const Home = () => {
         isPlaceMode={selectedStationInfo?.name?.includes('→') || false}
         placePosition={selectedStationInfo?.placePosition}
         placeInfo={selectedStationInfo?.placeInfo}
+        onAddSchedule={handleAddSchedule}
+      />
+      
+      {/* 🎯 약속 추가 확인 모달 */}
+      <ScheduleConfirmModal
+        isVisible={showScheduleConfirmModal}
+        onClose={handleCloseScheduleConfirmModal}
+        scheduleData={scheduleData}
+        onSendInvitation={handleSendInvitation}
+        onGoToSchedule={handleGoToSchedule}
       />
     </div>
   );
