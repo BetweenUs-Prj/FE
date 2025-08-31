@@ -81,7 +81,70 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     type: 'info'
   });
 
-  // friends 상태가 변경될 때마다 부모 컴포넌트에 알림 (제거 - 중간거리 찾기 버튼 클릭 시에만 전달)
+  // JWT 토큰을 가져오는 함수
+  const getAuthToken = (): string | null => {
+    // localStorage에서 토큰 가져오기 (실제 구현에 맞게 수정)
+    return localStorage.getItem('authToken');
+  };
+
+  // 사용자 위치 데이터를 백엔드로 전송하는 함수
+  const sendUserLocationsToBackend = async (friendsData: Friend[], category: MeetingCategory, customCategoryText?: string) => {
+    try {
+      // JWT 토큰 가져오기
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
+      }
+            
+      const requestData = {
+        locations: friendsData.map(friend => ({
+          userId: friend.id,
+          address: friend.location,
+          latitude: friend.coordinates?.lat,
+          longitude: friend.coordinates?.lng
+        })),
+        category: category,
+        customCategory: customCategoryText || null,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('백엔드로 전송할 데이터:', requestData);
+
+      const response = await fetch('/api/middle/points/multiple-locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log('백엔드 응답:', responseData);
+      
+      // 성공 토스트 메시지
+      showToast('위치 정보가 성공적으로 전송되었습니다!', 'success');
+      
+      return responseData;
+      
+    } catch (error) {
+      console.error('백엔드 전송 실패:', error);
+      
+      // JWT 토큰 관련 에러인지 확인
+      if (error instanceof Error && error.message.includes('인증 토큰')) {
+        showToast('로그인이 필요합니다. 다시 로그인해주세요.', 'error');
+      } else {
+        showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+      }
+      
+      throw error;
+    }
+  };
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
@@ -295,6 +358,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     try {
       console.log('중간거리 찾기 버튼 클릭됨');
       console.log('전송할 좌표 데이터:', friends.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
+
+      // 백엔드로 사용자 위치 데이터 전송
+      await sendUserLocationsToBackend(friends, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined);
 
       // 중간거리 찾기 버튼 클릭 시 PaperDrawer 닫기 및 부모 컴포넌트에 알림
       setIsExpanded(false); // 항상 닫기로 고정
