@@ -163,3 +163,31 @@
   font-size: 0.9rem;
   font-weight: 500;
 }
+
+.scheduleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.scheduleItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+.scheduleLabel {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.scheduleValue {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}

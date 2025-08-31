@@ -11,46 +11,31 @@ interface Schedule {
   description: string;
   type: 'meeting' | 'personal' | 'work' | 'social';
   participants: string[];
+  placeInfo?: {
+    title: string;
+    category: string;
+    description?: string;
+  };
+  stationName?: string;
+  routes?: any[];
 }
 
 interface ScheduleModalProps {
   isVisible: boolean;
   onClose: () => void;
+  schedules?: Schedule[];
+  onAddSchedule?: (schedule: Schedule) => void;
+  onRemoveSchedule?: (id: number) => void;
 }
 
-const ScheduleModal: React.FC<ScheduleModalProps> = ({ isVisible, onClose }) => {
-  const [schedules, setSchedules] = useState<Schedule[]>([
-    {
-      id: 1,
-      title: '친구들과 점심 약속',
-      date: '2024-01-15',
-      time: '12:00',
-      location: '강남역 스타벅스',
-      description: '친구들과 점심 먹으면서 이야기하기',
-      type: 'social',
-      participants: ['김철수', '이영희', '박민수']
-    },
-    {
-      id: 2,
-      title: '회의',
-      date: '2024-01-16',
-      time: '14:00',
-      location: '회사',
-      description: '프로젝트 진행상황 회의',
-      type: 'work',
-      participants: ['팀원들']
-    },
-    {
-      id: 3,
-      title: '운동',
-      date: '2024-01-17',
-      time: '18:00',
-      location: '헬스장',
-      description: '유산소 운동 30분',
-      type: 'personal',
-      participants: []
-    }
-  ]);
+const ScheduleModal: React.FC<ScheduleModalProps> = ({ 
+  isVisible, 
+  onClose, 
+  schedules: propSchedules = [],
+  onAddSchedule,
+  onRemoveSchedule 
+}) => {
+  const [schedules, setSchedules] = useState<Schedule[]>(propSchedules);
 
   const [toast, setToast] = useState<{
     isVisible: boolean;
@@ -74,12 +59,14 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isVisible, onClose }) => 
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  const handleAddSchedule = () => {
-    showToast('일정 추가 기능이 곧 추가될 예정입니다!', 'info');
-  };
+
 
   const handleRemoveSchedule = (id: number) => {
-    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+    if (onRemoveSchedule) {
+      onRemoveSchedule(id);
+    } else {
+      setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+    }
     showToast('일정이 삭제되었습니다.', 'success');
   };
 
@@ -126,11 +113,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isVisible, onClose }) => 
           </div>
 
           <div className={styles.content}>
-            <div className={styles.addSection}>
-              <button className={styles.addButton} onClick={handleAddSchedule}>
-                + 일정 추가
-              </button>
-            </div>
 
             <div className={styles.scheduleList}>
               {schedules.map(schedule => (

@@ -39,6 +39,7 @@ const Home = () => {
     showFriendsModal,
     showScheduleModal,
     showMeetingModal,
+    schedules,
     
     // 핸들러
     hideToast,
@@ -52,6 +53,7 @@ const Home = () => {
     handleSendInvitation,
     handleGoToSchedule,
     handleCloseScheduleConfirmModal,
+    handleRemoveSchedule = () => {},
     
     // 액션
     setShowFriendsModal,
@@ -69,8 +71,6 @@ const Home = () => {
           center={mapCenter}
           level={mapLevel}
           zoomable={mapInteraction.zoomable}
-          disableDoubleClickZoom={mapInteraction.disableDoubleClickZoom}
-          disableDoubleTapZoom={mapInteraction.disableDoubleTapZoom}
           draggable={mapInteraction.draggable}
           appKey={KAKAO_MAP_APP_KEY}
           className={styles.homeMapContainer}
@@ -167,6 +167,8 @@ const Home = () => {
       <ScheduleModal
         isVisible={showScheduleModal}
         onClose={() => setShowScheduleModal(false)}
+        schedules={schedules}
+        onRemoveSchedule={handleRemoveSchedule}
       />
       
       <MeetingModal

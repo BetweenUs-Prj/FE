@@ -52,11 +52,9 @@ const MapPreviewSection: React.FC = () => {
                 level={6}
                 draggable={true}
                 zoomable={false}
-                scrollwheel={false}
-                disableDoubleClickZoom={true}
-                disableDoubleTapZoom={true}
                 appKey={KAKAO_MAP_APP_KEY}
                 className={styles.previewMapContainer}
+
               />
             </div>
           </FadeIn>

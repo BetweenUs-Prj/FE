@@ -22,8 +22,6 @@ interface UseKakaoMapProps {
     level?: number;
     draggable?: boolean;
     zoomable?: boolean;
-    disableDoubleClickZoom?: boolean;
-    disableDoubleTapZoom?: boolean;
   };
   appKey: string;
   markers?: MarkerInfo[];
@@ -201,9 +199,7 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       try {
         console.log('🎯 맵 옵션 업데이트:', {
           draggable: options.draggable,
-          zoomable: options.zoomable,
-          disableDoubleClickZoom: options.disableDoubleClickZoom,
-          disableDoubleTapZoom: options.disableDoubleTapZoom
+          zoomable: options.zoomable
         });
         
         const center = new window.kakao.maps.LatLng(options.center.lat, options.center.lng);
@@ -224,12 +220,13 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         // if (options.scrollwheel !== undefined) {
         //   mapRef.current.setScrollwheel(options.scrollwheel);
         // }
-        if (options.disableDoubleClickZoom !== undefined) {
-          mapRef.current.setDisableDoubleClickZoom(options.disableDoubleClickZoom);
-        }
-        if (options.disableDoubleTapZoom !== undefined) {
-          mapRef.current.setDisableDoubleTapZoom(options.disableDoubleTapZoom);
-        }
+        // disableDoubleClickZoom과 disableDoubleTapZoom은 초기화 시에만 설정 가능
+        // if (options.disableDoubleClickZoom !== undefined) {
+        //   mapRef.current.setDisableDoubleClickZoom(options.disableDoubleClickZoom);
+        // }
+        // if (options.disableDoubleTapZoom !== undefined) {
+        //   mapRef.current.setDisableDoubleTapZoom(options.disableDoubleTapZoom);
+        // }
       } catch (error) {
         console.error('맵 업데이트 중 오류:', error);
       }
@@ -324,27 +321,11 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         
         const marker = new window.kakao.maps.Marker(markerOptions);
 
-        // 인포윈도우 생성 (제목이나 내용이 있는 경우)
-        if (markerInfo.title || markerInfo.content) {
-          const infowindow = new window.kakao.maps.InfoWindow({
-            content: `
-              <div style="padding:10px;min-width:200px;">
-                ${markerInfo.title ? `<h3 style="margin:0 0 5px 0;font-size:14px;">${markerInfo.title}</h3>` : ''}
-                ${markerInfo.content ? `<p style="margin:0;font-size:12px;">${markerInfo.content}</p>` : ''}
-              </div>
-            `
-          });
-
-          // 클릭 이벤트 추가
+        // 클릭 이벤트 추가 (인포윈도우 없이)
+        if (onMarkerClick) {
           window.kakao.maps.event.addListener(marker, 'click', () => {
-            infowindow.open(mapRef.current, marker);
-            if (onMarkerClick) {
-              onMarkerClick(markerInfo);
-            }
+            onMarkerClick(markerInfo);
           });
-
-          // 마커에 인포윈도우 참조 저장
-          (marker as any).infowindow = infowindow;
         }
 
         markersRef.current.push(marker);
@@ -519,9 +500,7 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         level: options.level || 8, // 기본 레벨을 8로 설정
         draggable: options.draggable ?? true,
         zoomable: options.zoomable ?? true,
-        scrollwheel: true, // scrollwheel은 초기화 시에만 설정 가능
-        disableDoubleClickZoom: options.disableDoubleClickZoom ?? false,
-        disableDoubleTapZoom: options.disableDoubleTapZoom ?? false
+        scrollwheel: true // scrollwheel은 초기화 시에만 설정 가능
       };
       
       mapRef.current = new window.kakao.maps.Map(mapContainer, mapOption);

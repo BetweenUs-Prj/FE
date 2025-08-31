@@ -1161,16 +1161,12 @@
 }
 
 .addScheduleSection {
-  margin-top: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
   text-align: center;
 }
 
 .addScheduleButton {
-  background: white;
-  color: #667eea;
+  background: #4CAF50;
+  color: white;
   border: none;
   padding: 14px 24px;
   border-radius: 8px;
@@ -1183,11 +1179,12 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
+  border-radius: 12px;
+  border: 1px solid #b3b3b3;
 }
 
 .addScheduleButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
 }
 
 

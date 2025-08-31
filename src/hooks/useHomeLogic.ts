@@ -89,13 +89,14 @@ export const useHomeLogic = () => {
   const [selectedStationInfo, setSelectedStationInfo] = useState<StationInfo | null>(null);
   const [showScheduleConfirmModal, setShowScheduleConfirmModal] = useState(false);
   const [scheduleData, setScheduleData] = useState<any>(null);
+  
+  // 일정 관리 상태
+  const [schedules, setSchedules] = useState<any[]>([]);
 
   // 지도 상호작용 상태 (동적 제어) - 🎯 초기값을 비활성화로 변경
   const [mapInteraction, setMapInteraction] = useState({
     zoomable: false,
-    draggable: false,
-    disableDoubleClickZoom: true,
-    disableDoubleTapZoom: true
+    draggable: false
   });
 
   // 맵 상호작용 제어 함수
@@ -103,9 +104,7 @@ export const useHomeLogic = () => {
     console.log('🎯 enableMapInteraction 호출됨 - 맵 상호작용 활성화');
     setMapInteraction({
       zoomable: true,
-      draggable: true,
-      disableDoubleClickZoom: false,
-      disableDoubleTapZoom: false
+      draggable: true
     });
   }, []);
 
@@ -113,9 +112,7 @@ export const useHomeLogic = () => {
     console.log('🎯 disableMapInteraction 호출됨 - 맵 상호작용 비활성화');
     setMapInteraction({
       zoomable: false,
-      draggable: false,
-      disableDoubleClickZoom: true,
-      disableDoubleTapZoom: true
+      draggable: false
     });
   }, []);
 
@@ -599,8 +596,35 @@ export const useHomeLogic = () => {
 
   // 🎯 약속 추가 관련 함수들
   const handleAddSchedule = (data: any) => {
-    setScheduleData(data);
-    setShowScheduleConfirmModal(true);
+    console.log('🎯 handleAddSchedule 호출됨:', data);
+    
+    // 바로 일정에 추가
+    const newSchedule = {
+      id: Date.now(),
+      title: data.placeInfo.title,
+      date: new Date().toISOString().split('T')[0],
+      time: data.meetingTime,
+      location: `${data.stationName}역 → ${data.placeInfo.title}`,
+      description: data.placeInfo.description || `${data.placeInfo.title}에서 만남`,
+      type: 'social' as const,
+      participants: data.friends.map((f: any) => f.name),
+      placeInfo: data.placeInfo,
+      stationName: data.stationName,
+      routes: data.routes
+    };
+    
+    console.log('🎯 새 일정 생성:', newSchedule);
+    
+    setSchedules(prev => {
+      const updatedSchedules = [...prev, newSchedule];
+      console.log('🎯 업데이트된 일정 목록:', updatedSchedules);
+      return updatedSchedules;
+    });
+    
+    showToast('일정이 추가되었습니다!', 'success');
+    
+    // TransportInfoModal 닫기
+    setShowTransportModal(false);
   };
 
   const handleSendInvitation = () => {
@@ -615,11 +639,36 @@ export const useHomeLogic = () => {
     setShowScheduleModal(true);
   };
 
-  const handleCloseScheduleConfirmModal = () => {
+  // 일정 관리 핸들러
+  const handleAddScheduleToCalendar = (schedule: any) => {
+    const newSchedule = {
+      id: Date.now(),
+      title: schedule.placeInfo.title,
+      date: new Date().toISOString().split('T')[0],
+      time: schedule.meetingTime,
+      location: `${schedule.stationName}역 → ${schedule.placeInfo.title}`,
+      description: schedule.placeInfo.description || `${schedule.placeInfo.title}에서 만남`,
+      type: 'social' as const,
+      participants: schedule.friends.map((f: any) => f.name),
+      placeInfo: schedule.placeInfo,
+      stationName: schedule.stationName,
+      routes: schedule.routes
+    };
+    
+    setSchedules(prev => [...prev, newSchedule]);
+    showToast('일정이 추가되었습니다!', 'success');
+  };
+
+  const handleRemoveSchedule = useCallback((id: number) => {
+    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+    showToast('일정이 삭제되었습니다.', 'success');
+  }, [showToast]);
+
+  const handleCloseScheduleConfirmModal = useCallback(() => {
     // 약속 추가 확인 모달을 닫고 TransportInfoModal을 다시 열기
     setShowScheduleConfirmModal(false);
     setShowTransportModal(true);
-  };
+  }, []);
 
 
 
@@ -647,6 +696,7 @@ export const useHomeLogic = () => {
     showFriendsModal,
     showScheduleModal,
     showMeetingModal,
+    schedules,
     
     // 디바운싱 함수들
     setMapCenterDebounced,
@@ -680,6 +730,8 @@ export const useHomeLogic = () => {
     handleSendInvitation,
     handleGoToSchedule,
     handleCloseScheduleConfirmModal,
+    handleAddScheduleToCalendar,
+    handleRemoveSchedule,
     
     // 맵 상호작용 제어
     enableMapInteraction,

@@ -95,15 +95,21 @@ const ScheduleConfirmModal: React.FC<ScheduleConfirmModalProps> = ({
             </div>
           </div>
 
-          {/* 🎯 교통 정보 */}
+          {/* 🎯 참여자별 교통 정보 */}
           {routes.length > 0 && (
             <div className={styles.section}>
-              <h4>🚇 교통 정보</h4>
-              <div className={styles.transportInfo}>
-                <p><strong>교통수단:</strong> {selectedTransportMode === 'transit' ? '대중교통' : '자동차'}</p>
+              <h4>🚇 참여자별 교통 정보</h4>
+              <div className={styles.participants}>
                 {routes.map((route) => (
-                  <div key={route.friendId} className={styles.routeInfo}>
-                    <span>{route.friendName}: {route.duration}분 ({route.distance}km)</span>
+                  <div key={route.friendId} className={styles.participant}>
+                    <div>
+                      <span className={styles.participantName}>{route.friendName}</span>
+                      <span className={styles.participantLocation}>{route.details.join(' → ')}</span>
+                    </div>
+                    <div className={styles.transportDetails}>
+                      <span>{route.duration}분</span>
+                      <span>{route.distance}km</span>
+                    </div>
                   </div>
                 ))}
               </div>

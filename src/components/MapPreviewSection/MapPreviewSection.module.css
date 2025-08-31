@@ -70,9 +70,12 @@
 }
 
 .previewMapContainer {
-  width: 400px;
-  height: 300px;
+  width: 400px !important;
+  height: 300px !important;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
 }

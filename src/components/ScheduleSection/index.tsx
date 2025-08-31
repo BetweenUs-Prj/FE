@@ -145,51 +145,51 @@ const ScheduleSection: React.FC = () => {
     <section ref={sectionRef} className={styles.scheduleSection}>
       <div className={styles.scheduleContent}>
         <FadeIn delay={0.2} direction="up">
-          <h2 className={styles.scheduleTitle}>일정 공유 & 막차시간 관리</h2>
+          <h2 className={styles.scheduleTitle}>지금 시작해보세요</h2>
         </FadeIn>
         <FadeIn delay={0.3} direction="up">
           <p className={styles.scheduleSubtitle}>
-            개개인의 막차시간과 일정을 공유하여 아무도 뒤처지지 않는 완벽한 만남을 계획해보세요
+            친구들과의 만남을 더욱 쉽고 편리하게 만들어보세요
           </p>
         </FadeIn>
         
         <div className={styles.scheduleFeatures}>
           <FadeIn delay={0.4} direction="up">
             <div className={styles.feature}>
-              <div className={styles.featureIcon}>🚇</div>
+              <div className={styles.featureIcon}>📍</div>
               <div className={styles.featureText}>
-                <h3>막차시간 공유</h3>
-                <p>개인별 막차시간을 설정하고 안전한 만남을 보장합니다</p>
+                <h3>중간 거리 찾기</h3>
+                <p>친구들의 위치를 입력하면 최적의 만남 장소를 자동으로 찾아줍니다</p>
               </div>
             </div>
           </FadeIn>
           
           <FadeIn delay={0.5} direction="up">
             <div className={styles.feature}>
-              <div className={styles.featureIcon}>📅</div>
+              <div className={styles.featureIcon}>🚇</div>
               <div className={styles.featureText}>
-                <h3>일정 동기화</h3>
-                <p>모든 참여자의 일정을 한눈에 확인하고 최적의 시간을 찾습니다</p>
+                <h3>교통 정보 제공</h3>
+                <p>각 친구별로 역까지의 경로와 소요시간을 실시간으로 계산합니다</p>
               </div>
             </div>
           </FadeIn>
           
           <FadeIn delay={0.6} direction="up">
             <div className={styles.feature}>
-              <div className={styles.featureIcon}>⏰</div>
+              <div className={styles.featureIcon}>🎯</div>
               <div className={styles.featureText}>
-                <h3>알림 설정</h3>
-                <p>중요한 시간을 놓치지 않도록 스마트한 알림을 제공합니다</p>
+                <h3>추천 장소</h3>
+                <p>역 주변의 카페, 식당, 놀이공원 등 다양한 장소를 추천합니다</p>
               </div>
             </div>
           </FadeIn>
           
           <FadeIn delay={0.7} direction="up">
             <div className={styles.feature}>
-              <div className={styles.featureIcon}>📱</div>
+              <div className={styles.featureIcon}>📅</div>
               <div className={styles.featureText}>
-                <h3>실시간 업데이트</h3>
-                <p>일정 변경사항을 실시간으로 공유하여 혼선을 방지합니다</p>
+                <h3>약속 관리</h3>
+                <p>선택한 장소와 시간으로 약속을 생성하고 친구들에게 초대장을 보낼 수 있습니다</p>
               </div>
             </div>
           </FadeIn>
@@ -198,7 +198,7 @@ const ScheduleSection: React.FC = () => {
       <FadeIn delay={0.8} direction="down">
             <div className={styles.bottomArrow}>
               <div className={styles.arrowIcon}>↓</div>
-              <div className={styles.arrowText}>편지가 왔어요!</div>
+              <div className={styles.arrowText}>지금 시작하기</div>
             </div>
           </FadeIn>
       {/* 종이 효과 */}

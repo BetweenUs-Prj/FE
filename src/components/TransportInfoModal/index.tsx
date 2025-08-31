@@ -236,8 +236,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     }
   };
 
-  // 경로 생성
+  // 경로 생성 (실제 API 호출 준비)
   const generateSimulatedRoute = (friend: Friend, transportMode: 'transit' | 'car' = 'transit') => {
+    // TODO: 실제 ODsay API 호출로 대체
     const distance = calculateDistance(
       friend.position.lat, friend.position.lng,
       stationPosition.lat, stationPosition.lng
@@ -246,31 +247,24 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     const duration = Math.round(distance * (transportMode === 'transit' ? 3 : 2));
     const departureTime = calculateDepartureTime(meetingTime, duration);
     
-    const routeSteps: RouteStep[] = [{
-      transportMode,
-      duration,
-      distance: Math.round(distance * 10) / 10,
-      details: [friend.name, stationName]
-    }];
-    
     return {
       friendId: friend.id,
       friendName: friend.name,
       transportMode,
       duration,
       distance: Math.round(distance * 10) / 10,
-      details: [friend.name, stationName],
+      details: [friend.location, stationName + '역'],
       coords: generateRouteCoords(friend.position, stationPosition),
       departureTime,
       arrivalTime: meetingTime,
       lastTrainTime: transportMode === 'transit' ? getLastTrainTime() : undefined,
-      routeSteps,
-      transferInfos: transportMode === 'transit' ? [{
-        station: friend.name,
-        line: '지하철',
-        direction: stationName + ' 방향',
-        time: `${duration}분`
-      }] : []
+      routeSteps: [{
+        transportMode,
+        duration,
+        distance: Math.round(distance * 10) / 10,
+        details: [friend.location, stationName + '역']
+      }],
+      transferInfos: []
     };
   };
 
@@ -442,6 +436,17 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                     <button 
                       className={styles.addScheduleButton}
                       onClick={() => {
+                        console.log('🎯 약속 추가하기 버튼 클릭됨');
+                        console.log('🎯 onAddSchedule 존재:', !!onAddSchedule);
+                        console.log('🎯 전달할 데이터:', {
+                          placeInfo,
+                          stationName,
+                          friends,
+                          routes,
+                          meetingTime,
+                          selectedTransportMode
+                        });
+                        
                         // 약속 추가 팝업 표시
                         if (onAddSchedule) {
                           onAddSchedule({
