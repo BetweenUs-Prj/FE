@@ -1,30 +1,61 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Home from '../pages/Home';
-import About from '../pages/About';
+import { Routes, Route } from 'react-router-dom';
+import HomePage from '../pages/Home';
+import AboutPage from '../pages/About';
 import GameHomePage from '../pages/Game/GameHomePage';
+import GameCreatePage from '../pages/Game/GameCreatePage';
+import QuizLobbyPage from '../pages/Game/QuizLobbyPage';
+import QuizLobbySessionPage from '../pages/Game/QuizLobbySessionPage';
+import QuizGamePage from '../pages/Game/QuizGamePage';
+import ReactionLobbyPage from '../pages/Game/ReactionLobbyPage';
+import ReactionLobbySessionPage from '../pages/Game/ReactionLobbySessionPage';
+import StableReactionPage from '../pages/Game/StableReactionPage';
+import ReactionResultPage from '../pages/Game/ReactionResultPage';
+import ReactionGameREST from '../pages/Game/ReactionGameREST';
+import ResultPageREST from '../pages/Game/ResultPageREST';
 import PenaltyPage from '../pages/Game/PenaltyPage';
-import CategoryPage from '../pages/Game/CategoryPage';
-import QuizPage from '../pages/Game/QuizPage';
-import ReactionPage from '../pages/Game/ReactionPage';
-import ResultPage from '../pages/Game/ResultPage';
+import JoinPage from '../pages/Game/JoinPage';
+import AppointmentPage from '../pages/Appointment/AppointmentPage';
+import GlassPreviewPage from '../pages/dev/GlassPreview';
+import ReactionSpeedDemo from '../pages/dev/ReactionSpeedDemo';
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
-      {/* Game namespace */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/about" element={<AboutPage />} />
+      
+      {/* 게임 관련 라우트 */}
       <Route path="/game" element={<GameHomePage />} />
-      {/* penalty can be invoked either with a session id (legacy) or via query string */}
+      <Route path="/game/create" element={<GameCreatePage />} />
+      
+      {/* 퀴즈 게임 */}
+      <Route path="/game/quiz/lobby" element={<QuizLobbyPage />} />
+      <Route path="/game/quiz/lobby/:sessionId" element={<QuizLobbySessionPage />} />
+      {/* 👇 More SPECIFIC route comes FIRST */}
+      <Route path="/game/quiz/result/:sessionId" element={<ResultPageREST />} />
+      {/* 👇 More GENERAL route comes LAST */}
+      <Route path="/game/quiz/:sessionId" element={<QuizGamePage />} />
+      
+      {/* 반응속도 게임 */}
+      <Route path="/game/reaction/lobby" element={<ReactionLobbyPage />} />
+      <Route path="/game/reaction/lobby/:sessionId" element={<ReactionLobbySessionPage />} />
+      {/* 👇 More SPECIFIC route comes FIRST */}
+      <Route path="/game/reaction/result/:sessionId" element={<ResultPageREST />} />
+      <Route path="/game/reaction/play/:sessionId" element={<ReactionGameREST />} />
+      {/* 👇 More GENERAL route comes LAST */}
+      <Route path="/game/reaction/:sessionId" element={<StableReactionPage />} />
+      
+      {/* 공통 */}
+      <Route path="/game/result/:sessionId" element={<ResultPageREST />} />
       <Route path="/game/penalty" element={<PenaltyPage />} />
-      <Route path="/game/penalty/:sessionId" element={<PenaltyPage />} />
-      <Route path="/game/category/:sessionId" element={<CategoryPage />} />
-      <Route path="/game/quiz/:sessionId" element={<QuizPage />} />
-      <Route path="/game/quiz/:sessionId/round/:roundId" element={<QuizPage />} />
-      <Route path="/game/reaction/:sessionId" element={<ReactionPage />} />
-      <Route path="/game/result/:sessionId" element={<ResultPage />} />
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/join" element={<JoinPage />} />
+      
+      {/* 약속 페이지 */}
+      <Route path="/appointment" element={<AppointmentPage />} />
+      
+      {/* 개발용 */}
+      <Route path="/dev/glass" element={<GlassPreviewPage />} />
+      <Route path="/demo/reaction" element={<ReactionSpeedDemo />} />
     </Routes>
   );
 }

@@ -1,50 +1,62 @@
-/* Global styles for the mini games UI */
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
+/* Import Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import design tokens and glass utilities */
+@import url('./styles/tokens.css');
+@import url('./styles/glass.tailwind.css');
+@import url('./styles/glassmorphism.css');
+@import url('./styles/modern-home.css');
+@import url('./styles/space-theme.css');
+
+/* Base layer customizations */
+@layer base {
+  html, body, #root {
+    @apply m-0 p-0 h-full w-full;
+  }
+
+  body {
+    @apply text-text-primary min-h-screen relative;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle ambient lighting overlay - removed for modern home design */
+
+  a {
+    @apply no-underline;
+    color: inherit;
+  }
+
+  /* Remove default button styles */
+  button {
+    @apply border-0 bg-transparent p-0 cursor-pointer;
+    font-family: inherit;
+  }
 }
-body {
-  font-family: system-ui, sans-serif;
-  background-color: #0f172a; /* dark navy */
-  color: #f8fafc; /* light text */
-}
-a {
-  color: inherit;
-  text-decoration: none;
-}
-button,
-.home-button {
-  background: #334155;
-  color: #f1f5f9;
-  border: 1px solid #475569;
-  padding: 0.6rem 1.2rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-button:hover,
-.home-button:hover {
-  background: #475569;
-}
-/* Scoreboard row animations */
-.score-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: background-color 0.3s ease;
-}
-.score-row.up {
-  background-color: #14532d;
-}
-.score-row.down {
-  background-color: #7f1d1d;
-}
-.scoreboard {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* Legacy class compatibility */
+@layer components {
+  /* Maintain backward compatibility for existing components */
+  .home-button {
+    @apply glass-btn;
+  }
+  
+  .btn-ios {
+    @apply glass-btn-success;
+  }
+  
+  .btn-ios-secondary {
+    @apply glass-btn;
+  }
+  
+  .card-ios {
+    @apply glass-card;
+  }
+  
+  .badge-lock {
+    @apply glass rounded-full px-2 py-1 text-xs font-medium text-text-primary;
+  }
 }

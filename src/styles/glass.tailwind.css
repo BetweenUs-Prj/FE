@@ -1,0 +1,347 @@
+/**
+ * iOS Glassmorphism Utility Classes
+ * Tailwind @layer utilities for consistent glass effects
+ */
+
+@layer utilities {
+  /* === CORE GLASS SURFACES === */
+  
+  .glass {
+    @apply backdrop-blur-glass bg-surface-glass/[0.1] 
+           ring-1 ring-surface-glass/[0.2] 
+           shadow-glass;
+  }
+  
+  .glass-strong {
+    @apply backdrop-blur-glass-strong bg-surface-glass/[0.15] 
+           ring-1 ring-surface-glass/[0.25] 
+           shadow-glass-lg;
+  }
+  
+  .surface {
+    @apply bg-surface-glass/[0.05] 
+           ring-1 ring-border-hairline/50 
+           shadow-glass;
+  }
+  
+  .surface-elevated {
+    @apply bg-surface-elevated/[0.1] 
+           ring-1 ring-surface-elevated/[0.15] 
+           shadow-glass-lg;
+  }
+  
+  /* === GLASS COMPONENTS === */
+  
+  .glass-card {
+    @apply glass rounded-ios p-4 
+           transition-all duration-250 ease-glass;
+  }
+  
+  .glass-card:hover {
+    @apply bg-surface-glass/[0.12] 
+           ring-surface-glass/[0.25] 
+           shadow-glass-lg;
+  }
+  
+  .glass-modal {
+    @apply glass-strong rounded-ios-lg p-6 
+           max-w-md w-full mx-4 
+           transform transition-all duration-350 ease-ios;
+  }
+  
+  .glass-topbar {
+    @apply glass fixed top-0 left-0 right-0 z-50 
+           border-b border-border-hairline/30 
+           backdrop-blur-glass-strong;
+  }
+  
+  /* === GLASS BUTTONS === */
+  
+  .glass-btn {
+    @apply glass rounded-ios px-4 py-2.5 
+           text-text-primary font-medium 
+           transition-all duration-250 ease-glass 
+           active:scale-[0.98] 
+           focus-ring;
+  }
+  
+  .glass-btn:hover {
+    @apply bg-surface-glass/[0.15] brightness-105;
+  }
+  
+  .glass-btn:active {
+    @apply bg-surface-glass/[0.2] brightness-95;
+  }
+  
+  .glass-btn-primary {
+    @apply glass-btn bg-tint-primary/90 text-text-on-tint 
+           ring-tint-primary/20;
+  }
+  
+  .glass-btn-primary:hover {
+    @apply bg-tint-primary/95 brightness-110;
+  }
+  
+  .glass-btn-secondary {
+    @apply glass-btn bg-tint-secondary/90 text-text-on-tint 
+           ring-tint-secondary/20;
+  }
+  
+  .glass-btn-success {
+    @apply glass-btn bg-tint-success/90 text-text-on-tint 
+           ring-tint-success/20;
+  }
+  
+  .glass-btn-warning {
+    @apply glass-btn bg-tint-warning/90 text-text-on-tint 
+           ring-tint-warning/20;
+  }
+  
+  .glass-btn-danger {
+    @apply glass-btn bg-tint-danger/90 text-text-on-tint 
+           ring-tint-danger/20;
+  }
+  
+  /* === GLASS INPUTS === */
+  
+  .glass-input {
+    @apply glass rounded-ios px-3 py-2.5 
+           text-text-primary placeholder-text-tertiary 
+           border-0 ring-1 ring-border-hairline/30 
+           focus-ring
+           transition-all duration-250 ease-glass;
+  }
+  
+  .glass-input:focus {
+    @apply ring-2 ring-tint-primary/50 
+           bg-surface-glass/[0.15];
+  }
+  
+  .glass-select {
+    @apply glass-input appearance-none 
+           bg-[url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")] 
+           bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat 
+           pr-10;
+  }
+  
+  /* === GLASS BORDERS === */
+  
+  .hairline {
+    @apply border-border-hairline/50;
+  }
+  
+  .hairline-top {
+    @apply border-t border-border-hairline/50;
+  }
+  
+  .hairline-bottom {
+    @apply border-b border-border-hairline/50;
+  }
+  
+  .hairline-x {
+    @apply border-x border-border-hairline/50;
+  }
+  
+  .hairline-y {
+    @apply border-y border-border-hairline/50;
+  }
+  
+  /* === FOCUS MANAGEMENT === */
+  
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-tint-primary/50 focus:ring-offset-0;
+  }
+  
+  .focus-ring-danger {
+    @apply focus:outline-none focus:ring-2 focus:ring-tint-danger/50 focus:ring-offset-0;
+  }
+  
+  .focus-ring-success {
+    @apply focus:outline-none focus:ring-2 focus:ring-tint-success/50 focus:ring-offset-0;
+  }
+  
+  /* === GLASS OVERLAYS === */
+  
+  .glass-overlay {
+    @apply fixed inset-0 z-40 
+           bg-surface-overlay/40 
+           backdrop-blur-sm 
+           transition-opacity duration-350 ease-ios;
+  }
+  
+  /* === SCROLLBARS === */
+  
+  .scrollbar-glass {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border-medium) / 0.3) transparent;
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar-thumb {
+    background: rgb(var(--border-medium) / 0.3);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--border-medium) / 0.5);
+  }
+  
+  /* === GLASS STATES === */
+  
+  .glass-disabled {
+    @apply opacity-50 cursor-not-allowed 
+           pointer-events-none;
+  }
+  
+  .glass-loading {
+    @apply opacity-75 cursor-wait;
+  }
+  
+  .glass-loading::after {
+    content: '';
+    @apply absolute inset-0 
+           bg-surface-glass/10 
+           animate-pulse 
+           rounded-ios;
+  }
+  
+  /* === RESPONSIVE GLASS === */
+  
+  @media (max-width: 640px) {
+    .glass-modal {
+      @apply mx-2 max-w-none;
+    }
+    
+    .glass-topbar {
+      @apply px-4;
+    }
+  }
+  
+  /* === DARK THEME ADJUSTMENTS === */
+  
+  .theme-dark .glass {
+    @apply bg-surface-glass/[0.15] 
+           ring-surface-glass/[0.15];
+  }
+  
+  .theme-dark .glass-strong {
+    @apply bg-surface-glass/[0.25] 
+           ring-surface-glass/[0.2];
+  }
+  
+  .theme-dark .surface {
+    @apply bg-surface-glass/[0.1];
+  }
+  
+  .theme-dark .glass-input:focus {
+    @apply bg-surface-glass/[0.2];
+  }
+  
+  /* === REDUCED MOTION === */
+  
+  @media (prefers-reduced-motion: reduce) {
+    .glass-btn {
+      @apply transition-none;
+    }
+    
+    .glass-modal {
+      @apply transition-none;
+    }
+    
+    .glass-overlay {
+      @apply transition-none;
+    }
+  }
+  
+  /* === HIGH CONTRAST === */
+  
+  @media (prefers-contrast: high) {
+    .glass {
+      @apply ring-2 ring-border-strong/70;
+    }
+    
+    .glass-strong {
+      @apply ring-2 ring-border-strong/80;
+    }
+    
+    .glass-btn {
+      @apply ring-2 ring-border-medium/60;
+    }
+    
+    .glass-input {
+      @apply ring-2 ring-border-medium/60;
+    }
+    
+    .focus-ring {
+      @apply focus:ring-4 focus:ring-tint-primary/80;
+    }
+    
+    /* Ensure text contrast meets WCAG AA */
+    .text-text-secondary {
+      @apply !text-text-primary/90;
+    }
+    
+    .text-text-tertiary {
+      @apply !text-text-secondary/90;
+    }
+  }
+  
+  /* === FOCUS VISIBLE === */
+  
+  .glass-btn:focus-visible,
+  .glass-input:focus-visible,
+  .glass-select:focus-visible {
+    @apply ring-4 ring-tint-primary/60 ring-offset-2 ring-offset-bg-primary/50;
+  }
+  
+  /* === KEYBOARD NAVIGATION === */
+  
+  .glass-btn:focus-visible {
+    @apply outline-none;
+  }
+  
+  /* === SCREEN READER === */
+  
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
+  }
+  
+  /* === ANIMATIONS === */
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes pulse-glass {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}

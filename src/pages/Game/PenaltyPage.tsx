@@ -1,256 +1,14 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { createSession, createQuizSession, listQuestions, startQuizRound, startQuizRoundByCategory, StartRoundRes } from '../../api/game';
+import { createSession, createQuizSession, listQuestions } from '../../api/game';
 import type { GameType } from '../../api/game';
 import { useGameStore } from '../../hooks/useGameStore';
-import { CategorySelect } from '../../components/quiz/CategorySelect';
 import { showToast } from '../../components/common/Toast';
 import { listCategoriesSafe } from '../../api/meta';
-import { createGamePenalty } from '../../api/penalty';
-import '../../styles/penalty.css';
-
-// Define penalty type for inline editing
-type Penalty = { id: string; text: string };
-
-// Utility function to generate unique IDs
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
-// Individual penalty input row component
-interface PenaltyInputRowProps {
-  penalty: Penalty;
-  onChange: (text: string) => void;
-  onRemove: () => void;
-  autoFocus?: boolean;
-  selected: boolean;
-  onSelect: () => void;
-}
-
-const PenaltyInputRow: React.FC<PenaltyInputRowProps> = ({
-  penalty,
-  onChange,
-  onRemove,
-  autoFocus = false,
-  selected,
-  onSelect,
-}) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [autoFocus]);
-
-  return (
-    <div 
-      className={`flex gap-2 items-center p-2 rounded-xl border-2 transition-all ${
-        selected ? 'border-indigo-500 bg-indigo-50/10' : 'border-transparent hover:border-slate-600'
-      }`}
-      onClick={onSelect}
-      style={{ marginBottom: '1rem', cursor: 'pointer' }}
-    >
-      <input
-        type="radio"
-        aria-label="이 벌칙 선택"
-        checked={selected}
-        onChange={onSelect}
-        style={{ cursor: 'pointer' }}
-      />
-      <input
-        ref={inputRef}
-        value={penalty.text}
-        placeholder="벌칙 내용을 입력하세요"
-        onFocus={onSelect}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          flex: 1,
-          padding: '0.8rem',
-          borderRadius: '0.375rem',
-          border: '1px solid #374151',
-          backgroundColor: '#374151',
-          color: '#f8fafc',
-          fontSize: '1rem',
-          outline: 'none',
-        }}
-      />
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
-        style={{
-          padding: '0.5rem 0.75rem',
-          borderRadius: '0.375rem',
-          border: '1px solid #ef4444',
-          backgroundColor: 'transparent',
-          color: '#ef4444',
-          cursor: 'pointer',
-          fontSize: '0.9rem',
-        }}
-      >
-        삭제
-      </button>
-    </div>
-  );
-};
-
-// Category selector component for immediate visibility
-const CategorySelector: React.FC<{
-  onSelect: (category: string) => void;
-  loading?: boolean;
-}> = ({ onSelect, loading = false }) => {
-  const [cats, setCats] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
-  const nav = useNavigate();
-  const sessionId = useGameStore(s => s.sessionId);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const arr = await listCategoriesSafe();
-        if (!alive) return;
-        setCats(arr);
-        if (arr.length > 0) {
-          setSelected(arr[0]); // Auto-select first category
-        }
-      } catch (e) {
-        if (!alive) return;
-        setError('카테고리를 불러오지 못했습니다. 기본값으로 표시합니다.');
-        const defaultCats = ['술', '역사', '스포츠', '음식', '상식'];
-        setCats(defaultCats);
-        setSelected(defaultCats[0]);
-      } finally {
-        if (alive) setIsLoading(false);
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  const handleStartQuiz = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!selected) {
-      showToast('카테고리를 선택해주세요.', 'error');
-      return;
-    }
-    
-    const mockSessionId = sessionId || 1; // Mock session ID for testing
-    
-    try {
-      setIsLoading(true);
-      console.info('[quiz] startRound clicked', { sessionId: mockSessionId, selected });
-      
-      const res = await startQuizRound(mockSessionId, selected);
-      console.info('[quiz] startRound ok', res);
-      
-      nav(`/game/quiz/${mockSessionId}/round/${res.roundId}`, { state: res });
-    } catch (err) {
-      console.error('[quiz] startRound failed', err);
-      showToast('라운드 시작에 실패했습니다.', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent, category: string) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      setSelected(category);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div style={{ color: '#9ca3af', textAlign: 'center', padding: '1rem' }}>
-        카테고리 불러오는 중…
-      </div>
-    );
-  }
-
-  return (
-    <section aria-label="퀴즈 카테고리 선택" style={{ width: '100%' }}>
-      <h2 style={{ 
-        fontSize: '1.5rem', 
-        fontWeight: '600', 
-        marginBottom: '0.5rem',
-        color: '#f8fafc',
-        textAlign: 'center'
-      }}>
-        퀴즈 카테고리 선택
-      </h2>
-      
-      {error && (
-        <p 
-          role="alert" 
-          style={{ 
-            color: '#fbbf24', 
-            marginBottom: '1rem',
-            textAlign: 'center',
-            fontSize: '0.9rem'
-          }}
-        >
-          {error}
-        </p>
-      )}
-      
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '0.75rem',
-        justifyContent: 'center',
-        marginBottom: '2rem'
-      }}>
-        {cats.map(name => (
-          <button
-            key={name}
-            type="button"
-            onClick={() => setSelected(name)}
-            onKeyDown={(e) => handleKeyDown(e, name)}
-            aria-pressed={selected === name}
-            style={{
-              padding: '0.75rem 1.5rem',
-              borderRadius: '0.75rem',
-              border: selected === name ? '2px solid #6366f1' : '1px solid #4b5563',
-              backgroundColor: selected === name ? '#4338ca' : '#374151',
-              color: '#f8fafc',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: selected === name ? '600' : '400',
-              transition: 'all 0.2s ease',
-              outline: 'none',
-            }}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
-      
-      <div style={{ textAlign: 'center' }}>
-        <button
-          onClick={handleStartQuiz}
-          disabled={!selected || isLoading}
-          style={{
-            padding: '0.8rem 1.4rem',
-            borderRadius: '0.5rem',
-            background: (!selected || isLoading) ? '#4b5563' : '#10b981',
-            border: 'none',
-            color: '#fff',
-            fontSize: '1rem',
-            fontWeight: '600',
-            cursor: (!selected || isLoading) ? 'not-allowed' : 'pointer',
-            minWidth: '120px',
-          }}
-          aria-label={`${selected} 카테고리로 퀴즈 시작`}
-        >
-          {isLoading ? '시작 중...' : '퀴즈 시작'}
-        </button>
-      </div>
-    </section>
-  );
-};
+import { fetchPenalties, type Penalty } from '../../api/penalty';
+import { TopBar } from '../../components/common/TopBar';
+import { createLeaveSessionHandler } from '../../api/session';
+import { http } from '../../api/http';
 
 export default function PenaltyPage() {
   const [searchParams] = useSearchParams();
@@ -259,169 +17,139 @@ export default function PenaltyPage() {
   const gameTypeQuery = searchParams.get('gameType') as GameType | null;
   const effectiveGameType: GameType | undefined = (gameTypeQuery as GameType) || storeGameType;
   
-  // New state for inline penalty editing
+  // State for penalty selection
   const [penalties, setPenalties] = useState<Penalty[]>([]);
-  const [selectedPenaltyId, setSelectedPenaltyId] = useState<string | null>(null);
-  const [isPenaltyConfirmed, setIsPenaltyConfirmed] = useState(false);
-  const [confirmedPenaltyId, setConfirmedPenaltyId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedPenaltyId, setSelectedPenaltyId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const [categoryLoading, setCategoryLoading] = useState(false);
-  const [validationError, setValidationError] = useState<string>('');
-  const lastAddedIdRef = useRef<string | null>(null);
+  const [inviteOnly, setInviteOnly] = useState(false);
   
-  // Store access
-  const setPenalty = useGameStore(s => s.setPenalty);
+  // State for quiz game settings
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [totalRounds, setTotalRounds] = useState<number>(5);
+  const [showQuizSettings, setShowQuizSettings] = useState(false);
   
-  // Clear highlight after 1.5 seconds
-  useEffect(() => {
-    if (lastAddedIdRef.current) {
-      const timer = setTimeout(() => {
-        lastAddedIdRef.current = null;
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [lastAddedIdRef.current]);
-
+  // State for penalty creation
+  const [newPenaltyText, setNewPenaltyText] = useState('');
+  const [creatingPenalty, setCreatingPenalty] = useState(false);
+  const [showPenaltyForm, setShowPenaltyForm] = useState(false);
+  
   useEffect(() => {
     document.title = '벌칙 선택';
-    // Start with one empty penalty for immediate input
-    if (penalties.length === 0) {
-      const initialId = uid();
-      setPenalties([{ id: initialId, text: '' }]);
-      lastAddedIdRef.current = initialId;
-    }
+    loadPenalties();
+    loadCategories();
   }, []);
 
-  const handleSelectPenalty = (id: string) => setSelectedPenaltyId(id);
-  
-  const handleAddPenalty = () => {
-    const id = uid();
-    lastAddedIdRef.current = id;
-    setPenalties(prev => [...prev, { id, text: '' }]);
-    setSelectedPenaltyId(id); // 새 항목을 기본 선택
-  };
-
-  const handlePenaltyChange = (id: string, text: string) => {
-    setPenalties(prev =>
-      prev.map(p => p.id === id ? { ...p, text } : p)
-    );
-    setValidationError('');
-  };
-
-  const handlePenaltyRemove = (id: string) => {
-    setPenalties(prev => {
-      const filtered = prev.filter(p => p.id !== id);
-      // Always keep at least one penalty input
-      if (filtered.length === 0) {
-        const newId = uid();
-        lastAddedIdRef.current = newId;
-        return [{ id: newId, text: '' }];
-      }
-      return filtered;
-    });
-    setSelectedPenaltyId(prev => (prev === id ? null : prev));
-  };
-
-  // Check for duplicate penalties
-  const getDuplicateMap = () => {
-    const textCounts = penalties.reduce((acc, p) => {
-      const text = p.text.trim();
-      if (text) {
-        acc[text] = (acc[text] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return penalties.reduce((acc, p) => {
-      const text = p.text.trim();
-      acc[p.id] = text && textCounts[text] > 1;
-      return acc;
-    }, {} as Record<string, boolean>);
-  };
-
-  const duplicateMap = getDuplicateMap();
-
-  const handleConfirmPenalty = async () => {
-    if (!selectedPenaltyId) return;
-    
-    const chosen = penalties.find(p => p.id === selectedPenaltyId);
-    if (!chosen || !chosen.text.trim()) {
-      showToast('벌칙 내용을 입력해주세요.', 'error');
-      return;
-    }
-    
-    setLoading(true);
+  const loadPenalties = async () => {
     try {
-      const res = await createGamePenalty({ 
-        text: chosen.text.trim(), 
-        gameType: effectiveGameType as 'QUIZ' | 'REACTION' 
-      });
+      setLoading(true);
+      const penaltiesData = await fetchPenalties('all');
+      setPenalties(penaltiesData);
       
-      // Store single penalty in global state
-      setPenalty({ id: res.id, text: chosen.text.trim() });
-      
-      // Success - proceed with confirmation
-      setConfirmedPenaltyId(selectedPenaltyId);
-      setIsPenaltyConfirmed(true);
-      setValidationError('');
-      showToast('벌칙이 저장되었습니다.', 'success');
-    } catch (e: any) {
-      let message = '벌칙 저장 중 오류가 발생했습니다.';
-      if (e.response?.status === 400) {
-        message = '입력 내용을 확인해주세요.';
-      } else if (e.response?.status >= 500) {
-        message = '서버 오류입니다. 잠시 후 다시 시도해주세요.';
+      // Auto-select first penalty if available
+      if (penaltiesData.length > 0 && !selectedPenaltyId) {
+        setSelectedPenaltyId(penaltiesData[0].id);
       }
-      showToast(message, 'error');
+    } catch (error) {
+      console.error('Failed to load penalties:', error);
+      showToast('벌칙 목록을 불러오지 못했습니다.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReEditPenalty = () => {
-    setIsPenaltyConfirmed(false);
-    setConfirmedPenaltyId(null);
+  const loadCategories = async () => {
+    try {
+      const categoriesData = await listCategoriesSafe();
+      setCategories(categoriesData);
+      if (categoriesData.length > 0) {
+        setSelectedCategory(categoriesData[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      showToast('카테고리를 불러오지 못했습니다.', 'error');
+    }
   };
 
-  async function handleCategorySelect(category: string) {
-    if (!confirmedPenaltyId || !effectiveGameType) return;
+  const handleSelectPenalty = (id: number) => setSelectedPenaltyId(id);
+
+  const handleCreatePenalty = async () => {
+    if (!newPenaltyText.trim()) {
+      showToast('벌칙 내용을 입력해주세요.', 'error');
+      return;
+    }
+
+    setCreatingPenalty(true);
+    try {
+      await http.post('/penalties', { description: newPenaltyText.trim() });
+      showToast('벌칙이 추가되었습니다!', 'success');
+      setNewPenaltyText('');
+      setShowPenaltyForm(false);
+      loadPenalties(); // Reload penalties
+    } catch (error: any) {
+      console.error('Failed to create penalty:', error);
+      let errorMessage = '벌칙 추가에 실패했습니다.';
+      
+      if (error.response?.status === 400) {
+        errorMessage = '벌칙 내용을 입력해주세요.';
+      } else if (error.response?.status === 409) {
+        errorMessage = '이미 같은 벌칙이 있습니다.';
+      }
+      
+      showToast(errorMessage, 'error');
+    } finally {
+      setCreatingPenalty(false);
+    }
+  };
+
+  const handleStartGame = async () => {
+    if (!selectedPenaltyId || !effectiveGameType) {
+      showToast('벌칙을 선택해주세요.', 'error');
+      return;
+    }
     
     setCategoryLoading(true);
     try {
       if (effectiveGameType === 'QUIZ') {
-        const totalRounds = 5;
+        if (!selectedCategory) {
+          showToast('카테고리를 선택해주세요.', 'error');
+          return;
+        }
         
-        // For now, we'll use a mock penalty ID since we don't have real backend integration
-        // In a real app, you'd create the penalty in the backend first
-        const mockPenaltyId = 1;
-        
-        const session = await createQuizSession({
-          gameType: 'QUIZ',
-          totalRounds,
-          category,
-          penaltyId: mockPenaltyId,
-        });
-        
-        const questions = await listQuestions(category, 0, totalRounds);
+        // Check if questions exist for the category
+        const questions = await listQuestions(selectedCategory, 0, totalRounds);
         
         if (questions.length === 0) {
           showToast('선택한 카테고리에 문제가 없습니다.', 'error');
           return;
         }
         
-        useGameStore.getState().setQuizState(category, questions, totalRounds);
-        nav(`/game/quiz/${session.sessionId}`);
-      } else {
-        // For non-quiz games
-        const mockPenaltyId = 1;
+        const session = await createQuizSession({
+          gameType: 'QUIZ',
+          totalRounds,
+          category: selectedCategory,
+          penaltyId: selectedPenaltyId,
+          inviteOnly,
+        });
+        
+        useGameStore.getState().setQuizState(selectedCategory, questions, totalRounds);
+        nav(`/game/quiz/${session.sessionId}/lobby`);
+        
+      } else if (effectiveGameType === 'REACTION') {
         const session = await createSession({
           gameType: effectiveGameType,
-          penaltyId: mockPenaltyId,
+          penaltyId: selectedPenaltyId,
+          inviteOnly,
         });
-        nav(`/game/reaction/${session.sessionId}`);
+        nav(`/game/reaction/lobby/${session.sessionId}`);
+        
+        // 세션 정보를 저장소에 저장
+        sessionStorage.setItem('reaction.sessionId', session.sessionId.toString());
       }
       
     } catch (error: any) {
+      console.error('Failed to start game:', error);
       let errorMessage = '게임 시작에 실패했습니다. 잠시 후 다시 시도하세요.';
       
       if (error.response?.status) {
@@ -446,114 +174,538 @@ export default function PenaltyPage() {
       }
       
       showToast(errorMessage, 'error');
-      console.error('Failed to start game:', error);
-      
     } finally {
       setCategoryLoading(false);
     }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-background">
+        <TopBar 
+          title="벌칙 선택" 
+          onQuit={createLeaveSessionHandler()} 
+          showQuit={true}
+        />
+        <div className="space-container">
+          <div className="space-glass-card" style={{ textAlign: 'center', padding: '2rem' }}>
+            <div className="space-loader" style={{ margin: '0 auto 1rem' }}></div>
+            <p className="space-text">벌칙 목록을 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const confirmedPenalty = confirmedPenaltyId 
-    ? penalties.find(p => p.id === confirmedPenaltyId)
-    : null;
-
   return (
-    <>
-      {/* 상단 중앙 프리볰: 편집 모드 */}
-      {!isPenaltyConfirmed && (
-        <div className="sticky top-4 z-20 flex justify-center mb-6">
-          <div className="rounded-2xl bg-slate-800/90 backdrop-blur px-6 py-3 shadow-lg">
-            <span className="text-slate-200 mr-4 font-medium">현재 추가된 벌칙</span>
-            <div className="inline-flex flex-wrap gap-2 align-middle">
-              {penalties.filter(p => p.text.trim()).map(p => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleSelectPenalty(p.id)}
-                  className={`rounded-full px-3 py-1 border transition-all ${
-                    selectedPenaltyId === p.id
-                      ? 'bg-indigo-600 text-white border-indigo-500 ring-2 ring-indigo-300'
-                      : 'bg-slate-700 text-slate-100 border-slate-600 hover:bg-slate-600'
-                  }`}
-                  aria-pressed={selectedPenaltyId === p.id}
-                  title="클릭하면 이 벌칙을 선택합니다"
-                >
-                  {p.text}
-                </button>
-              ))}
+    <div 
+      className="space-background"
+      style={{
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%)',
+        minHeight: '100vh',
+        position: 'relative',
+        overflow: 'hidden',
+        color: '#ffffff'
+      }}
+    >
+      <TopBar 
+        title="벌칙 선택" 
+        onQuit={createLeaveSessionHandler()} 
+        showQuit={true}
+      />
+      <div 
+        className="space-container"
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          paddingTop: '60px',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem'
+        }}
+      >
+        <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+          
+          {/* 벌칙 선택 섹션 */}
+          <div 
+            className="space-glass-card"
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              padding: '2rem',
+              marginBottom: '1.5rem'
+            }}
+          >
+            <h1 
+              className="space-text"
+              style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                marginBottom: '1.5rem',
+                textAlign: 'center',
+                color: '#e0e0e0',
+                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+              }}
+            >
+              🎯 벌칙 선택
+            </h1>
+            
+            {/* 벌칙 드롭다운 */}
+            <div style={{ marginBottom: '2rem' }}>
+              <label 
+                className="space-text"
+                style={{
+                  display: 'block',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  marginBottom: '0.75rem',
+                  color: '#e0e0e0',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                벌칙 선택
+              </label>
+              <select
+                value={selectedPenaltyId || ''}
+                onChange={(e) => handleSelectPenalty(Number(e.target.value))}
+                disabled={loading || penalties.length === 0}
+                className="space-glass-input"
+                aria-label="벌칙 선택"
+                style={{
+                  width: '100%',
+                  padding: '1rem 1.25rem',
+                  fontSize: '1rem',
+                  borderRadius: '0.875rem',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  appearance: 'none',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#e0e0e0',
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.75rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5rem 1.5rem',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                <option value="" disabled>
+                  {loading ? '불러오는 중...' : '벌칙을 선택하세요'}
+                </option>
+                {penalties.map(penalty => (
+                  <option key={penalty.id} value={penalty.id}>
+                    {penalty.text}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* 상단 중앙 확정 배너: 확정 모드 */}
-      {isPenaltyConfirmed && confirmedPenaltyId && (
-        <div className="sticky top-4 z-20 flex justify-center mb-8">
-          <div className="rounded-2xl bg-indigo-600 text-white px-8 py-4 shadow-lg">
-            <strong className="mr-3 text-lg">확정된 벌칙:</strong>
-            <span className="text-lg">{penalties.find(p => p.id === confirmedPenaltyId)?.text ?? '—'}</span>
-            <button 
-              className="ml-6 text-sm underline opacity-90 hover:opacity-100 transition-opacity" 
-              onClick={handleReEditPenalty}
+            {/* 벌칙 추가 섹션 */}
+            <div 
+              className="space-glass-card"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                border: '2px dashed rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                padding: '1.5rem',
+                marginBottom: '2rem',
+              }}
             >
-              벌칙 다시 선택
-            </button>
+              {!showPenaltyForm ? (
+                <div style={{ textAlign: 'center' }}>
+                  <button
+                    onClick={() => setShowPenaltyForm(true)}
+                    className="space-glass-button space-button-green"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2))',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem 1.5rem',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      color: '#e0e0e0',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    + 벌칙 추가
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <label 
+                    className="space-text"
+                    style={{
+                      display: 'block',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      marginBottom: '0.5rem',
+                      color: '#e0e0e0',
+                      textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    새 벌칙
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <input
+                      type="text"
+                      value={newPenaltyText}
+                      onChange={(e) => setNewPenaltyText(e.target.value)}
+                      placeholder="벌칙 내용을 입력하세요"
+                      disabled={creatingPenalty}
+                      className="space-glass-input"
+                      style={{
+                        flex: 1,
+                        padding: '0.875rem 1rem',
+                        fontSize: '1rem',
+                        borderRadius: '0.75rem',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: '#e0e0e0',
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleCreatePenalty();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={handleCreatePenalty}
+                      disabled={creatingPenalty || !newPenaltyText.trim()}
+                      className="space-glass-button space-button-green"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2))',
+                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                        borderRadius: '0.75rem',
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        color: '#e0e0e0',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {creatingPenalty ? '추가 중...' : '추가'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowPenaltyForm(false);
+                        setNewPenaltyText('');
+                      }}
+                      disabled={creatingPenalty}
+                      className="space-glass-button"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '0.75rem',
+                        padding: '0.875rem 1.25rem',
+                        fontSize: '1rem',
+                        color: '#e0e0e0',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 초대 전용 설정 */}
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={inviteOnly}
+                  onChange={(e) => setInviteOnly(e.target.checked)}
+                  style={{
+                    width: '1.25rem',
+                    height: '1.25rem',
+                    accentColor: '#6366f1'
+                  }}
+                />
+                <span 
+                  className="space-text"
+                  style={{
+                    color: '#e0e0e0',
+                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                  }}
+                >
+                  친구만 허용 (초대 전용)
+                </span>
+              </label>
+              <p 
+                className="space-text-muted"
+                style={{
+                  fontSize: '0.875rem',
+                  margin: '0.5rem 0 0 2rem',
+                  lineHeight: '1.4',
+                  color: '#a0a0a0',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                활성화하면 공개 목록에 표시되지 않고, 초대 코드로만 입장할 수 있습니다.
+              </p>
+            </div>
+
+            {/* 게임 시작 섹션 */}
+            {selectedPenaltyId && (
+              <>
+                {effectiveGameType === 'QUIZ' ? (
+                  <div 
+                    className="space-glass-card"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                      padding: '2rem',
+                      marginBottom: '1.5rem'
+                    }}
+                  >
+                    <h2 
+                      className="space-text"
+                      style={{ 
+                        fontSize: '1.5rem', 
+                        fontWeight: '600', 
+                        marginBottom: '1.5rem',
+                        textAlign: 'center',
+                        color: '#e0e0e0',
+                        textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                      }}
+                    >
+                      🧠 퀴즈 게임 설정
+                    </h2>
+                    
+                    {/* 라운드 수 선택 */}
+                    <div style={{ marginBottom: '2rem' }}>
+                      <h3 
+                        className="space-text"
+                        style={{ 
+                          fontSize: '1.1rem', 
+                          fontWeight: '600', 
+                          marginBottom: '1rem',
+                          textAlign: 'center',
+                          color: '#e0e0e0',
+                          textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                        }}
+                      >
+                        총 라운드 수 선택
+                      </h3>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap'
+                      }}>
+                        {[3, 5, 7, 10].map(rounds => (
+                          <button
+                            key={rounds}
+                            type="button"
+                            onClick={() => setTotalRounds(rounds)}
+                            className={`space-glass-button ${totalRounds === rounds ? 'space-button-green' : ''}`}
+                            style={{
+                              padding: '0.75rem 1.5rem',
+                              borderRadius: '0.875rem',
+                              fontSize: '1rem',
+                              fontWeight: totalRounds === rounds ? '600' : '500',
+                              minWidth: '80px',
+                              background: totalRounds === rounds 
+                                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2))'
+                                : 'rgba(255, 255, 255, 0.1)',
+                              border: totalRounds === rounds 
+                                ? '2px solid rgba(16, 185, 129, 0.6)'
+                                : '1px solid rgba(255, 255, 255, 0.2)',
+                              color: '#e0e0e0',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                            }}
+                          >
+                            {rounds}라운드
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 카테고리 선택 */}
+                    <div style={{ marginBottom: '2rem' }}>
+                      <h3 
+                        className="space-text"
+                        style={{ 
+                          fontSize: '1.1rem', 
+                          fontWeight: '600', 
+                          marginBottom: '1rem',
+                          textAlign: 'center',
+                          color: '#e0e0e0',
+                          textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                        }}
+                      >
+                        퀴즈 카테고리 선택
+                      </h3>
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
+                        justifyContent: 'center'
+                      }}>
+                        {categories.map(name => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => setSelectedCategory(name)}
+                            className={`space-glass-button ${selectedCategory === name ? 'space-button-purple' : ''}`}
+                            style={{
+                              padding: '0.75rem 1.5rem',
+                              borderRadius: '0.875rem',
+                              fontSize: '1rem',
+                              fontWeight: selectedCategory === name ? '600' : '500',
+                              minWidth: '80px',
+                              background: selectedCategory === name 
+                                ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(67, 56, 202, 0.2))'
+                                : 'rgba(255, 255, 255, 0.1)',
+                              border: selectedCategory === name 
+                                ? '2px solid rgba(99, 102, 241, 0.6)'
+                                : '1px solid rgba(255, 255, 255, 0.2)',
+                              color: '#e0e0e0',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                            }}
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 게임 시작 버튼 */}
+                    <div style={{ textAlign: 'center' }}>
+                      <button
+                        onClick={handleStartGame}
+                        disabled={categoryLoading || !selectedCategory}
+                        className="space-glass-button space-button-green"
+                        style={{
+                          fontSize: '1.2rem',
+                          padding: '1rem 3rem',
+                          width: '100%',
+                          maxWidth: '300px',
+                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2))',
+                          border: '1px solid rgba(16, 185, 129, 0.4)',
+                          borderRadius: '0.875rem',
+                          color: '#e0e0e0',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        {categoryLoading ? '게임 준비 중...' : '🧠 퀴즈 시작'}
+                      </button>
+                    </div>
+                  </div>
+                ) : effectiveGameType === 'REACTION' ? (
+                  <div 
+                    className="space-glass-card"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                      padding: '2rem',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <h2 
+                      className="space-text"
+                      style={{ 
+                        fontSize: '1.5rem', 
+                        fontWeight: '600', 
+                        marginBottom: '2rem',
+                        color: '#e0e0e0',
+                        textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                      }}
+                    >
+                      ⚡ 반응속도 게임 ⚡
+                    </h2>
+                    <p 
+                      className="space-text-muted"
+                      style={{ 
+                        fontSize: '1.1rem', 
+                        marginBottom: '2rem',
+                        lineHeight: '1.6',
+                        color: '#a0a0a0',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      초록색 신호가 빨간색으로 바뀌는 순간 클릭하세요!<br />
+                      가장 빠른 반응속도를 가진 플레이어가 승리합니다.
+                    </p>
+                    <button
+                      onClick={handleStartGame}
+                      disabled={categoryLoading}
+                      className="space-glass-button space-button-green"
+                      style={{
+                        fontSize: '1.2rem',
+                        padding: '1rem 3rem',
+                        width: '100%',
+                        maxWidth: '300px',
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2))',
+                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                        borderRadius: '0.875rem',
+                        color: '#e0e0e0',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {categoryLoading ? '게임 준비 중...' : '⚡ 반응속도 게임 시작 ⚡'}
+                    </button>
+                  </div>
+                ) : (
+                  <div 
+                    className="space-glass-card"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                      padding: '2rem',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <p 
+                      className="space-text-muted"
+                      style={{
+                        color: '#a0a0a0',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      지원하지 않는 게임 타입입니다.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
-      )}
-
-      {/* 벌칙 편집 섹션: 확정 전만 */}
-      {!isPenaltyConfirmed && (
-        <div style={{ padding: '2rem', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h1 style={{ fontSize: '2rem', margin: '0 0 2rem 0', color: '#f8fafc' }}>벌칙 입력</h1>
-          
-          {/* 입력 리스트 */}
-          <div style={{ width: '100%', maxWidth: '640px' }}>
-            {penalties.map(p => (
-              <PenaltyInputRow
-                key={p.id}
-                penalty={p}
-                onChange={(txt) => handlePenaltyChange(p.id, txt)}
-                onRemove={() => handlePenaltyRemove(p.id)}
-                autoFocus={p.id === lastAddedIdRef.current}
-                selected={selectedPenaltyId === p.id}
-                onSelect={() => handleSelectPenalty(p.id)}
-              />
-            ))}
-          </div>
-
-          {/* 하단 버튼 */}
-          <div className="mt-4 flex gap-2">
-            <button type="button" onClick={handleAddPenalty} className="btn">+ 벌칙 추가</button>
-            <button 
-              type="button" 
-              onClick={handleConfirmPenalty} 
-              className="btn-primary" 
-              disabled={!selectedPenaltyId || !penalties.find(p => p.id === selectedPenaltyId)?.text.trim() || loading}
-            >
-              {loading ? '확정 중...' : '확정하기'}
-            </button>
-          </div>
-          
-          {validationError && (
-            <p role="alert" style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.75rem' }}>
-              {validationError}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* 카테고리 선택 섹션: 확정 후만 */}
-      {isPenaltyConfirmed && (
-        <div style={{ padding: '2rem', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '100%', maxWidth: '640px' }}>
-            <CategorySelector 
-              onSelect={handleCategorySelect} 
-              loading={categoryLoading}
-            />
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }

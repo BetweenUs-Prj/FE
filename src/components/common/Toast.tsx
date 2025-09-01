@@ -24,34 +24,45 @@ export const Toast: React.FC<ToastProps> = ({
     return () => clearTimeout(timer);
   }, [duration, onClose]);
 
-  const getBackgroundColor = () => {
+  const getToastStyles = () => {
+    const baseStyle = {
+      fontFamily: "'Press Start 2P', cursive",
+      fontSize: '0.8rem',
+      padding: '1rem',
+      border: '4px solid #0d0d0d',
+      boxShadow: '4px 4px 0px #0d0d0d',
+      color: '#f2e9e4',
+      textShadow: '2px 2px 0px #0d0d0d',
+      transition: 'all 0.3s ease'
+    };
+    
     switch (type) {
-      case 'success': return '#10b981';
-      case 'error': return '#ef4444';
+      case 'success': 
+        return { ...baseStyle, backgroundColor: '#6a856f' };
+      case 'error': 
+        return { ...baseStyle, backgroundColor: '#9d2929' };
       case 'info': 
-      default: return '#3b82f6';
+      default: 
+        return { ...baseStyle, backgroundColor: '#4a4e69' };
     }
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '1rem',
-        right: '1rem',
-        backgroundColor: getBackgroundColor(),
-        color: '#fff',
-        padding: '0.75rem 1rem',
-        borderRadius: '0.5rem',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-        zIndex: 9999,
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(-1rem)',
-        transition: 'all 0.3s ease-in-out',
-      }}
-    >
-      {message}
-    </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+      `}</style>
+      <div
+        className="fixed top-4 right-4 z-[9999]"
+        style={{
+          ...getToastStyles(),
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0) scale(1)' : 'translateY(-1rem) scale(0.95)',
+        }}
+      >
+        {message}
+      </div>
+    </>
   );
 };
 
@@ -83,17 +94,9 @@ export const ToastContainer: React.FC = () => {
   };
 
   return (
-    <>
+    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
       {toasts.map((toast, index) => (
-        <div
-          key={toast.id}
-          style={{
-            position: 'fixed',
-            top: `${1 + index * 4.5}rem`,
-            right: '1rem',
-            zIndex: 9999,
-          }}
-        >
+        <div key={toast.id} className="pointer-events-auto">
           <Toast
             message={toast.message}
             type={toast.type}
@@ -102,13 +105,18 @@ export const ToastContainer: React.FC = () => {
           />
         </div>
       ))}
-    </>
+    </div>
   );
 };
 
 // Helper function for showing toasts
 export const showToast = (message: string, type?: 'success' | 'error' | 'info', duration?: number) => {
+  console.log('[TOAST] Showing toast:', { message, type, duration });
   if ((window as any).showToast) {
     (window as any).showToast(message, type, duration);
+  } else {
+    console.warn('[TOAST] showToast function not available on window');
+    // Fallback: use console.log for debugging
+    console.log(`[TOAST] ${type?.toUpperCase() || 'INFO'}: ${message}`);
   }
 };

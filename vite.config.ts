@@ -4,9 +4,15 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    postcss: './postcss.config.js',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Force stub out WebSocket modules to prevent runtime errors
+      'sockjs-client': path.resolve(__dirname, './src/__stubs__/empty.js'),
+      '@stomp/stompjs': path.resolve(__dirname, './src/__stubs__/empty.js'),
     },
   },
   server: {
@@ -18,10 +24,8 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-      },
-      '/ws': {
-        target: 'ws://localhost:8080',
-        ws: true
+        secure: false,
+        timeout: 20000
       }
     }
   },

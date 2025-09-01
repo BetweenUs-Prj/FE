@@ -1,0 +1,497 @@
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useGameStore } from '../../hooks/useGameStore';
+
+interface ReactionResult {
+  userUid: string;
+  deltaMs: number;
+  falseStart: boolean;
+  rank: number;
+}
+
+interface ReactionRound {
+  roundId: number;
+  sessionId: number;
+  status: 'WAITING' | 'PREPARING' | 'RED' | 'FINISHED';
+  redAt: number;
+  createdAt: number;
+  participants: number;
+  results: ReactionResult[];
+}
+
+interface GameState {
+  currentRound: ReactionRound | null;
+  playerReady: boolean;
+  gameStarted: boolean;
+  showResult: boolean;
+  myResult: ReactionResult | null;
+}
+
+/**
+ * REST 기반 반응속도 게임 (WebSocket 완전 제거)
+ */
+export default function ReactionGameREST() {
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const nav = useNavigate();
+  const setGameType = useGameStore((s) => s.setGameType);
+  const gameType = useGameStore((s) => s.gameType);
+  
+  const [gameState, setGameState] = useState<GameState>({
+    currentRound: null,
+    playerReady: false,
+    gameStarted: false,
+    showResult: false,
+    myResult: null
+  });
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [reactionTime, setReactionTime] = useState<number | null>(null);
+  const [clicked, setClicked] = useState(false);
+  
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
+  const redStartTime = useRef<number | null>(null);
+  
+  // 컴포넌트 마운트
+  useEffect(() => {
+    console.log('[REACTION] mount sid=' + sessionId);
+    try {
+      if (setGameType && typeof setGameType === 'function') {
+        setGameType('REACTION');
+        console.log('[REACTION] Game type set to REACTION');
+      } else {
+        console.warn('[REACTION] setGameType is not available');
+      }
+    } catch (error) {
+      console.error('[REACTION] Error setting game type:', error);
+    }
+    mountedRef.current = true;
+    
+    return () => {
+      console.log('[REACTION] unmount sid=' + sessionId);
+      mountedRef.current = false;
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      if (countdownRef.current) clearTimeout(countdownRef.current);
+    };
+  }, [sessionId, setGameType]);
+  
+  // 현재 라운드 조회
+  const fetchCurrentRound = useCallback(async (): Promise<boolean> => {
+    if (!sessionId || !mountedRef.current) return false;
+    
+    try {
+      const response = await fetch(`/api/mini-games/reaction/sessions/${sessionId}/current-round?ts=${Date.now()}`, {
+        headers: {
+          'User-Uid': localStorage.getItem('userUid') || 'anonymous',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (response.status === 200) {
+        const roundData: ReactionRound = await response.json();
+        console.log('[REACTION] Current round:', roundData);
+        
+        if (!mountedRef.current) return false;
+        
+        setGameState(prev => ({
+          ...prev,
+          currentRound: roundData,
+          gameStarted: roundData.status !== 'WAITING'
+        }));
+        
+        // 상태별 처리
+        if (roundData.status === 'RED' && !clicked) {
+          // 빨간 화면 - 클릭 대기
+          redStartTime.current = roundData.redAt;
+          console.log('[REACTION] Red signal active, redAt:', roundData.redAt);
+          
+        } else if (roundData.status === 'FINISHED') {
+          // 게임 종료 - 결과 페이지로 이동
+          console.log('[REACTION] Game finished, navigating to results page');
+          
+          // 백엔드에서 세션 종료 처리 (필요한 경우)
+          try {
+            await fetch(`/api/mini-games/sessions/${sessionId}/finish`, {
+              method: 'POST',
+              headers: {
+                'User-Uid': localStorage.getItem('userUid') || 'anonymous',
+                'Content-Type': 'application/json'
+              }
+            });
+          } catch (err) {
+            console.log('[REACTION] Session finish call failed (may be expected):', err);
+          }
+          
+          // 결과 페이지로 이동
+          nav(`/game/result/${sessionId}`, { 
+            replace: true,
+            state: { 
+              from: 'reaction',
+              gameType: 'REACTION'
+            }
+          });
+          
+          return true; // 폴링 중단
+        }
+        
+        setLoading(false);
+        setError(null);
+        return false; // 폴링 계속
+        
+      } else if (response.status === 204) {
+        // 라운드 없음 - 대기 상태
+        console.log('[REACTION] No current round, waiting...');
+        setGameState(prev => ({ ...prev, currentRound: null }));
+        setLoading(false);
+        return false;
+        
+      } else {
+        console.log('[REACTION] Fetch error:', response.status);
+        setError('게임 상태를 불러올 수 없습니다.');
+        setLoading(false);
+        return true;
+      }
+      
+    } catch (err) {
+      console.error('[REACTION] Fetch error:', err);
+      if (mountedRef.current) {
+        setError('네트워크 오류가 발생했습니다.');
+        setLoading(false);
+      }
+      return true;
+    }
+  }, [sessionId, clicked]);
+  
+  // 플레이어 준비 상태 설정
+  const setPlayerReady = useCallback(async (ready: boolean) => {
+    if (!sessionId) return;
+    
+    try {
+      const endpoint = ready ? 'ready' : 'unready';
+      const response = await fetch(`/api/mini-games/reaction/sessions/${sessionId}/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'User-Uid': localStorage.getItem('userUid') || 'anonymous',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        console.log(`[REACTION] Player ${ready ? 'ready' : 'unready'}`);
+        setGameState(prev => ({ ...prev, playerReady: ready }));
+      }
+      
+    } catch (err) {
+      console.error('[REACTION] Ready state error:', err);
+    }
+  }, [sessionId]);
+  
+  // 라운드 생성
+  const createRound = useCallback(async () => {
+    if (!sessionId) return;
+    
+    try {
+      const response = await fetch('/api/mini-games/reaction/rounds', {
+        method: 'POST',
+        headers: {
+          'User-Uid': localStorage.getItem('userUid') || 'anonymous',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sessionId: parseInt(sessionId) })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[REACTION] Round created:', data);
+        
+        // 카운트다운 시작 (5초)
+        setCountdown(5);
+        let count = 5;
+        
+        countdownRef.current = setInterval(() => {
+          count--;
+          setCountdown(count);
+          
+          if (count <= 0) {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            setCountdown(null);
+          }
+        }, 1000);
+        
+      } else {
+        setError('게임을 시작할 수 없습니다.');
+      }
+      
+    } catch (err) {
+      console.error('[REACTION] Create round error:', err);
+      setError('게임을 시작할 수 없습니다.');
+    }
+  }, [sessionId]);
+  
+  // 클릭 등록
+  const handleClick = useCallback(async () => {
+    if (!gameState.currentRound || clicked || gameState.currentRound.status !== 'RED') return;
+    
+    setClicked(true);
+    const clickTime = Date.now();
+    
+    // 반응시간 계산 (클라이언트에서 임시 계산)
+    if (redStartTime.current) {
+      const deltaMs = clickTime - redStartTime.current;
+      setReactionTime(deltaMs);
+      console.log('[REACTION] Click registered, delta:', deltaMs + 'ms');
+    }
+    
+    try {
+      const response = await fetch(`/api/mini-games/reaction/rounds/${gameState.currentRound.roundId}/click`, {
+        method: 'POST',
+        headers: {
+          'User-Uid': localStorage.getItem('userUid') || 'anonymous',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('[REACTION] Click result:', result);
+        
+        // 서버에서 받은 정확한 반응시간으로 업데이트
+        setReactionTime(result.deltaMs);
+        
+      } else {
+        console.log('[REACTION] Click registration failed:', response.status);
+      }
+      
+    } catch (err) {
+      console.error('[REACTION] Click error:', err);
+    }
+  }, [gameState.currentRound, clicked]);
+  
+  // 폴링 시작
+  useEffect(() => {
+    if (!sessionId) return;
+    
+    const startPolling = async () => {
+      // 플레이어 준비 상태 설정
+      await setPlayerReady(true);
+      
+      // 첫 조회
+      const finished = await fetchCurrentRound();
+      
+      if (!finished && mountedRef.current) {
+        // 500ms 간격으로 폴링
+        pollingRef.current = setInterval(async () => {
+          const finished = await fetchCurrentRound();
+          if (finished && pollingRef.current) {
+            clearInterval(pollingRef.current);
+          }
+        }, 500);
+      }
+    };
+    
+    startPolling();
+    
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      setPlayerReady(false); // 컴포넌트 언마운트 시 준비 해제
+    };
+  }, [sessionId, fetchCurrentRound, setPlayerReady]);
+  
+  // 키보드 이벤트 (스페이스바 클릭)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && gameState.currentRound?.status === 'RED') {
+        e.preventDefault();
+        handleClick();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameState.currentRound?.status, handleClick]);
+  
+  // 홈으로 이동
+  const handleGoHome = () => nav('/');
+  
+  // 로비로 이동
+  const handleBackToLobby = () => nav('/lobby');
+  
+  // 다시 하기
+  const handleRestart = () => {
+    setGameState({
+      currentRound: null,
+      playerReady: false,
+      gameStarted: false,
+      showResult: false,
+      myResult: null
+    });
+    setClicked(false);
+    setReactionTime(null);
+    setCountdown(null);
+    setLoading(true);
+    setError(null);
+  };
+  
+  // 로딩 화면
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4 mx-auto"></div>
+          <p className="text-white text-center">게임을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // 에러 화면
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-white mb-2">오류 발생</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <button
+            onClick={handleGoHome}
+            className="px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 font-semibold"
+          >
+            홈으로 이동
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // 결과 페이지로 이동 중 화면 (이 상태는 실제로는 잠시만 표시됨)
+  if (gameState.showResult) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <div className="text-6xl mb-4">🏁</div>
+          <h2 className="text-2xl font-bold text-white mb-4">게임 종료!</h2>
+          <p className="text-gray-400 mb-2">결과 페이지로 이동 중...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 대기 화면
+  if (!gameState.currentRound || gameState.currentRound.status === 'WAITING') {
+    return (
+      <div className="min-h-screen bg-gray-900 p-4 flex items-center justify-center">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-12 text-center max-w-2xl">
+          <div className="text-6xl mb-6">⚡</div>
+          <h1 className="text-4xl font-bold text-yellow-400 mb-4">반응속도 게임</h1>
+          <p className="text-gray-400 mb-8 text-lg">
+            빨간 불이 켜지면 최대한 빠르게 클릭하세요!
+          </p>
+          
+          <div className="bg-gray-700 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-bold text-white mb-4">게임 방법</h3>
+            <div className="text-gray-300 space-y-2 text-left">
+              <p>• 준비 버튼을 눌러 게임을 시작하세요</p>
+              <p>• 카운트다운 후 랜덤 시간에 빨간 불이 켜집니다</p>
+              <p>• 빨간 불이 켜지면 화면을 클릭하거나 스페이스바를 누르세요</p>
+              <p>• 빨간 불이 켜지기 전에 클릭하면 부정출발입니다</p>
+            </div>
+          </div>
+          
+          {!gameState.playerReady && (
+            <button
+              onClick={() => setPlayerReady(true)}
+              className="px-8 py-4 bg-yellow-500 text-black rounded-xl hover:bg-yellow-600 font-bold text-xl transition transform hover:scale-105"
+            >
+              게임 참가
+            </button>
+          )}
+          
+          {gameState.playerReady && (
+            <div>
+              <p className="text-green-400 font-semibold mb-4">참가 완료! 다른 플레이어를 기다리는 중...</p>
+              <button
+                onClick={createRound}
+                className="px-8 py-4 bg-red-500 text-white rounded-xl hover:bg-red-600 font-bold text-xl transition transform hover:scale-105"
+              >
+                게임 시작
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
+  // 카운트다운 화면
+  if (countdown !== null && countdown > 0) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div 
+            className="text-9xl font-bold text-yellow-400 mb-4 animate-pulse"
+            style={{ textShadow: '0 0 50px rgba(255, 193, 7, 0.8)' }}
+          >
+            {countdown}
+          </div>
+          <p className="text-2xl text-white">준비하세요...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // 대기 중 (빨간 불 전)
+  if (gameState.currentRound.status === 'PREPARING') {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center cursor-pointer"
+        style={{ backgroundColor: '#1a1a2e' }}
+        onClick={handleClick}
+      >
+        <div className="text-center">
+          <div className="text-6xl mb-6 animate-pulse">⏳</div>
+          <h2 className="text-3xl font-bold text-white mb-4">준비하세요...</h2>
+          <p className="text-gray-400 text-lg">빨간 불이 켜지면 클릭하세요</p>
+          <p className="text-gray-500 text-sm mt-4">화면을 클릭하거나 스페이스바를 누르세요</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // 빨간 불 (클릭 대기)
+  if (gameState.currentRound.status === 'RED') {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center cursor-pointer"
+        style={{ backgroundColor: '#dc2626' }}
+        onClick={handleClick}
+      >
+        <div className="text-center text-white">
+          {clicked ? (
+            <div>
+              <div className="text-8xl mb-4">✅</div>
+              <h2 className="text-4xl font-bold mb-4">클릭 완료!</h2>
+              {reactionTime && (
+                <p className="text-2xl font-semibold">
+                  반응시간: {reactionTime}ms
+                </p>
+              )}
+              <p className="text-xl opacity-80 mt-2">결과를 기다리는 중...</p>
+            </div>
+          ) : (
+            <div>
+              <div className="text-9xl mb-6 animate-bounce">🔴</div>
+              <h2 className="text-5xl font-bold mb-4">지금 클릭!</h2>
+              <p className="text-2xl opacity-80">화면을 클릭하거나 스페이스바를 누르세요</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
+  return null;
+}

@@ -228,7 +228,7 @@ export const PenaltyCreateButton: React.FC<PenaltyCreateButtonProps> = ({ onPena
                     fontSize: '1rem',
                     outline: 'none',
                   }}
-                  aria-invalid={!!validationError}
+                  aria-invalid={validationError ? 'true' : 'false'}
                   aria-describedby={validationError ? 'penalty-error' : undefined}
                 />
                 {validationError && (
