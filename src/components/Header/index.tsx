@@ -18,20 +18,8 @@ const Header: React.FC = () => {
   });
 
   const handleLoginClick = () => {
-    // TODO: 차후 카카오 API 로그인 구현
-    // const handleKakaoLogin = async () => {
-    //   try {
-    //     // 카카오 로그인 API 호출
-    //     // const response = await kakaoLoginAPI();
-    //     // setIsLoggedIn(true);
-    //   } catch (error) {
-    //     console.error('카카오 로그인 실패:', error);
-    //   }
-    // };
-
-    // 임시로 로그인 상태 토글 (차후 API 연동 시 제거)
-    setIsLoggedIn(!isLoggedIn);
-    setShowProfileMenu(false);
+    // 카카오 로그인 페이지로 리다이렉트
+    window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
   };
 
   const showToast = (message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
