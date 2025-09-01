@@ -90,11 +90,11 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   // 사용자 위치 데이터를 백엔드로 전송하는 함수
   const sendUserLocationsToBackend = async (friendsData: Friend[], category: MeetingCategory, customCategoryText?: string) => {
     try {
-      // JWT 토큰 가져오기
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
-      }
+      // JWT 토큰 가져오기 (인증 로직 주석처리)
+      // const token = getAuthToken();
+      // if (!token) {
+      //   throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
+      // }
             
       const requestData = {
         locations: friendsData.map(friend => ({
@@ -114,7 +114,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          // 'Authorization': `Bearer ${token}`, // 인증 로직 주석처리
         },
         body: JSON.stringify(requestData)
       });
@@ -135,12 +135,14 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     } catch (error) {
       console.error('백엔드 전송 실패:', error);
       
-      // JWT 토큰 관련 에러인지 확인
-      if (error instanceof Error && error.message.includes('인증 토큰')) {
-        showToast('로그인이 필요합니다. 다시 로그인해주세요.', 'error');
-      } else {
-        showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
-      }
+      // JWT 토큰 관련 에러인지 확인 (인증 로직 주석처리)
+      // if (error instanceof Error && error.message.includes('인증 토큰')) {
+      //   showToast('로그인이 필요합니다. 다시 로그인해주세요.', 'error');
+      // } else {
+      //   showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+      // }
+      
+      showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
       
       throw error;
     }
