@@ -600,39 +600,121 @@ export const useHomeLogic = () => {
   }, [friends, showCardList]);
 
   // 🎯 약속 추가 관련 함수들
-  const handleAddSchedule = (data: any) => {
+  const handleAddSchedule = async (data: any) => {
     console.log('🎯 handleAddSchedule 호출됨:', data);
     
-    // 바로 일정에 추가
-    const newSchedule = {
-      id: Date.now(),
+    // PromiseService에 약속 생성 요청
+    const meetingRequest = {
       title: data.placeInfo.title,
-      date: new Date().toISOString().split('T')[0],
-      time: data.meetingTime,
-      location: `${data.stationName}역 → ${data.placeInfo.title}`,
-      description: data.placeInfo.description || `${data.placeInfo.title}에서 만남`,
-      type: 'social' as const,
-      participants: data.friends.map((f: any) => f.name),
-      placeInfo: data.placeInfo,
-      stationName: data.stationName,
-      routes: data.routes
+      placeId: data.placeInfo.id || 1,
+      placeName: data.placeInfo.title,
+      placeAddress: `${data.stationName}역 주변`,
+      scheduledAt: `${new Date().toISOString().split('T')[0]}T${data.meetingTime}:00`,
+      maxParticipants: data.friends.length + 1,
+      memo: data.placeInfo.description || `${data.placeInfo.title}에서 만남`,
+      participantUserIds: data.friends.map((f: any) => f.id).filter((id: any) => id && id !== 1) // Exclude host
     };
-    
-    console.log('🎯 일정 추가 중:', newSchedule);
-    setSchedules(prev => {
-      const updatedSchedules = [...prev, newSchedule];
-      console.log('🎯 업데이트된 일정 목록:', updatedSchedules);
-      return updatedSchedules;
-    });
-    
-    // ScheduleConfirmModal도 열기
-    setScheduleData(data);
-    setShowScheduleConfirmModal(true);
+
+    try {
+      const response = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-ID': '1' // TODO: Get from auth context
+        },
+        body: JSON.stringify(meetingRequest)
+      });
+
+      if (response.ok) {
+        const newMeeting = await response.json();
+        
+        // Transform backend meeting to frontend schedule format
+        const newSchedule = {
+          id: newMeeting.meetingId,
+          title: newMeeting.title,
+          date: newMeeting.scheduledAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+          time: newMeeting.scheduledAt?.split('T')[1]?.substring(0, 5) || data.meetingTime,
+          location: `${data.stationName}역 → ${data.placeInfo.title}`,
+          description: newMeeting.memo || `${data.placeInfo.title}에서 만남`,
+          type: 'social' as const,
+          participants: data.friends.map((f: any) => f.name),
+          placeInfo: data.placeInfo,
+          stationName: data.stationName,
+          routes: data.routes
+        };
+        
+        console.log('🎯 일정 추가 완료:', newSchedule);
+        setSchedules(prev => {
+          const updatedSchedules = [...prev, newSchedule];
+          console.log('🎯 업데이트된 일정 목록:', updatedSchedules);
+          return updatedSchedules;
+        });
+
+        showToast('일정이 생성되었습니다!', 'success');
+        
+        // ScheduleConfirmModal을 위해 meetingId 포함된 데이터 설정
+        const enrichedData = {
+          ...data,
+          meetingId: newMeeting.meetingId
+        };
+        setScheduleData(enrichedData);
+        setShowScheduleConfirmModal(true);
+      } else {
+        console.error('일정 생성 실패:', response.statusText);
+        showToast('일정 생성에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('일정 생성 중 오류:', error);
+      showToast('일정 생성 중 오류가 발생했습니다.', 'error');
+    }
   };
 
-  const handleSendInvitation = () => {
-    // TODO: 초대장 보내기 로직 구현
-    showToast('초대장이 발송되었습니다!', 'success');
+  const handleSendInvitation = async () => {
+    if (!scheduleData?.meetingId) {
+      showToast('초대를 보낼 약속 정보가 없습니다.', 'error');
+      return;
+    }
+
+    try {
+      // Get participant user IDs from friends data
+      const participantIds = scheduleData.friends
+        ?.map((f: any) => f.id)
+        .filter((id: any) => id && id !== 1) || []; // Exclude host (assuming host is user 1)
+
+      if (participantIds.length === 0) {
+        showToast('초대할 참가자가 없습니다.', 'warning');
+        return;
+      }
+
+      const response = await fetch(`/api/meetings/${scheduleData.meetingId}/invites`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-ID': '1' // TODO: Get from auth context
+        },
+        body: JSON.stringify({
+          userIds: participantIds,
+          message: `${scheduleData.placeInfo.title}에서 만나요!`
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const invitedCount = result.invited?.length || 0;
+        showToast(`${invitedCount}명에게 초대장이 발송되었습니다!`, 'success');
+        
+        if (result.errors && result.errors.length > 0) {
+          console.warn('초대 중 일부 오류:', result.errors);
+        }
+      } else {
+        console.error('초대 발송 실패:', response.statusText);
+        showToast('초대장 발송에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('초대 발송 중 오류:', error);
+      showToast('초대장 발송 중 오류가 발생했습니다.', 'error');
+    }
+    
     setShowScheduleConfirmModal(false);
   };
 
@@ -664,9 +746,26 @@ export const useHomeLogic = () => {
     showToast('일정이 추가되었습니다!', 'success');
   };
 
-  const handleRemoveSchedule = useCallback((id: number) => {
-    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
-    showToast('일정이 삭제되었습니다.', 'success');
+  const handleRemoveSchedule = useCallback(async (id: number) => {
+    try {
+      const response = await fetch(`/api/meetings/${id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'X-User-ID': '1' // TODO: Get from auth context
+        }
+      });
+
+      if (response.ok) {
+        setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+        showToast('일정이 취소되었습니다.', 'success');
+      } else {
+        console.error('일정 취소 실패:', response.statusText);
+        showToast('일정 취소에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('일정 취소 중 오류:', error);
+      showToast('일정 취소 중 오류가 발생했습니다.', 'error');
+    }
   }, [showToast]);
 
 
