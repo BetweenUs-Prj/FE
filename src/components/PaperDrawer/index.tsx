@@ -90,11 +90,11 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   // 사용자 위치 데이터를 백엔드로 전송하는 함수
   const sendUserLocationsToBackend = async (friendsData: Friend[], category: MeetingCategory, customCategoryText?: string) => {
     try {
-      // JWT 토큰 가져오기
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
-      }
+      // JWT 토큰 가져오기 (인증 로직 주석처리)
+      // const token = getAuthToken();
+      // if (!token) {
+      //   throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
+      // }
             
       const requestData = {
         locations: friendsData.map(friend => ({
@@ -110,37 +110,84 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
 
       console.log('백엔드로 전송할 데이터:', requestData);
 
-      const response = await fetch('/api/middle/points/multiple-locations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData)
-      });
+      // 중심점 계산
+      const validLocations = friendsData.filter(friend => friend.coordinates);
+      const centerLat = validLocations.reduce((sum, friend) => sum + friend.coordinates!.lat, 0) / validLocations.length;
+      const centerLng = validLocations.reduce((sum, friend) => sum + friend.coordinates!.lng, 0) / validLocations.length;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      // 가장 가까운 역 찾기
+      const { getAllStations } = await import('@/constants/stationData');
+      const allStations = getAllStations();
+      
+      let nearestStation = allStations[0];
+      let minDistance = Math.sqrt(Math.pow(centerLat - nearestStation.lat, 2) + Math.pow(centerLng - nearestStation.lng, 2));
+      
+      for (const station of allStations) {
+        const distance = Math.sqrt(Math.pow(centerLat - station.lat, 2) + Math.pow(centerLng - station.lng, 2));
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestStation = station;
+        }
       }
 
-      const responseData = await response.json();
+      // 카테고리를 목적으로 변환
+      const purpose = category === 'CUSTOM' && customCategoryText ? 
+        customCategoryText : 
+        CATEGORY_OPTIONS.find(opt => opt.value === category)?.label || '모임';
+
+      // 카테고리를 백엔드 프리셋으로 매핑
+      const categoryToPresetMap: Record<MeetingCategory, string> = {
+        'DRINKING': 'DRINKING', 'COFFEE': 'COFFEE', 'DINING': 'DINING',
+        'MEETING': 'MEETING', 'DATE': 'DATE', 'STUDY': 'STUDY',
+        'ENTERTAINMENT': 'ENTERTAINMENT', 'SHOPPING': 'SHOPPING',
+        'EXERCISE': 'EXERCISE', 'CULTURE': 'CULTURE', 'CUSTOM': 'DINING'
+      };
+
+      // AI 기반 추천 요청
+      const aiResponse = await fetch('/api/recommendations/meeting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stationName: nearestStation.name, purpose })
+      });
+
+      // 프리셋 기반 추천 요청
+      const presetResponse = await fetch('/api/recommendations/preset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          preset: categoryToPresetMap[category],
+          count: 5,
+          location: nearestStation.name,
+          additionalRequirements: category === 'CUSTOM' ? customCategoryText : undefined
+        })
+      });
+
+      // 응답 처리
+      const responseData = {
+        centerPoint: { lat: centerLat, lng: centerLng },
+        nearestStation: nearestStation.name,
+        aiRecommendations: aiResponse.ok ? await aiResponse.json() : null,
+        presetRecommendations: presetResponse.ok ? await presetResponse.json() : null
+      };
+
       console.log('백엔드 응답:', responseData);
       
       // 성공 토스트 메시지
-      showToast('위치 정보가 성공적으로 전송되었습니다!', 'success');
+      showToast(`${nearestStation.name} 주변 ${purpose} 추천을 받았습니다!`, 'success');
       
       return responseData;
       
     } catch (error) {
       console.error('백엔드 전송 실패:', error);
       
-      // JWT 토큰 관련 에러인지 확인
-      if (error instanceof Error && error.message.includes('인증 토큰')) {
-        showToast('로그인이 필요합니다. 다시 로그인해주세요.', 'error');
-      } else {
-        showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
-      }
+      // JWT 토큰 관련 에러인지 확인 (인증 로직 주석처리)
+      // if (error instanceof Error && error.message.includes('인증 토큰')) {
+      //   showToast('로그인이 필요합니다. 다시 로그인해주세요.', 'error');
+      // } else {
+      //   showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+      // }
+      
+      showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
       
       throw error;
     }
