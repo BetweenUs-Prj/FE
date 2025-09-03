@@ -1,17 +1,7 @@
-import { Outlet } from 'react-router-dom';
-import { TransitionProvider } from './contexts/TransitionContext';
-import GlobalTransitionOverlay from './components/GlobalTransitionOverlay';
-import './styles/App.css';
+import AppRoutes from '@/routes';
 
 function App() {
-  return (
-    <TransitionProvider>
-      <div className="App">
-        <Outlet />
-        <GlobalTransitionOverlay />
-      </div>
-    </TransitionProvider>
-  );
+  return <AppRoutes />;
 }
 
-export default App;
+export default App
