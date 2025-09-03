@@ -267,122 +267,289 @@ export default function ReactionGameREST() {
     return () => window.removeEventListener('keydown', onKey);
   }, [gameState.currentRound?.status, handleClick]);
 
+  // 픽셀 아트 스타일과 이벤트 핸들러
+  const handleMouseOver = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(-4px)'; 
+      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
+    } 
+  };
+
+  const handleMouseOut = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(0)'; 
+      e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d'; 
+    } 
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(2px)'; 
+      e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d'; 
+    } 
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(-4px)'; 
+      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
+    } 
+  };
+
+  // 픽셀 아트 스타일 정의
+  const styles = `
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    .pixel-game-body { 
+      font-family: 'Press Start 2P', cursive; 
+      background-color: #2c2d3c; 
+      color: #f2e9e4; 
+      background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); 
+      background-size: 4px 4px; 
+      image-rendering: pixelated; 
+      min-height: 100vh; 
+    }
+    .pixel-container { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      padding: 2rem; 
+    }
+    .game-clickable-area {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .red-bg {
+      background-color: #dc2626 !important;
+    }
+    @keyframes countdown-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+  `;
+
   // ----------- UI -----------
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="bg-gray-800 rounded-lg shadow-lg p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4 mx-auto"></div>
-          <p className="text-white text-center">게임을 불러오는 중...</p>
+      <>
+        <style>{styles}</style>
+        <div className="pixel-game-body">
+          <div className="pixel-container">
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '2rem', animation: 'countdown-pulse 2s ease-in-out infinite' }}>⏳</div>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#f2e9e4' }}>게임을 불러오는 중...</h2>
+              <p style={{ fontSize: '0.8rem', color: '#9ca3af' }}>반응속도 게임을 준비하고 있습니다</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-white mb-2">오류 발생</h2>
-          <p className="text-gray-400 mb-6">{error}</p>
-          <button onClick={() => nav('/')} className="px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 font-semibold">
-            홈으로 이동
-          </button>
+      <>
+        <style>{styles}</style>
+        <div className="pixel-game-body">
+          <div className="pixel-container">
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '2rem', color: '#e76f51' }}>⚠️</div>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#f2e9e4' }}>오류 발생</h2>
+              <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '2rem' }}>{error}</p>
+              <button 
+                onClick={() => nav('/')}
+                onMouseOver={handleMouseOver}
+                onMouseOut={handleMouseOut}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                style={{
+                  padding: '1rem 2rem',
+                  fontSize: '0.8rem',
+                  backgroundColor: '#fbbf24',
+                  color: '#0d0d0d',
+                  border: '2px solid #0d0d0d',
+                  boxShadow: '4px 4px 0px #0d0d0d',
+                  cursor: 'pointer',
+                  fontFamily: "'Press Start 2P', cursive"
+                }}
+              >
+                홈으로 이동
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // 라운드 없음/WAITING
   if (!gameState.currentRound || gameState.currentRound.status === 'WAITING') {
     return (
-      <div className="min-h-screen bg-gray-900 p-4 flex items-center justify-center">
-        <div className="bg-gray-800 rounded-xl shadow-lg p-12 text-center max-w-2xl">
-          <div className="text-6xl mb-6">⚡</div>
-          <h1 className="text-4xl font-bold text-yellow-400 mb-4">반응속도 게임</h1>
-          <p className="text-gray-400 mb-8 text-lg">빨간 불이 켜지면 최대한 빠르게 클릭하세요!</p>
+      <>
+        <style>{styles}</style>
+        <div className="pixel-game-body">
+          <div className="pixel-container">
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '2rem' }}>⚡</div>
+              <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#fbbf24' }}>반응속도 게임</h1>
+              <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '2rem' }}>빨간 불이 켜지면 최대한 빠르게 클릭하세요!</p>
 
-          <div className="bg-gray-700 rounded-lg p-6 mb-8 text-left text-gray-300">
-            <p>• 준비 버튼을 눌러 게임을 시작하세요</p>
-            <p>• 카운트다운 후 랜덤 시간에 빨간 불이 켜집니다</p>
-            <p>• 빨간 불이 켜지면 화면을 클릭하거나 스페이스바를 누르세요</p>
-            <p>• 빨간 불이 켜지기 전에 클릭하면 부정출발입니다</p>
-          </div>
+              <div style={{ 
+                backgroundColor: 'rgba(13, 13, 13, 0.4)', 
+                border: '2px solid #4b5563',
+                padding: '1.5rem', 
+                marginBottom: '2rem', 
+                textAlign: 'left',
+                fontSize: '0.7rem',
+                lineHeight: '1.8',
+                color: '#d1d5db'
+              }}>
+                <p>• 준비 버튼을 눌러 게임을 시작하세요</p>
+                <p>• 카운트다운 후 랜덤 시간에 빨간 불이 켜집니다</p>
+                <p>• 빨간 불이 켜지면 화면을 클릭하거나 스페이스바를 누르세요</p>
+                <p>• 빨간 불이 켜지기 전에 클릭하면 부정출발입니다</p>
+              </div>
 
-          {!gameState.playerReady ? (
-            <button
-              onClick={() => setPlayerReady(true)}
-              className="px-8 py-4 bg-yellow-500 text-black rounded-xl hover:bg-yellow-600 font-bold text-xl transition transform hover:scale-105"
-            >
-              게임 참가
-            </button>
-          ) : (
-            <div>
-              <p className="text-green-400 font-semibold mb-4">참가 완료! 다른 플레이어를 기다리는 중…</p>
-              <button
-                onClick={createRoundHandler}
-                className="px-8 py-4 bg-red-500 text-white rounded-xl hover:bg-red-600 font-bold text-xl transition transform hover:scale-105"
-              >
-                게임 시작
-              </button>
+              {!gameState.playerReady ? (
+                <button
+                  onClick={() => setPlayerReady(true)}
+                  onMouseOver={handleMouseOver}
+                  onMouseOut={handleMouseOut}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
+                  style={{
+                    padding: '1.2rem 2.4rem',
+                    fontSize: '0.9rem',
+                    backgroundColor: '#fbbf24',
+                    color: '#0d0d0d',
+                    border: '2px solid #0d0d0d',
+                    boxShadow: '4px 4px 0px #0d0d0d',
+                    cursor: 'pointer',
+                    fontFamily: "'Press Start 2P', cursive"
+                  }}
+                >
+                  게임 참가
+                </button>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '1rem', fontWeight: 'bold' }}>
+                    참가 완료! 다른 플레이어를 기다리는 중…
+                  </p>
+                  <button
+                    onClick={createRoundHandler}
+                    onMouseOver={handleMouseOver}
+                    onMouseOut={handleMouseOut}
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    style={{
+                      padding: '1.2rem 2.4rem',
+                      fontSize: '0.9rem',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      border: '2px solid #0d0d0d',
+                      boxShadow: '4px 4px 0px #0d0d0d',
+                      cursor: 'pointer',
+                      fontFamily: "'Press Start 2P', cursive"
+                    }}
+                  >
+                    게임 시작
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // 카운트다운
   if (countdown !== null && countdown > 0) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-9xl font-bold text-yellow-400 mb-4 animate-pulse" style={{ textShadow: '0 0 50px rgba(255,193,7,.8)' }}>
-            {countdown}
+      <>
+        <style>{styles}</style>
+        <div className="pixel-game-body">
+          <div className="pixel-container">
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                fontSize: '6rem', 
+                fontWeight: 'bold', 
+                color: '#fbbf24', 
+                marginBottom: '2rem',
+                animation: 'countdown-pulse 1s ease-in-out infinite',
+                textShadow: '0 0 50px rgba(251, 191, 36, 0.8)'
+              }}>
+                {countdown}
+              </div>
+              <p style={{ fontSize: '1.2rem', color: '#f2e9e4' }}>준비하세요…</p>
+            </div>
           </div>
-          <p className="text-2xl text-white">준비하세요…</p>
         </div>
-      </div>
+      </>
     );
   }
 
   // PREPARING
   if (gameState.currentRound.status === 'PREPARING') {
     return (
-      <div className="min-h-screen flex items-center justify-center cursor-pointer" style={{ backgroundColor: '#1a1a2e' }} onClick={handleClick}>
-        <div className="text-center">
-          <div className="text-6xl mb-6 animate-pulse">⏳</div>
-          <h2 className="text-3xl font-bold text-white mb-4">준비하세요…</h2>
-          <p className="text-gray-400 text-lg">빨간 불이 켜지면 클릭하세요</p>
-          <p className="text-gray-500 text-sm mt-4">화면을 클릭하거나 스페이스바를 누르세요</p>
+      <>
+        <style>{styles}</style>
+        <div 
+          className="game-clickable-area"
+          onClick={handleClick}
+          style={{ backgroundColor: '#1a1a2e' }}
+        >
+          <div style={{ textAlign: 'center', color: '#ffffff' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'countdown-pulse 2s ease-in-out infinite' }}>🟢</div>
+            <div style={{ fontSize: '1.5rem', textShadow: '2px 2px 0px #0d0d0d', marginBottom: '0.5rem' }}>준비하세요…</div>
+            <div style={{ fontSize: '0.9rem', opacity: '0.9', marginBottom: '0.5rem' }}>빨간 불이 켜지면 클릭하세요</div>
+            <div style={{ fontSize: '0.7rem', opacity: '0.7' }}>화면을 클릭하거나 스페이스바를 누르세요</div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // RED
   if (gameState.currentRound.status === 'RED') {
     return (
-      <div className="min-h-screen flex items-center justify-center cursor-pointer" style={{ backgroundColor: '#dc2626' }} onClick={handleClick}>
-        <div className="text-center text-white">
-          {clicked ? (
-            <div>
-              <div className="text-8xl mb-4">✅</div>
-              <h2 className="text-4xl font-bold mb-4">클릭 완료!</h2>
-              {reactionTime !== null && <p className="text-2xl font-semibold">반응시간: {reactionTime}ms</p>}
-              <p className="text-xl opacity-80 mt-2">결과 페이지로 이동합니다…</p>
-            </div>
-          ) : (
-            <div>
-              <div className="text-9xl mb-6 animate-bounce">🔴</div>
-              <h2 className="text-5xl font-bold mb-4">지금 클릭!</h2>
-              <p className="text-2xl opacity-80">화면을 클릭하거나 스페이스바를 누르세요</p>
-            </div>
-          )}
+      <>
+        <style>{styles}</style>
+        <div 
+          className={`game-clickable-area ${clicked ? '' : 'red-bg'}`}
+          onClick={handleClick}
+          style={clicked ? { backgroundColor: '#a7c957' } : {}}
+        >
+          <div style={{ textAlign: 'center', color: '#ffffff' }}>
+            {clicked ? (
+              <div>
+                <div style={{ fontSize: '4rem', marginBottom: '2rem', animation: 'countdown-pulse 2s ease-in-out infinite' }}>⏳</div>
+                <div style={{ fontSize: '1.5rem', textShadow: '2px 2px 0px #0d0d0d', marginBottom: '1rem' }}>기록 완료!</div>
+                {reactionTime !== null && (
+                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0d0d0d', marginBottom: '1.5rem' }}>
+                    반응시간: {reactionTime}ms
+                  </div>
+                )}
+                <div style={{ fontSize: '0.9rem', opacity: '0.9', marginBottom: '0.5rem' }}>다른 플레이어를 기다리는 중...</div>
+                <div style={{ fontSize: '0.7rem', opacity: '0.7' }}>모든 플레이어가 완료하면 결과가 표시됩니다</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '5rem', marginBottom: '1rem', animation: 'countdown-pulse 0.5s ease-in-out infinite' }}>🔴</div>
+                <div style={{ fontSize: '2rem', textShadow: '2px 2px 0px #0d0d0d', marginBottom: '0.5rem' }}>지금 클릭!</div>
+                <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>화면을 클릭하거나 스페이스바를 누르세요</div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

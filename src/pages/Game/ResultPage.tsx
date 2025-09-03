@@ -6,6 +6,9 @@ import { LiveScoreboard } from '../../components/quiz/LiveScoreboard';
 import type { ScoreboardItem } from '../../components/quiz/LiveScoreboard';
 import { GameResultManager, type BaseGameResult } from '../../services/GameResultManager';
 import { GameType } from '../../types/gameLifecycle';
+import { GameContainer } from '../../components';
+import { PixelGameResult } from '../../components/common/PixelUI/PixelGameResult';
+import { PixelLoading } from '../../components/common/PixelUI/PixelLoading';
 
 // @ts-ignore - SockJS and @stomp/stompjs might not have types
 import SockJS from 'sockjs-client';
@@ -432,162 +435,97 @@ export default function ResultPage() {
     }
   }, [gameType, sessionId]);
 
-  const sorted = (finalScores.length > 0 ? finalScores : players)
-    .sort((a, b) => (b.score || 0) - (a.score || 0))
-    .map((p: any, index) => ({
-      id: p.userUid || p.id,
-      name: p.displayName || p.name || (p.userUid || p.id)?.substring(0, 8) || 'Unknown',
-      score: p.score || 0,
-      rank: index + 1
-    }));
-  const winner = sorted.length > 0 ? sorted[0] : null;
-
-  // --- 스타일 및 렌더링 ---
-  const handleMouseOver = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(-4px)'; 
-      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
-    } 
-  };
-  const handleMouseOut = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(0)'; 
-      e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d'; 
-    } 
-  };
-  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(2px)'; 
-      e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d'; 
-    } 
-  };
-  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(-4px)'; 
-      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
-    } 
+  // Convert data to PixelGameResult format
+  const convertToGameResultFormat = () => {
+    const currentUserUid = localStorage.getItem('betweenUs_userUid') || '';
+    
+    const sorted = (finalScores.length > 0 ? finalScores : players)
+      .sort((a, b) => (b.score || 0) - (a.score || 0))
+      .map((p: any, index) => ({
+        rank: index + 1,
+        userUid: p.userUid || p.id,
+        displayName: p.displayName || p.name || (p.userUid || p.id)?.substring(0, 8) || 'Unknown',
+        score: p.score || 0,
+        isCurrentUser: (p.userUid || p.id) === currentUserUid
+      }));
+    
+    return sorted;
   };
 
-  const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    .pixel-game-body { 
-      font-family: 'Press Start 2P', cursive; 
-      background-color: #2c2d3c; 
-      color: #f2e9e4; 
-      background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); 
-      background-size: 4px 4px; 
-      image-rendering: pixelated; 
-      min-height: 100vh; 
-    }
-    .pixel-container { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      min-height: 100vh; 
-      padding: 2rem; 
-    }
-    .pixel-box { 
-      background-color: #4a4e69; 
-      padding: 1.5rem; 
-      border: 4px solid #0d0d0d; 
-      box-shadow: 8px 8px 0px #0d0d0d; 
-      width: 100%; 
-      max-width: 800px; 
-      margin-bottom: 2rem; 
-      box-sizing: border-box; 
-    }
-    .pixel-title { 
-      font-size: 2rem; 
-      color: #ffd6a5; 
-      text-shadow: 3px 3px 0px #0d0d0d; 
-      margin: 0 0 1.5rem 0; 
-      text-align: center; 
-      word-break: break-all; 
-    }
-    .pixel-button { 
-      font-family: 'Press Start 2P', cursive; 
-      color: #f2e9e4; 
-      border: 4px solid #0d0d0d; 
-      box-shadow: 4px 4px 0px #0d0d0d; 
-      padding: 1rem 2rem; 
-      cursor: pointer; 
-      transition: transform 0.1s linear, box-shadow 0.1s linear; 
-      text-align: center; 
-      background-color: #9a8c98; 
-      font-size: 1rem; 
-      margin: 0.5rem; 
-    }
-    .rank-item { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      padding: 1rem; 
-      border: 4px solid #0d0d0d; 
-      margin-bottom: 1rem; 
-    }
-  `;
-  
-  const getRankColor = (rank: number) => {
-    if (rank === 1) return '#ffd6a5';
-    if (rank === 2) return '#c9c9c9';
-    if (rank === 3) return '#a1683a';
-    return '#4a4e69';
+  const handlePlayAgain = () => {
+    nav('/game');
   };
 
+  const handleGoHome = () => {
+    nav('/game');
+  };
+
+  const handleGoAppointment = () => {
+    nav('/appointment', { 
+      state: { 
+        penalty: penaltyInfo, 
+        gameType: gameType, 
+        sessionId: sessionId 
+      } 
+    });
+  };
+
+  // Loading state
   if (players.length === 0 && reactionResults.length === 0 && finalScores.length === 0) {
-      return (
-        <>
-            <style>{styles}</style>
-            <div className="pixel-game-body">
-                <div className="pixel-container">
-                    <div className="pixel-box"><p className="pixel-title">참가자 정보 없음</p></div>
-                </div>
-            </div>
-        </>
-      );
+    return (
+      <GameContainer>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <PixelLoading
+            message="결과를 불러오는 중..."
+            variant="game"
+            size="large"
+            fullScreen={false}
+          />
+        </div>
+      </GameContainer>
+    );
   }
 
   return (
-    <>
-        <style>{styles}</style>
-        <div className="pixel-game-body">
-            <div className="pixel-container">
-                <div className="pixel-box">
-                    <h1 className="pixel-title">GAME OVER</h1>
-                    <h2 style={{fontSize: '1.2rem', color: '#a7c957', textShadow: '2px 2px 0px #0d0d0d', wordBreak: 'break-all'}}>WINNER: {winner?.name || '...'}</h2>
-                </div>
-
-                <div className="pixel-box">
-                    <h3 className="pixel-title" style={{fontSize: '1.5rem'}}>FINAL SCORE</h3>
-                    <div style={{maxHeight: '30vh', overflowY: 'auto', paddingRight: '1rem'}}>
-                        {sorted.length > 0 ? sorted.map((player, index) => (
-                            <div key={player.id} className="rank-item" style={{backgroundColor: getRankColor(index + 1)}}>
-                                <span style={{fontSize: '0.9rem', wordBreak: 'break-all'}}>#{index + 1} {player.name}</span>
-                                <span style={{fontSize: '0.9rem'}}>{player.score} PTS</span>
-                            </div>
-                        )) : <p>결과를 불러오는 중입니다...</p>}
-                    </div>
-                </div>
-
-                {penaltyInfo && (
-                    <div className="pixel-box" style={{backgroundColor: '#9d2929'}}>
-                        <h3 className="pixel-title" style={{color: '#f2e9e4'}}>PENALTY</h3>
-                        <p style={{fontSize: '1.2rem', color: '#ffd6a5', marginBottom: '0.5rem', wordBreak: 'break-all'}}>{penaltyInfo.loserNickname || penaltyInfo.loserUid}</p>
-                        <p style={{fontSize: '1rem', lineHeight: '1.5'}}>{penaltyInfo.penaltyText}</p>
-                    </div>
-                )}
-                
-                <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center'}}>
-                    <button onClick={() => nav('/appointment', { state: { penalty: penaltyInfo, gameType: gameType, sessionId: sessionId } })} className="pixel-button" style={{backgroundColor: '#6a856f'}} onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-                        약속으로
-                    </button>
-                    <button onClick={() => nav('/game')} className="pixel-button" style={{backgroundColor: '#c19454'}} onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-                        홈으로
-                    </button>
-                </div>
-            </div>
-        </div>
-    </>
+    <GameContainer>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <PixelGameResult
+          title="게임 결과"
+          results={convertToGameResultFormat()}
+          penalty={penaltyInfo ? { 
+            code: 'PENALTY', 
+            text: penaltyInfo.penaltyText 
+          } : undefined}
+          gameType={gameType === 'QUIZ' ? 'QUIZ' : 'REACTION'}
+          onPlayAgain={handlePlayAgain}
+          onGoHome={handleGoHome}
+        />
+        
+        {/* Additional appointment button for this specific page */}
+        {penaltyInfo && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '1rem'
+          }}>
+            <button
+              onClick={handleGoAppointment}
+              style={{
+                padding: '1rem 2rem',
+                backgroundColor: '#6a856f',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              약속으로
+            </button>
+          </div>
+        )}
+      </div>
+    </GameContainer>
   );
 }

@@ -206,25 +206,40 @@ export default function QuizLobbySessionPage() {
     
     const styles = `
       @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-      .pixel-game-body { font-family: 'Press Start 2P', cursive; background-color: #2c2d3c; color: #f2e9e4; background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); background-size: 4px 4px; image-rendering: pixelated; min-height: 100vh; }
-      .pixel-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 2rem; text-align: center; }
-      .pixel-box { background-color: #4a4e69; padding: 1.5rem; border: 4px solid #0d0d0d; box-shadow: 8px 8px 0px #0d0d0d; width: 100%; margin-bottom: 2rem; }
-      .pixel-title { font-size: 1.8rem; color: #ffd6a5; text-shadow: 3px 3px 0px #0d0d0d; margin: 0; }
-      .pixel-button { font-family: 'Press Start 2P', cursive; color: #f2e9e4; border: 4px solid #0d0d0d; box-shadow: 4px 4px 0px #0d0d0d; padding: 1rem; cursor: pointer; transition: transform 0.1s linear, box-shadow 0.1s linear; text-align: center; background-color: #9a8c98; }
-      .pixel-button:disabled { background-color: #3b3d51; color: #6e6f7a; cursor: not-allowed; box-shadow: 4px 4px 0px #0d0d0d; transform: translateY(0); }
-      .status-indicator { position: fixed; top: 20px; right: 20px; padding: 0.5rem; border: 4px solid #0d0d0d; font-size: 0.8rem; z-index: 10; }
-      .member-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background-color: #22223b; border: 4px solid #0d0d0d; margin-bottom: 1rem; }
-      @keyframes blink { 50% { opacity: 0; } }
-      .blinking-cursor { animation: blink 1s step-end infinite; }
+      .pixel-lobby-body { 
+        font-family: 'Press Start 2P', cursive; 
+        background-color: #2c2d3c; 
+        color: #f2e9e4; 
+        background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); 
+        background-size: 4px 4px; 
+        image-rendering: pixelated; 
+        min-height: 100vh; 
+      }
+      .pixel-container { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+        min-height: 100vh; 
+        padding: 2rem; 
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+      }
     `;
 
     if (isLoading) {
         return (
             <>
                 <style>{styles}</style>
-                <div className="pixel-game-body">
-                    <div className="pixel-container" style={{ justifyContent: 'center' }}>
-                        <h1 className="pixel-title" style={{ fontSize: '1.5rem' }}>LOADING<span className="blinking-cursor">_</span></h1>
+                <div className="pixel-lobby-body">
+                    <div className="pixel-container">
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '2rem', animation: 'pulse 2s ease-in-out infinite' }}>⏳</div>
+                            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#f2e9e4' }}>로딩 중...</h2>
+                            <p style={{ fontSize: '0.7rem', color: '#9ca3af' }}>로비 정보를 불러오고 있습니다</p>
+                        </div>
                     </div>
                 </div>
             </>
@@ -235,15 +250,30 @@ export default function QuizLobbySessionPage() {
         return (
             <>
                 <style>{styles}</style>
-                <div className="pixel-game-body">
-                    <div className="pixel-container" style={{ justifyContent: 'center' }}>
-                        <div className="pixel-box" style={{backgroundColor: '#9d2929'}}>
-                             <h1 className="pixel-title" style={{color: '#f2e9e4'}}>ERROR</h1>
-                             <p style={{fontSize: '1rem', marginBottom: '2rem'}}>로비를 찾을 수 없습니다.</p>
+                <div className="pixel-lobby-body">
+                    <div className="pixel-container">
+                        <div style={{ textAlign: 'center' }}>
+                            <p style={{ color: '#ef4444', marginBottom: '1.5rem', fontSize: '1rem' }}>로비를 찾을 수 없습니다.</p>
+                            <button 
+                                onClick={() => navigate('/game')}
+                                onMouseOver={handleMouseOver}
+                                onMouseOut={handleMouseOut}
+                                onMouseDown={handleMouseDown}
+                                onMouseUp={handleMouseUp}
+                                style={{
+                                    padding: '1rem 2rem',
+                                    fontSize: '0.8rem',
+                                    backgroundColor: '#fbbf24',
+                                    color: '#0d0d0d',
+                                    border: '2px solid #0d0d0d',
+                                    boxShadow: '4px 4px 0px #0d0d0d',
+                                    cursor: 'pointer',
+                                    fontFamily: "'Press Start 2P', cursive"
+                                }}
+                            >
+                                게임 홈으로 돌아가기
+                            </button>
                         </div>
-                        <button onClick={() => navigate('/game')} className="pixel-button" onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut}>
-                            게임 홈으로
-                        </button>
                     </div>
                 </div>
             </>
@@ -253,59 +283,268 @@ export default function QuizLobbySessionPage() {
     return (
         <>
             <style>{styles}</style>
-            <div className="pixel-game-body">
-                {/* TopBar는 현재 픽셀 스타일과 맞지 않을 수 있어 주석 처리했습니다. */}
-                {/* <TopBar title="퀴즈 로비" onQuit={createLeaveSessionHandler(sessionId)} showQuit={!!sessionId} /> */}
+            <div className="pixel-lobby-body">
+                <TopBar 
+                    title="퀴즈 게임 로비" 
+                    onQuit={createLeaveSessionHandler(sessionId)} 
+                    showQuit={!!sessionId}
+                />
                 
-                <div className="pixel-container" style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '4rem' }}>
-                    <div className="status-indicator" style={{ backgroundColor: stompConnected ? '#6a856f' : '#c19454' }}>
-                        {stompConnected ? '실시간 연결' : '폴링 모드'}
-                    </div>
-
-                    <div style={{ width: '100%', marginBottom: '2rem' }}>
-                        <div className="pixel-box" style={{ padding: '1rem' }}>
-                            <h1 className="pixel-title" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>퀴즈 로비</h1>
-                            <p style={{ fontSize: '0.9rem', color: '#c9c9c9', margin: 0 }}>
-                                카테고리: <span style={{ color: '#fdffb6' }}>{getCategoryLabel(session?.category)}</span>
+                <div style={{
+                    paddingTop: '80px',
+                    minHeight: '100vh',
+                    padding: '2rem'
+                }}>
+                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        {/* 게임 정보 */}
+                        <div style={{
+                            background: 'rgba(251, 191, 36, 0.1)',
+                            border: '3px solid #fbbf24',
+                            boxShadow: '6px 6px 0px #0d0d0d',
+                            padding: '2rem',
+                            marginBottom: '2rem',
+                            textAlign: 'center'
+                        }}>
+                            <h1 style={{ 
+                                fontSize: '1.8rem', 
+                                fontWeight: 'bold',
+                                marginBottom: '0.5rem',
+                                color: '#fbbf24',
+                                textShadow: '2px 2px 0px #0d0d0d'
+                            }}>
+                                🧠 퀴즈 게임 로비
+                            </h1>
+                            <p style={{ 
+                                fontSize: '0.8rem',
+                                marginBottom: '1rem',
+                                color: '#d1d5db'
+                            }}>
+                                지식으로 승부하는 퀴즈 게임!
                             </p>
-                        </div>
-                    </div>
-
-                    <div className="pixel-box">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.2rem', textShadow: '2px 2px 0px #0d0d0d', margin: 0 }}>참가자 ({memberCount}/10)</h2>
-                            <button onClick={fetchLobby} className="pixel-button" style={{ padding: '0.5rem', fontSize: '0.7rem', backgroundColor: '#22223b' }}>새로고침</button>
-                        </div>
-                        <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '1rem' }}>
-                            {lobbyMembers.length > 0 ? lobbyMembers.map((member) => (
-                                <div key={member.uid} className="member-list-item">
-                                    <span style={{ wordBreak: 'break-all' }}>{member.uid === currentUserUid ? '>>> 나' : member.uid.substring(0, 12)}</span>
-                                    <span>{member.role === 'HOST' ? '[[방장]]' : ''}</span>
+                            <div style={{
+                                display: 'inline-block',
+                                fontSize: '0.8rem',
+                                padding: '0.5rem 1rem',
+                                background: 'rgba(16, 185, 129, 0.2)',
+                                border: '2px solid #10b981',
+                                color: '#10b981',
+                                fontWeight: 'bold',
+                                marginBottom: '1rem'
+                            }}>
+                                {memberCount}/10명 참여
+                            </div>
+                            {session?.category && (
+                                <div style={{
+                                    display: 'block',
+                                    fontSize: '0.7rem',
+                                    color: '#9ca3af'
+                                }}>
+                                    카테고리: <span style={{ color: '#fbbf24' }}>{getCategoryLabel(session.category)}</span>
                                 </div>
-                            )) : <p>참가자를 기다리는 중...</p>}
+                            )}
                         </div>
-                    </div>
 
-                    <div className="pixel-box">
-                        <h2 style={{ fontSize: '1rem', textShadow: '2px 2px 0px #0d0d0d', marginBottom: '1rem' }}>초대 코드</h2>
-                        <p style={{ fontSize: '1.5rem', color: '#fdffb6', wordBreak: 'break-all', marginBottom: '1.5rem' }}>{sessionDetails?.inviteCode}</p>
-                        <button onClick={copyInviteLink} className="pixel-button" onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>링크 복사</button>
-                    </div>
+                        {/* 참가자 목록 */}
+                        <div style={{
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            border: '3px solid #10b981',
+                            boxShadow: '6px 6px 0px #0d0d0d',
+                            padding: '1.5rem',
+                            marginBottom: '1.5rem'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{
+                                    fontSize: '1rem',
+                                    fontWeight: 'bold',
+                                    color: '#10b981',
+                                    textShadow: '2px 2px 0px #0d0d0d',
+                                    margin: 0
+                                }}>
+                                    👥 참가자 목록
+                                </h3>
+                                <button 
+                                    onClick={fetchLobby}
+                                    onMouseOver={handleMouseOver}
+                                    onMouseOut={handleMouseOut}
+                                    onMouseDown={handleMouseDown}
+                                    onMouseUp={handleMouseUp}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        fontSize: '0.6rem',
+                                        backgroundColor: '#4b5563',
+                                        color: '#f2e9e4',
+                                        border: '2px solid #0d0d0d',
+                                        boxShadow: '2px 2px 0px #0d0d0d',
+                                        cursor: 'pointer',
+                                        fontFamily: "'Press Start 2P', cursive"
+                                    }}
+                                >
+                                    새로고침
+                                </button>
+                            </div>
+                            
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.75rem',
+                                maxHeight: '250px',
+                                overflowY: 'auto'
+                            }}>
+                                {lobbyMembers.length > 0 ? lobbyMembers.map((member, index) => (
+                                    <div key={member.uid} style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '0.75rem 1rem',
+                                        background: 'rgba(13, 13, 13, 0.4)',
+                                        border: '2px solid #4b5563'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem'
+                                        }}>
+                                            <span style={{
+                                                fontSize: '0.8rem',
+                                                fontWeight: 'bold',
+                                                minWidth: '2rem',
+                                                color: '#f2e9e4'
+                                            }}>
+                                                {index + 1}
+                                            </span>
+                                            <span style={{
+                                                fontSize: '0.8rem',
+                                                color: '#f2e9e4',
+                                                wordBreak: 'break-all'
+                                            }}>
+                                                {member.uid === currentUserUid ? '>>> 나' : member.uid.substring(0, 12)}
+                                            </span>
+                                            {member.role === 'HOST' && (
+                                                <span style={{
+                                                    fontSize: '0.6rem',
+                                                    color: '#fbbf24',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    👑 방장
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <p style={{ fontSize: '0.8rem', color: '#9ca3af', textAlign: 'center' }}>참가자를 기다리는 중...</p>
+                                )}
+                            </div>
+                        </div>
 
-                    {isHost && (
-                        <div style={{ width: '100%', marginTop: '1rem' }}>
-                            <button onClick={handleStartGame} disabled={isStarting || !canStart} className="pixel-button" style={{ backgroundColor: '#9d2929', fontSize: '1.2rem', padding: '1.2rem' }} onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-                                {isStarting ? '시작 중...' : '게임 시작'}
+                        {/* 초대 링크 */}
+                        <div style={{
+                            background: 'rgba(13, 13, 13, 0.4)',
+                            border: '2px solid #4b5563',
+                            padding: '1.5rem',
+                            marginBottom: '1.5rem',
+                            textAlign: 'center'
+                        }}>
+                            <h3 style={{
+                                fontSize: '0.9rem',
+                                fontWeight: 'bold',
+                                marginBottom: '1rem',
+                                color: '#d1d5db'
+                            }}>
+                                🔗 초대 링크
+                            </h3>
+                            <p style={{ 
+                                fontSize: '1.2rem', 
+                                color: '#fbbf24', 
+                                wordBreak: 'break-all', 
+                                marginBottom: '1.5rem',
+                                fontWeight: 'bold'
+                            }}>
+                                {sessionDetails?.inviteCode}
+                            </p>
+                            <button
+                                onClick={copyInviteLink}
+                                onMouseOver={handleMouseOver}
+                                onMouseOut={handleMouseOut}
+                                onMouseDown={handleMouseDown}
+                                onMouseUp={handleMouseUp}
+                                style={{
+                                    padding: '0.8rem 1.5rem',
+                                    fontSize: '0.8rem',
+                                    backgroundColor: '#fbbf24',
+                                    color: '#0d0d0d',
+                                    border: '2px solid #0d0d0d',
+                                    boxShadow: '4px 4px 0px #0d0d0d',
+                                    cursor: 'pointer',
+                                    fontFamily: "'Press Start 2P', cursive"
+                                }}
+                            >
+                                초대 링크 복사
                             </button>
-                            {!canStart && <p style={{ fontSize: '0.8rem', marginTop: '1rem', color: '#a1a1a1' }}>시작하려면 최소 2명이 필요합니다</p>}
                         </div>
-                    )}
 
-                    {!isHost && (
-                        <div className="pixel-box">
-                            <p>방장이 시작할 때까지 대기 중<span className="blinking-cursor">_</span></p>
-                        </div>
-                    )}
+                        {/* 게임 시작 버튼 - 방장만 표시 */}
+                        {isHost && (
+                            <div style={{ textAlign: 'center' }}>
+                                <button
+                                    onClick={handleStartGame}
+                                    disabled={isStarting || !canStart}
+                                    onMouseOver={canStart ? handleMouseOver : undefined}
+                                    onMouseOut={canStart ? handleMouseOut : undefined}
+                                    onMouseDown={canStart ? handleMouseDown : undefined}
+                                    onMouseUp={canStart ? handleMouseUp : undefined}
+                                    style={{
+                                        fontSize: '0.9rem',
+                                        padding: '1rem 3rem',
+                                        width: '100%',
+                                        maxWidth: '300px',
+                                        backgroundColor: canStart ? '#10b981' : '#4b5563',
+                                        color: canStart ? '#0d0d0d' : '#9ca3af',
+                                        border: '2px solid #0d0d0d',
+                                        boxShadow: canStart ? '4px 4px 0px #0d0d0d' : '2px 2px 0px #0d0d0d',
+                                        cursor: canStart ? 'pointer' : 'not-allowed',
+                                        fontFamily: "'Press Start 2P', cursive",
+                                        opacity: canStart ? 1 : 0.7
+                                    }}
+                                >
+                                    {isStarting ? '게임 시작 중...' : '🚀 게임 시작'}
+                                </button>
+                                {!canStart && (
+                                    <p style={{
+                                        fontSize: '0.7rem',
+                                        marginTop: '0.5rem',
+                                        color: '#9ca3af'
+                                    }}>
+                                        시작하려면 최소 2명이 필요합니다
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 참가자용 대기 메시지 */}
+                        {!isHost && (
+                            <div style={{
+                                background: 'rgba(13, 13, 13, 0.4)',
+                                border: '2px solid #4b5563',
+                                padding: '1.5rem',
+                                textAlign: 'center'
+                            }}>
+                                <p style={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: 'bold',
+                                    color: '#d1d5db',
+                                    marginBottom: '0.5rem'
+                                }}>
+                                    ⏳ 방장이 게임을 시작할 때까지 기다려주세요
+                                </p>
+                                <p style={{
+                                    fontSize: '0.7rem',
+                                    color: '#9ca3af'
+                                }}>
+                                    게임이 시작되면 자동으로 퀴즈 게임 페이지로 이동합니다
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </>

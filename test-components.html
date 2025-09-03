@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>컴포넌트 테스트</title>
+</head>
+<body>
+    <h1>컴포넌트 리팩토링 테스트</h1>
+    <p>브라우저에서 <a href="http://localhost:5173">http://localhost:5173</a>에 접속하여 다음을 확인해주세요:</p>
+    
+    <h2>✅ 확인 사항:</h2>
+    <ul>
+        <li><strong>콘솔 오류 없음</strong>: F12 → Console 탭에서 import 오류가 없어야 함</li>
+        <li><strong>페이지 로딩</strong>: 메인 페이지가 정상 로딩되어야 함</li>
+        <li><strong>게임 메뉴</strong>: 퀴즈/반응속도 게임 버튼이 보여야 함</li>
+        <li><strong>네비게이션</strong>: 게임 선택 화면으로 이동 가능해야 함</li>
+    </ul>
+    
+    <h2>🎯 테스트할 리팩토링된 컴포넌트들:</h2>
+    <h3>Reaction Game Components:</h3>
+    <ul>
+        <li>GameLoadingScreen</li>
+        <li>GameReadyStatusIndicator</li>
+        <li>GameHostControls</li>
+        <li>GamePlayerWaitingArea</li>
+        <li>GameParticipantCounter</li>
+        <li>GameDebugPanel</li>
+    </ul>
+    
+    <h3>Quiz Game Components:</h3>
+    <ul>
+        <li>GameSessionInfo</li>
+        <li>GameWaitingStatus</li>
+        <li>GameAnswerControls</li>
+        <li>GameErrorDisplay</li>
+        <li>QuizTimer</li>
+        <li>QuizQuestionCard</li>
+    </ul>
+    
+    <h3>Lobby Components:</h3>
+    <ul>
+        <li>GameLobbyHeader</li>
+        <li>GamePlayerList</li>
+        <li>GameLobbyActions</li>
+    </ul>
+</body>
+</html>

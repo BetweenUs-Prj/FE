@@ -203,25 +203,6 @@ export default function ReactionLobbySessionPage() {
     }
   };
 
-  // 수동 게임 시작 테스트 (개발용)
-  const handleManualStartTest = async () => {
-    if (!sessionId) return;
-    
-    try {
-      console.log('[REACTION-LOBBY] 🧪 Manual start test for session:', sessionId);
-      
-      // 직접 HTTP 요청으로 게임 시작
-      const response = await http.post(`/mini-games/sessions/${sessionId}/start`, {});
-      console.log('[REACTION-LOBBY] 🧪 Manual start test result:', response.data);
-      
-      alert('수동 게임 시작 테스트 성공!');
-      goToGamePage();
-      
-    } catch (error: any) {
-      console.error('[REACTION-LOBBY] 🧪 Manual start test failed:', error);
-      alert(`수동 게임 시작 테스트 실패: ${error.message}`);
-    }
-  };
 
   const copyInviteLink = async () => {
     if (!sessionDetails?.inviteCode) return;
@@ -328,488 +309,446 @@ export default function ReactionLobbySessionPage() {
     };
   }, [sessionId]);
 
+  // 픽셀 아트 스타일 정의
+  const styles = `
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    .pixel-lobby-body { 
+      font-family: 'Press Start 2P', cursive; 
+      background-color: #2c2d3c; 
+      color: #f2e9e4; 
+      background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); 
+      background-size: 4px 4px; 
+      image-rendering: pixelated; 
+      min-height: 100vh; 
+    }
+    .pixel-container { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      padding: 2rem; 
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+  `;
+
+  // 픽셀 아트 이벤트 핸들러
+  const handleMouseOver = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(-4px)'; 
+      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
+    } 
+  };
+
+  const handleMouseOut = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(0)'; 
+      e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d'; 
+    } 
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(2px)'; 
+      e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d'; 
+    } 
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => { 
+    if (!e.currentTarget.disabled) { 
+      e.currentTarget.style.transform = 'translateY(-4px)'; 
+      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
+    } 
+  };
+
+
   if (isLoading) {
     return (
-      <div 
-        style={{
-          background: '#FFFFFF',
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#333333'
-        }}
-      >
-        <div style={{
-          fontSize: '1.2rem',
-          color: '#666666'
-        }}>
-          로딩 중...
+      <>
+        <style>{styles}</style>
+        <div className="pixel-lobby-body">
+          <div className="pixel-container">
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '2rem', animation: 'pulse 2s ease-in-out infinite' }}>⏳</div>
+              <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#f2e9e4' }}>로딩 중...</h2>
+              <p style={{ fontSize: '0.7rem', color: '#9ca3af' }}>로비 정보를 불러오고 있습니다</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!lobby) {
     return (
-      <div 
-        style={{
-          background: '#FFFFFF',
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#333333'
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>로비를 찾을 수 없습니다.</p>
-          <button 
-            onClick={() => navigate('/game')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#FCB422',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.5rem',
-              cursor: 'pointer'
-            }}
-          >
-            게임 홈으로 돌아가기
-          </button>
+      <>
+        <style>{styles}</style>
+        <div className="pixel-lobby-body">
+          <div className="pixel-container">
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: '#ef4444', marginBottom: '1.5rem', fontSize: '1rem' }}>로비를 찾을 수 없습니다.</p>
+              <button 
+                onClick={() => navigate('/game')}
+                onMouseOver={handleMouseOver}
+                onMouseOut={handleMouseOut}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                style={{
+                  padding: '1rem 2rem',
+                  fontSize: '0.8rem',
+                  backgroundColor: '#fbbf24',
+                  color: '#0d0d0d',
+                  border: '2px solid #0d0d0d',
+                  boxShadow: '4px 4px 0px #0d0d0d',
+                  cursor: 'pointer',
+                  fontFamily: "'Press Start 2P', cursive"
+                }}
+              >
+                게임 홈으로 돌아가기
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div 
-      style={{
-        background: '#FFFFFF',
-        minHeight: '100vh',
-        position: 'relative',
-        overflow: 'hidden',
-        color: '#333333'
-      }}
-    >
-      <TopBar 
-        title="반응속도 게임 로비" 
-        onQuit={createLeaveSessionHandler(sessionId)} 
-        showQuit={!!sessionId}
-      />
-      
-      <div 
-        style={{
-          position: 'relative',
-          zIndex: 1,
+    <>
+      <style>{styles}</style>
+      <div className="pixel-lobby-body">
+        <TopBar 
+          title="반응속도 게임 로비" 
+          onQuit={createLeaveSessionHandler(sessionId)} 
+          showQuit={!!sessionId}
+        />
+        
+        <div style={{
           paddingTop: '80px',
           minHeight: '100vh',
           padding: '2rem'
-        }}
-      >
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          {/* 게임 정보 */}
-          <div 
-            style={{
-              background: 'linear-gradient(135deg, #FCB422 0%, #F97B25 100%)',
-              borderRadius: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(252, 180, 34, 0.3)',
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {/* 게임 정보 */}
+            <div style={{
+              background: 'rgba(251, 191, 36, 0.1)',
+              border: '3px solid #fbbf24',
+              boxShadow: '6px 6px 0px #0d0d0d',
               padding: '2rem',
-              marginBottom: '1.5rem',
-              textAlign: 'center',
-              color: '#FFFFFF'
-            }}
-          >
-            <h1 
-              style={{ 
-                fontSize: '2rem', 
-                fontWeight: '700',
-                marginBottom: '0.5rem',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-              }}
-            >
-              ⚡ 반응속도 게임 로비
-            </h1>
-            <p 
-              style={{ 
-                fontSize: '1.1rem',
-                marginBottom: '1rem',
-                opacity: 0.9,
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
-              }}
-            >
-              빠른 반응속도를 테스트해보세요!
-            </p>
-            <div 
-              style={{
-                display: 'inline-block',
-                fontSize: '0.9rem',
-                padding: '0.5rem 1rem',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '0.75rem',
-                color: '#FFFFFF',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
-              }}
-            >
-              {lobby.total}/{lobby.capacity}명 참여
-            </div>
-          </div>
-
-          {/* 게임 규칙 */}
-          <div 
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '15px',
-              padding: '1.5rem',
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}
-          >
-            <h3 
-              style={{
-                fontSize: '1.2rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                textAlign: 'center',
-                color: '#333333'
-              }}
-            >
-              🎯 게임 규칙
-            </h3>
-            <div 
-              style={{
-                fontSize: '1rem',
-                lineHeight: '1.8',
-                color: '#333333'
-              }}
-            >
-              <p>🟢 <strong>초록 신호</strong>가 나타나면 준비하세요!</p>
-              <p>⏱️ <strong>1.5~4초</strong> 후 빨간 신호가 나타납니다</p>
-              <p>🔴 <strong>빨간 신호</strong>가 나타나면 즉시 클릭하세요!</p>
-              <p>⚠️ 빨간 신호 전에 클릭하면 <strong>False Start</strong>입니다</p>
-            </div>
-          </div>
-
-          {/* 준비 상태 요약 */}
-          <div 
-            style={{
-              background: 'rgba(252, 180, 34, 0.1)',
-              borderRadius: '15px',
-              padding: '1.5rem',
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(252, 180, 34, 0.2)',
+              marginBottom: '2rem',
               textAlign: 'center'
-            }}
-          >
-            <div style={{
-              fontSize: '1.2rem',
-              fontWeight: '600',
-              color: '#FCB422',
-              marginBottom: '0.5rem'
             }}>
-              준비된 플레이어: {lobby?.members?.filter(m => m.isReady).length || 0}/{lobby?.total || 0}
+              <h1 style={{ 
+                fontSize: '1.8rem', 
+                fontWeight: 'bold',
+                marginBottom: '0.5rem',
+                color: '#fbbf24',
+                textShadow: '2px 2px 0px #0d0d0d'
+              }}>
+                ⚡ 반응속도 게임 로비
+              </h1>
+              <p style={{ 
+                fontSize: '0.8rem',
+                marginBottom: '1rem',
+                color: '#d1d5db'
+              }}>
+                빠른 반응속도를 테스트해보세요!
+              </p>
+              <div style={{
+                display: 'inline-block',
+                fontSize: '0.8rem',
+                padding: '0.5rem 1rem',
+                background: 'rgba(16, 185, 129, 0.2)',
+                border: '2px solid #10b981',
+                color: '#10b981',
+                fontWeight: 'bold',
+                marginBottom: '1rem'
+              }}>
+                {lobby.total}/{lobby.capacity}명 참여
+              </div>
             </div>
-            <div style={{
-              fontSize: '0.9rem',
-              color: '#6B7280'
-            }}>
-              {lobby?.members?.filter(m => m.isReady).length === lobby?.total && lobby?.total >= 2 
-                ? '🚀 모든 플레이어가 준비되었습니다!' 
-                : '최소 2명의 플레이어가 필요합니다'}
-            </div>
-          </div>
 
-          {/* 참가자 목록 */}
-          <div 
-            style={{
-              background: 'linear-gradient(135deg, #147781 0%, #1E9AA8 100%)',
-              borderRadius: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(20, 119, 129, 0.3)',
+            {/* 게임 규칙 */}
+            <div style={{
+              background: 'rgba(13, 13, 13, 0.4)',
+              border: '2px solid #4b5563',
               padding: '1.5rem',
               marginBottom: '1.5rem'
-            }}
-          >
-            <h3 
-              style={{
-                fontSize: '1.2rem',
-                fontWeight: '600',
+            }}>
+              <h3 style={{
+                fontSize: '1rem',
                 marginBottom: '1rem',
                 textAlign: 'center',
-                color: '#FFFFFF',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-              }}
-            >
-              👥 참가자 목록
-            </h3>
-            
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem'
-            }}>
-              {lobby.members.map((member, index) => (
-                <div key={member.userUid} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem'
-                  }}>
-                    <span 
-                      style={{
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        minWidth: '2rem',
-                        color: '#FFFFFF',
-                        textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-                      }}
-                    >
-                      {index + 1}
-                    </span>
-                    <span 
-                      style={{
-                        fontSize: '1rem',
-                        color: '#FFFFFF',
-                        textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-                      }}
-                    >
-                      {member.userUid}
-                    </span>
-                    {member.userUid === session?.hostUid && (
-                      <span style={{
-                        fontSize: '0.8rem',
-                        color: '#FCB422',
-                        fontWeight: '600',
-                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
-                      }}>
-                        👑 호스트
-                      </span>
-                    )}
-                  </div>
-                  <span 
-                    style={{
-                      fontSize: '0.9rem',
-                      color: member.isReady ? '#10B981' : '#FCD34D',
-                      fontWeight: '600',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
-                    }}
-                  >
-                    {member.isReady ? '✅ 준비완료' : '⏳ 대기중'}
-                  </span>
-                </div>
-              ))}
+                color: '#fbbf24'
+              }}>
+                🎯 게임 규칙
+              </h3>
+              <div style={{
+                fontSize: '0.7rem',
+                lineHeight: '1.8',
+                color: '#d1d5db'
+              }}>
+                <p>🟢 초록 신호가 나타나면 준비하세요!</p>
+                <p>⏱️ 1.5~4초 후 빨간 신호가 나타납니다</p>
+                <p>🔴 빨간 신호가 나타나면 즉시 클릭하세요!</p>
+                <p>⚠️ 빨간 신호 전에 클릭하면 False Start입니다</p>
+              </div>
             </div>
-          </div>
 
-          {/* 초대 링크 */}
-          <div 
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '15px',
+            {/* 준비 상태 요약 */}
+            <div style={{
+              background: 'rgba(251, 191, 36, 0.1)',
+              border: '2px solid #fbbf24',
               padding: '1.5rem',
               marginBottom: '1.5rem',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
               textAlign: 'center'
-            }}
-          >
-            <h3 
-              style={{
-                fontSize: '1.1rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#333333'
-              }}
-            >
-              🔗 초대 링크
-            </h3>
-            <button
-              onClick={copyInviteLink}
-              style={{
-                background: 'linear-gradient(135deg, #FCB422 0%, #F97B25 100%)',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '0.8rem 1.5rem',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 12px rgba(252, 180, 34, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(252, 180, 34, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(252, 180, 34, 0.3)';
-              }}
-            >
-              초대 링크 복사
-            </button>
-          </div>
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                color: '#fbbf24',
+                marginBottom: '0.5rem'
+              }}>
+                준비된 플레이어: {lobby?.members?.filter(m => m.isReady).length || 0}/{lobby?.total || 0}
+              </div>
+              <div style={{
+                fontSize: '0.7rem',
+                color: '#9ca3af'
+              }}>
+                {lobby?.members?.filter(m => m.isReady).length === lobby?.total && lobby?.total >= 2 
+                  ? '🚀 모든 플레이어가 준비되었습니다!' 
+                  : '최소 2명의 플레이어가 필요합니다'}
+              </div>
+            </div>
 
-          {/* 게임 시작 버튼 - 방장만 표시 */}
-          {isHost && (
-            <div style={{ textAlign: 'center' }}>
-              {/* 디버그 정보 (개발용) */}
-              {process.env.NODE_ENV === 'development' && (
-                <div 
+            {/* 참가자 목록 */}
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '3px solid #10b981',
+              boxShadow: '6px 6px 0px #0d0d0d',
+              padding: '1.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  color: '#10b981',
+                  textShadow: '2px 2px 0px #0d0d0d',
+                  margin: 0
+                }}>
+                  👥 참가자 목록
+                </h3>
+                <button 
+                  onClick={fetchLobby}
+                  onMouseOver={handleMouseOver}
+                  onMouseOut={handleMouseOut}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
                   style={{
-                    background: 'rgba(20, 119, 129, 0.1)',
-                    borderRadius: '8px',
-                    padding: '0.5rem',
-                    marginBottom: '1rem',
-                    fontSize: '0.8rem',
-                    color: '#147781',
-                    border: '1px solid rgba(20, 119, 129, 0.2)'
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.6rem',
+                    backgroundColor: '#4b5563',
+                    color: '#f2e9e4',
+                    border: '2px solid #0d0d0d',
+                    boxShadow: '2px 2px 0px #0d0d0d',
+                    cursor: 'pointer',
+                    fontFamily: "'Press Start 2P', cursive"
                   }}
                 >
-                  <div>Debug: isHost={isHost.toString()}</div>
-                  <div>Debug: sessionStatus={sessionStatus}</div>
-                  <div>Debug: headCount={headCount}</div>
-                  <div>Debug: readyCount={readyCount}</div>
-                  <div>Debug: canStart={canStart.toString()}</div>
-                  <div>Debug: sessionId={sessionId}</div>
-                  <div>Debug: lobby.total={lobby?.total}</div>
-                  <div>Debug: lobby.members.length={lobby?.members?.length}</div>
-                  <div>Debug: isStarting={isStarting.toString()}</div>
-                  
-                  {/* 수동 테스트 버튼 */}
-                  <button
-                    onClick={handleManualStartTest}
-                    style={{
-                      background: 'rgba(249, 109, 60, 0.8)',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '0.3rem 0.6rem',
-                      fontSize: '0.7rem',
-                      cursor: 'pointer',
-                      marginTop: '0.5rem'
-                    }}
-                  >
-                    🧪 수동 시작 테스트
-                  </button>
-                </div>
-              )}
+                  새로고침
+                </button>
+              </div>
               
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                maxHeight: '250px',
+                overflowY: 'auto'
+              }}>
+                {lobby.members.length > 0 ? lobby.members.map((member, index) => (
+                  <div key={member.userUid} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(13, 13, 13, 0.4)',
+                    border: '2px solid #4b5563'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem'
+                    }}>
+                      <span style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        minWidth: '2rem',
+                        color: '#f2e9e4'
+                      }}>
+                        {index + 1}
+                      </span>
+                      <span style={{
+                        fontSize: '0.8rem',
+                        color: '#f2e9e4',
+                        wordBreak: 'break-all'
+                      }}>
+                        {member.userUid === currentUserUid ? '>>> 나' : member.userUid.substring(0, 12)}
+                      </span>
+                      {member.userUid === session?.hostUid && (
+                        <span style={{
+                          fontSize: '0.6rem',
+                          color: '#fbbf24',
+                          fontWeight: 'bold'
+                        }}>
+                          👑 호스트
+                        </span>
+                      )}
+                    </div>
+                    <span style={{
+                      fontSize: '0.7rem',
+                      color: member.isReady ? '#10b981' : '#fcd34d',
+                      fontWeight: 'bold'
+                    }}>
+                      {member.isReady ? '✅ 준비완료' : '⏳ 대기중'}
+                    </span>
+                  </div>
+                )) : (
+                  <p style={{ fontSize: '0.8rem', color: '#9ca3af', textAlign: 'center' }}>참가자를 기다리는 중...</p>
+                )}
+              </div>
+            </div>
+
+            {/* 초대 링크 */}
+            <div style={{
+              background: 'rgba(13, 13, 13, 0.4)',
+              border: '2px solid #4b5563',
+              padding: '1.5rem',
+              marginBottom: '1.5rem',
+              textAlign: 'center'
+            }}>
+              <h3 style={{
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                marginBottom: '1rem',
+                color: '#d1d5db'
+              }}>
+                🔗 초대 링크
+              </h3>
               <button
-                onClick={() => {
-                  console.log('[REACTION-LOBBY] 🎯 Game start button clicked');
-                  console.log('[REACTION-LOBBY] 🎯 Current state:', {
-                    sessionId,
-                    isHost,
-                    sessionStatus,
-                    headCount,
-                    readyCount,
-                    canStart,
-                    lobby,
-                    sessionDetails
-                  });
-                  handleStartGame();
-                }}
-                disabled={isStarting || !canStart}
+                onClick={copyInviteLink}
+                onMouseOver={handleMouseOver}
+                onMouseOut={handleMouseOut}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
                 style={{
-                  fontSize: '1.2rem',
-                  padding: '1rem 3rem',
-                  width: '100%',
-                  maxWidth: '300px',
-                  background: canStart 
-                    ? 'linear-gradient(135deg, #147781 0%, #1E9AA8 100%)'
-                    : 'rgba(255, 255, 255, 0.1)',
-                  border: canStart 
-                    ? '1px solid rgba(20, 119, 129, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '0.875rem',
-                  color: '#FFFFFF',
-                  cursor: canStart ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.3s ease',
-                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
-                  fontWeight: '600',
-                  boxShadow: canStart ? '0 4px 16px rgba(20, 119, 129, 0.3)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (canStart) {
-                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(20, 119, 129, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (canStart) {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(20, 119, 129, 0.3)';
-                  }
+                  padding: '0.8rem 1.5rem',
+                  fontSize: '0.8rem',
+                  backgroundColor: '#fbbf24',
+                  color: '#0d0d0d',
+                  border: '2px solid #0d0d0d',
+                  boxShadow: '4px 4px 0px #0d0d0d',
+                  cursor: 'pointer',
+                  fontFamily: "'Press Start 2P', cursive"
                 }}
               >
-                {isStarting ? '게임 시작 중...' : '🚀 게임 시작'}
+                초대 링크 복사
               </button>
-              {!canStart && (
-                <p 
+            </div>
+
+
+            {/* 게임 시작 버튼 - 방장만 표시 */}
+            {isHost && (
+              <div style={{ textAlign: 'center' }}>
+                
+                <button
+                  onClick={() => {
+                    console.log('[REACTION-LOBBY] 🎯 Game start button clicked');
+                    console.log('[REACTION-LOBBY] 🎯 Current state:', {
+                      sessionId,
+                      isHost,
+                      sessionStatus,
+                      headCount,
+                      readyCount,
+                      canStart,
+                      lobby,
+                      sessionDetails
+                    });
+                    handleStartGame();
+                  }}
+                  disabled={isStarting || !canStart}
+                  onMouseOver={canStart ? handleMouseOver : undefined}
+                  onMouseOut={canStart ? handleMouseOut : undefined}
+                  onMouseDown={canStart ? handleMouseDown : undefined}
+                  onMouseUp={canStart ? handleMouseUp : undefined}
                   style={{
                     fontSize: '0.9rem',
-                    marginTop: '0.5rem',
-                    color: '#666666'
+                    padding: '1rem 3rem',
+                    width: '100%',
+                    maxWidth: '300px',
+                    backgroundColor: canStart ? '#10b981' : '#4b5563',
+                    color: canStart ? '#0d0d0d' : '#9ca3af',
+                    border: '2px solid #0d0d0d',
+                    boxShadow: canStart ? '4px 4px 0px #0d0d0d' : '2px 2px 0px #0d0d0d',
+                    cursor: canStart ? 'pointer' : 'not-allowed',
+                    fontFamily: "'Press Start 2P', cursive",
+                    opacity: canStart ? 1 : 0.7
                   }}
                 >
-                  {!isHost 
-                    ? '방장만 게임을 시작할 수 있습니다.'
-                    : sessionStatus !== 'WAITING'
-                    ? '게임이 이미 진행 중이거나 종료되었습니다.'
-                    : headCount < 2
-                    ? '최소 2명 이상 참가해야 게임을 시작할 수 있습니다.'
-                    : readyCount < 2
-                    ? '모든 플레이어가 준비 상태여야 게임을 시작할 수 있습니다.'
-                    : '게임을 시작할 수 없습니다.'
-                  }
-                </p>
-              )}
-            </div>
-          )}
+                  {isStarting ? '게임 시작 중...' : '🚀 게임 시작'}
+                </button>
+                {!canStart && (
+                  <p style={{
+                    fontSize: '0.7rem',
+                    marginTop: '0.5rem',
+                    color: '#9ca3af'
+                  }}>
+                    {!isHost 
+                      ? '방장만 게임을 시작할 수 있습니다.'
+                      : sessionStatus !== 'WAITING'
+                      ? '게임이 이미 진행 중이거나 종료되었습니다.'
+                      : headCount < 2
+                      ? '최소 2명 이상 참가해야 게임을 시작할 수 있습니다.'
+                      : readyCount < 2
+                      ? '모든 플레이어가 준비 상태여야 게임을 시작할 수 있습니다.'
+                      : '게임을 시작할 수 없습니다.'
+                    }
+                  </p>
+                )}
+              </div>
+            )}
 
-          {/* 참가자용 대기 메시지 */}
-          {!isHost && (
-            <div 
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '15px',
+            {/* 참가자용 대기 메시지 */}
+            {!isHost && (
+              <div style={{
+                background: 'rgba(13, 13, 13, 0.4)',
+                border: '2px solid #4b5563',
                 padding: '1.5rem',
-                textAlign: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
-              }}
-            >
-              <p 
-                style={{
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  color: '#333333',
-                  marginBottom: '0.5rem'
-                }}
-              >
-                ⏳ 방장이 게임을 시작할 때까지 기다려주세요
-              </p>
-              <p 
-                style={{
+                textAlign: 'center'
+              }}>
+                <p style={{
                   fontSize: '0.9rem',
-                  color: '#666666'
-                }}
-              >
-                게임이 시작되면 자동으로 반응속도 게임 페이지로 이동합니다
-              </p>
-            </div>
-          )}
+                  fontWeight: 'bold',
+                  color: '#d1d5db',
+                  marginBottom: '0.5rem'
+                }}>
+                  ⏳ 방장이 게임을 시작할 때까지 기다려주세요
+                </p>
+                <p style={{
+                  fontSize: '0.7rem',
+                  color: '#9ca3af'
+                }}>
+                  게임이 시작되면 자동으로 반응속도 게임 페이지로 이동합니다
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
