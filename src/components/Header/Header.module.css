@@ -1,0 +1,266 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: clamp(60px, 8vh, 80px);
+  padding: clamp(2px, 0.2vh, 4px) 0;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+.headerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 2vw, 32px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+}
+
+.logo {
+  cursor: pointer;
+  width: min(6vw, 60px);
+  height: min(6vw, 60px);
+  background-image: url('/src/assets/icons/우리 사이 로고.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.logo:hover {
+  color: var(--accent-color);
+}
+
+.navMenu {
+  display: flex;
+  gap: clamp(30px, 6vw, 60px);
+  align-items: center;
+}
+
+.navLink {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: clamp(14px, 2vw, 18px);
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.navLink:hover {
+  color: var(--text-primary);
+}
+
+.navLink.active {
+  color: var(--accent-color);
+}
+
+.navLink.active::after {
+  content: '';
+  position: absolute;
+  bottom: clamp(-4px, -0.5vw, -8px);
+  left: 0;
+  right: 0;
+  height: clamp(1px, 0.2vw, 3px);
+  background-color: var(--accent-color);
+  border-radius: clamp(1px, 0.1vw, 2px);
+}
+
+.kakaoLoginButton {
+  background-color: #FEE500;
+  color: #000000;
+  border: none;
+  padding: min(0.75vw, 8px) min(1.5vw, 16px);
+  border-radius: min(0.8vw, 8px);
+  font-size: min(1.8vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: min(0.5vw, 5px);
+  box-shadow: 0 0.2vw 0.8vw rgba(254, 229, 0, 0.3);
+}
+
+.kakaoLoginButton:hover {
+  background-color: #FDD835;
+  transform: translateY(min(-0.2vw, -2px));
+  box-shadow: 0 0.4vw 1.2vw rgba(254, 229, 0, 0.4);
+}
+
+.kakaoLoginButton:active {
+  transform: translateY(0);
+  box-shadow: 0 0.2vw 0.4vw rgba(254, 229, 0, 0.3);
+}
+
+/* 프로필 섹션 스타일 */
+.profileSection {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: min(1vw, 12px);
+  background: rgba(255, 255, 255, 0.9);
+  padding: min(0.5vw, 6px) min(1vw, 12px);
+  border-radius: min(0.8vw, 8px);
+  border: 1px solid #c3c3c3;
+  transition: all 0.3s ease;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: min(0.2vw, 2px);
+}
+
+.profileName {
+  font-size: min(1.6vw, 13px);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.profileEmail {
+  font-size: min(1.2vw, 11px);
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.logoutButton {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  padding: min(0.5vw, 6px) min(1vw, 10px);
+  border-radius: min(0.6vw, 6px);
+  font-size: min(1.4vw, 12px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.logoutButton:hover {
+  background-color: #ff5252;
+  transform: translateY(min(-0.1vw, -1px));
+  box-shadow: 0 0.2vw 0.6vw rgba(255, 107, 107, 0.3);
+}
+
+.logoutButton:active {
+  transform: translateY(0);
+  box-shadow: 0 0.1vw 0.3vw rgba(255, 107, 107, 0.3);
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 768px) {
+  .header {
+    height: 60px;
+    padding: 2px 0;
+  }
+  
+  .headerContainer {
+    padding: 0 16px;
+  }
+  
+  .navMenu {
+    gap: 20px;
+  }
+  
+  .navLink {
+    font-size: 14px;
+  }
+  
+  .kakaoLoginButton {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    height: 56px;
+  }
+  
+  .headerContainer {
+    padding: 0 12px;
+  }
+  
+  .navMenu {
+    gap: 16px;
+  }
+  
+  .navLink {
+    font-size: 13px;
+  }
+  
+  .kakaoLoginButton {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* 프로필 드롭다운 메뉴 스타일 */
+.profileDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #b5b5b5;
+  border-radius: 8px;
+  min-width: 120px;
+  z-index: 1000;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.profileMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.profileMenuItem:last-child {
+  border-bottom: none;
+}
+
+.profileMenuItem:hover {
+  background-color: #f8f9fa;
+}
+
+.menuIcon {
+  font-size: 16px;
+  min-width: 20px;
+}
+
+.menuText {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.menuDivider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 4px 0;
+}
+
+/* 프로필 정보 클릭 가능하도록 스타일 수정 */
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: min(0.2vw, 2px);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.profileInfo:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}

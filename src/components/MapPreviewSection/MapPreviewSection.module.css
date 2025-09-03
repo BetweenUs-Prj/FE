@@ -1,0 +1,81 @@
+.mapPreviewSection {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  scroll-snap-align: start;
+}
+
+.mapPreviewContent {
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+}
+
+.mapPreviewTitle {
+  color: var(--text-primary);
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 4rem;
+}
+
+.mapPreviewContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.mapInfo {
+  text-align: left;
+}
+
+.mapInfo h3 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.mapInfo p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.mapFeatures {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.mapFeature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.mapFeature .featureIcon {
+  font-size: 1.2rem;
+}
+
+.mapPreview {
+  display: flex;
+  justify-content: center;
+}
+
+.previewMapContainer {
+  width: 400px !important;
+  height: 300px !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+}

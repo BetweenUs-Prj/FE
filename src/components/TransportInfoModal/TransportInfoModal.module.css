@@ -1,0 +1,1190 @@
+.overlay {
+  position: fixed;
+  width: 400px;
+  height: fit-content;
+  max-height: 85vh;
+  z-index: 999999;
+  pointer-events: none;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  min-height: fit-content;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  pointer-events: auto;
+  position: relative;
+  resize: both;
+  min-width: 320px;
+  max-width: 600px;
+}
+
+.modal::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(-45deg, transparent 30%, #d1d5db 30%, #d1d5db 50%, transparent 50%);
+  cursor: nw-resize;
+  pointer-events: auto;
+  border-radius: 0 0 16px 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
+  color: #111827;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  flex-shrink: 0;
+}
+
+.header:active {
+  cursor: grabbing;
+}
+
+.header * {
+  pointer-events: none;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.closeButton {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+}
+
+.closeButton:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.headerButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto !important;
+}
+
+.collapseAllButton {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+}
+
+.collapseAllButton:hover {
+  background: #4f46e5;
+  color: white;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.mainArea {
+  flex-shrink: 0;
+}
+
+.functionArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 교통수단 선택 섹션 */
+.transportModeSection {
+  margin-bottom: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.transportModeSection h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* 장소 정보 섹션 */
+.placeInfoSection {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f0f9ff;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.placeInfoSection h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0c4a6e;
+}
+
+.placeCard {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0f2fe;
+}
+
+.placeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.placeHeader h5 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0c4a6e;
+  flex: 1;
+}
+
+.placeCategory {
+  background: #0ea5e9;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.placeDescription {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.placeMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeMeta span {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.transportButtons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.transportButton {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  flex: 1;
+  min-width: 120px;
+}
+
+.transportButton:hover {
+  background: #f9fafb;
+  border-color: #3b82f6;
+}
+
+.transportButton.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.transportButton:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 섹션 헤더 */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionHeader h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.collapseButton {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collapseButton:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.refreshButton {
+  padding: 8px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  min-width: 80px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.refreshButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* 경로 섹션 */
+.routesSection {
+  margin-bottom: 8px;
+}
+
+.routeCard {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.routeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.routeTitle {
+  flex: 1;
+}
+
+.routeTitle h5 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.routeMeta {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  color: #6b7280;
+  flex-wrap: wrap;
+}
+
+.lastTrainBadge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.timeSummary {
+  font-size: 14px;
+  color: #059669;
+  font-weight: 500;
+  background: #ecfdf5;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.routesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.routeInfo {
+  flex: 1;
+}
+
+.timeInfo {
+  font-size: 14px;
+  color: #059669;
+  font-weight: 500;
+  background: #ecfdf5;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.routeSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.transportIcon {
+  font-size: 16px;
+}
+
+.routeText {
+  color: #6b7280;
+}
+
+/* 경로 옵션 */
+.routeOptions {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.routeOptionButton {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.routeOptionButton:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.routeOptionButton.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.routeOptionNumber {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  min-width: 40px;
+}
+
+.routeOptionInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.routeOptionTime {
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.routeOptionDistance {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* 상세 경로 */
+.routeDetails {
+  margin-bottom: 16px;
+}
+
+.routeStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.routeStep:last-child {
+  margin-bottom: 0;
+}
+
+.routeStep:not(:last-child)::after {
+  content: '↓';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f8fafc;
+  color: #3b82f6;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.stepIcon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.stepInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.stepName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepDetails {
+  margin-bottom: 8px;
+}
+
+.stepDetail {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  display: inline-block;
+  margin-right: 6px;
+  font-weight: 500;
+}
+
+.stepMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.stepDuration {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.stepSeparator {
+  color: #d1d5db;
+}
+
+.stepDistance {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stepRoute {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #eff6ff;
+  border-radius: 4px;
+  border: 1px solid #dbeafe;
+}
+
+/* 환승 정보 */
+.transferSection {
+  margin: 16px 0;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.transferSection h6 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.transferInfo {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.transferStation {
+  margin-bottom: 6px;
+}
+
+.transferStation strong {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.transferDetails {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+.transferDetails span {
+  background: #fef3c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #f59e0b;
+}
+
+/* 상세 경로 섹션 */
+.detailedRouteSection {
+  margin: 16px 0;
+}
+
+.toggleDetailedRoute {
+  width: 100%;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggleDetailedRoute:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.routeSteps {
+  margin-top: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* 개별 교통수단 선택 */
+.individualTransportSection {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.individualTransportSection h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.individualTransportList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.individualTransportItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.friendName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.individualTransportButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.individualButton {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.individualButton:hover {
+  background: #f9fafb;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.individualButton.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.individualButton:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 막차 섹션 */
+.lastTrainSection {
+  margin-bottom: 24px;
+}
+
+.lastTrainList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lastTrainItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.friendName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.lastTrainTime {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ef4444;
+}
+
+/* 로딩 상태 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading p {
+  margin: 0;
+  font-size: 16px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* 에러 상태 */
+.errorSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #fef2f2;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  margin-top: 16px;
+}
+
+.errorIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+  color: #ef4444;
+}
+
+.errorMessage {
+  flex: 1;
+}
+
+.errorMessage p {
+  margin: 0 0 6px 0;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.errorDetail {
+  font-size: 13px;
+  color: #ef4444;
+  font-weight: normal;
+}
+
+/* 빈 상태 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.emptyStateIcon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+  color: #9ca3af;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.emptyStateSub {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+/* 만남 시간 설정 */
+.meetingTimeSection {
+  margin-bottom: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.meetingTimeSection h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.timeInput {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.timePicker {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  color: #374151;
+  min-width: 100px;
+}
+
+.refreshButton {
+  padding: 6px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.refreshButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* 시간 정보 */
+.timeInfo {
+  margin: 12px 0;
+  padding: 12px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.timeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.timeRow:last-child {
+  margin-bottom: 0;
+}
+
+.timeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.timeValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* 막차 정보 */
+.lastTrainInfo {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lastTrainLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.lastTrainTime {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    height: 95vh;
+    max-height: none;
+  }
+  
+  .content {
+    padding: 16px;
+  }
+  
+  .header {
+    padding: 16px 20px;
+  }
+  
+  .transportButtons {
+    flex-direction: column;
+  }
+  
+  .transportButton {
+    min-width: auto;
+  }
+  
+  .routeHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .routeSummary {
+    align-self: flex-end;
+  }
+  
+  .individualTransportMode {
+    justify-content: space-around;
+  }
+  
+  .individualButton {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}
+
+/* 🎯 장소 모드 스타일 */
+.placeModeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.placeDetailSection {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.placeHeader {
+  margin-bottom: 16px;
+}
+
+.placeTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.placeCategory {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.placeDescription h5,
+.recommendationReason h5,
+.transportInfo h5 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeDescription p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.recommendationReason ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendationReason li {
+  padding: 8px 0;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recommendationReason li:last-child {
+  border-bottom: none;
+}
+
+.transportDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transportDetails span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.addScheduleSection {
+  text-align: center;
+}
+
+.addScheduleButton {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #b3b3b3;
+}
+
+.addScheduleButton:hover {
+  transform: scale(1.02);
+}
+
+
