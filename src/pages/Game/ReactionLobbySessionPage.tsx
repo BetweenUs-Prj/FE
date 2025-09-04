@@ -6,6 +6,8 @@ import { TopBar } from '../../components/common/TopBar';
 import { createLeaveSessionHandler } from '../../api/session';
 import type { LobbySnapshot, SessionDetails } from '../../api/session';
 import { http } from '../../api/http';
+import { PIXEL_STYLES } from '../../styles/pixelStyles';
+import { PixelButton } from '../../components/common/PixelUI';
 
 export default function ReactionLobbySessionPage() {
   const navigate = useNavigate();
@@ -309,66 +311,13 @@ export default function ReactionLobbySessionPage() {
     };
   }, [sessionId]);
 
-  // 픽셀 아트 스타일 정의
-  const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    .pixel-lobby-body { 
-      font-family: 'Press Start 2P', cursive; 
-      background-color: #2c2d3c; 
-      color: #f2e9e4; 
-      background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); 
-      background-size: 4px 4px; 
-      image-rendering: pixelated; 
-      min-height: 100vh; 
-    }
-    .pixel-container { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      min-height: 100vh; 
-      padding: 2rem; 
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.8; }
-    }
-  `;
 
-  // 픽셀 아트 이벤트 핸들러
-  const handleMouseOver = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(-4px)'; 
-      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
-    } 
-  };
-
-  const handleMouseOut = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(0)'; 
-      e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d'; 
-    } 
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(2px)'; 
-      e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d'; 
-    } 
-  };
-
-  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => { 
-    if (!e.currentTarget.disabled) { 
-      e.currentTarget.style.transform = 'translateY(-4px)'; 
-      e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d'; 
-    } 
-  };
 
 
   if (isLoading) {
     return (
       <>
-        <style>{styles}</style>
+        <style>{PIXEL_STYLES}</style>
         <div className="pixel-lobby-body">
           <div className="pixel-container">
             <div style={{ textAlign: 'center' }}>
@@ -385,30 +334,18 @@ export default function ReactionLobbySessionPage() {
   if (!lobby) {
     return (
       <>
-        <style>{styles}</style>
+        <style>{PIXEL_STYLES}</style>
         <div className="pixel-lobby-body">
           <div className="pixel-container">
             <div style={{ textAlign: 'center' }}>
               <p style={{ color: '#ef4444', marginBottom: '1.5rem', fontSize: '1rem' }}>로비를 찾을 수 없습니다.</p>
-              <button 
+              <PixelButton 
                 onClick={() => navigate('/game')}
-                onMouseOver={handleMouseOver}
-                onMouseOut={handleMouseOut}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                style={{
-                  padding: '1rem 2rem',
-                  fontSize: '0.8rem',
-                  backgroundColor: '#fbbf24',
-                  color: '#0d0d0d',
-                  border: '2px solid #0d0d0d',
-                  boxShadow: '4px 4px 0px #0d0d0d',
-                  cursor: 'pointer',
-                  fontFamily: "'Press Start 2P', cursive"
-                }}
+                variant="warning"
+                size="medium"
               >
                 게임 홈으로 돌아가기
-              </button>
+              </PixelButton>
             </div>
           </div>
         </div>
@@ -418,7 +355,7 @@ export default function ReactionLobbySessionPage() {
 
   return (
     <>
-      <style>{styles}</style>
+      <style>{PIXEL_STYLES}</style>
       <div className="pixel-lobby-body">
         <TopBar 
           title="반응속도 게임 로비" 
@@ -542,25 +479,18 @@ export default function ReactionLobbySessionPage() {
                 }}>
                   👥 참가자 목록
                 </h3>
-                <button 
+                <PixelButton 
                   onClick={fetchLobby}
-                  onMouseOver={handleMouseOver}
-                  onMouseOut={handleMouseOut}
-                  onMouseDown={handleMouseDown}
-                  onMouseUp={handleMouseUp}
+                  variant="default"
+                  size="small"
                   style={{
-                    padding: '0.5rem 1rem',
                     fontSize: '0.6rem',
                     backgroundColor: '#4b5563',
-                    color: '#f2e9e4',
-                    border: '2px solid #0d0d0d',
-                    boxShadow: '2px 2px 0px #0d0d0d',
-                    cursor: 'pointer',
-                    fontFamily: "'Press Start 2P', cursive"
+                    color: '#f2e9e4'
                   }}
                 >
                   새로고침
-                </button>
+                </PixelButton>
               </div>
               
               <div style={{
@@ -639,25 +569,25 @@ export default function ReactionLobbySessionPage() {
               }}>
                 🔗 초대 링크
               </h3>
-              <button
+              <p style={{ 
+                fontSize: '1.2rem', 
+                color: '#fbbf24', 
+                wordBreak: 'break-all', 
+                marginBottom: '1.5rem',
+                fontWeight: 'bold'
+              }}>
+                {sessionDetails?.inviteCode}
+              </p>
+              <PixelButton
                 onClick={copyInviteLink}
-                onMouseOver={handleMouseOver}
-                onMouseOut={handleMouseOut}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
+                variant="warning"
+                size="medium"
                 style={{
-                  padding: '0.8rem 1.5rem',
-                  fontSize: '0.8rem',
-                  backgroundColor: '#fbbf24',
-                  color: '#0d0d0d',
-                  border: '2px solid #0d0d0d',
-                  boxShadow: '4px 4px 0px #0d0d0d',
-                  cursor: 'pointer',
-                  fontFamily: "'Press Start 2P', cursive"
+                  fontSize: '0.8rem'
                 }}
               >
                 초대 링크 복사
-              </button>
+              </PixelButton>
             </div>
 
 
@@ -665,7 +595,7 @@ export default function ReactionLobbySessionPage() {
             {isHost && (
               <div style={{ textAlign: 'center' }}>
                 
-                <button
+                <PixelButton
                   onClick={() => {
                     console.log('[REACTION-LOBBY] 🎯 Game start button clicked');
                     console.log('[REACTION-LOBBY] 🎯 Current state:', {
@@ -681,10 +611,7 @@ export default function ReactionLobbySessionPage() {
                     handleStartGame();
                   }}
                   disabled={isStarting || !canStart}
-                  onMouseOver={canStart ? handleMouseOver : undefined}
-                  onMouseOut={canStart ? handleMouseOut : undefined}
-                  onMouseDown={canStart ? handleMouseDown : undefined}
-                  onMouseUp={canStart ? handleMouseUp : undefined}
+                  variant={canStart ? 'success' : 'default'}
                   style={{
                     fontSize: '0.9rem',
                     padding: '1rem 3rem',
@@ -692,15 +619,11 @@ export default function ReactionLobbySessionPage() {
                     maxWidth: '300px',
                     backgroundColor: canStart ? '#10b981' : '#4b5563',
                     color: canStart ? '#0d0d0d' : '#9ca3af',
-                    border: '2px solid #0d0d0d',
-                    boxShadow: canStart ? '4px 4px 0px #0d0d0d' : '2px 2px 0px #0d0d0d',
-                    cursor: canStart ? 'pointer' : 'not-allowed',
-                    fontFamily: "'Press Start 2P', cursive",
                     opacity: canStart ? 1 : 0.7
                   }}
                 >
                   {isStarting ? '게임 시작 중...' : '🚀 게임 시작'}
-                </button>
+                </PixelButton>
                 {!canStart && (
                   <p style={{
                     fontSize: '0.7rem',
