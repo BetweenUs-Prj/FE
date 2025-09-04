@@ -468,14 +468,28 @@ export default function QuizGamePage() {
     console.debug('[QUIZ] Response time calculated:', actualResponseTime, 'ms');
     
     try {
+      // 임시 패치 (✅ sessionId 추가 + 멱등키)
       const res = await http.post(
         `/mini-games/sessions/${sessionId}/rounds/${currentQuestion.roundId}/answers`,
-        { 
-          optionId: parseInt(optionId),
-          responseTimeMs: actualResponseTime // 🔥 실제 응답시간 전송
+        {
+          // ★ 임시: 서버가 @NotNull sessionId를 기대한다면 바디에도 넣어줍니다.
+          sessionId: Number(sessionId),
+      
+          optionId: Number(optionId),                                // 숫자 보장
+          responseTimeMs: Math.max(0, Math.floor(actualResponseTime))
         },
-        { validateStatus: () => true }
+        {
+          validateStatus: () => true,
+          headers: {
+            // ★ 멱등키: 재전송/더블클릭 시 중복처리 방지
+            'Idempotency-Key': crypto.randomUUID(),
+            // ★ 반드시 포함되게 확인 (http 유틸 인터셉터에서도 보장)
+            'X-USER-UID': String(getUid()),
+            'Content-Type': 'application/json'
+          }
+        }
       );
+      
       
       if (res.status === 200 || res.status === 409) {
         setHasSubmitted(true);
@@ -1067,7 +1081,8 @@ export default function QuizGamePage() {
               <h2 className="pixel-title scoreboard-title">SCORE</h2>
               {scoreboard.map(item => (
                 <div key={item.userUid} className="scoreboard-item">
-                  <span>{item.displayName.substring(0,12)}</span>
+                  <span>{item?.displayName?.substring?.(0, 12) ?? 'Player'}</span>
+                
                   <span>{item.score}</span>
                 </div>
               ))}
@@ -1187,7 +1202,8 @@ export default function QuizGamePage() {
             <h2 className="pixel-title scoreboard-title">SCORE</h2>
             {scoreboard.map(item => (
               <div key={item.userUid} className="scoreboard-item">
-                <span>{item.displayName.substring(0,12)}</span>
+                <span>{item?.displayName?.substring?.(0, 12) ?? 'Player'}</span>
+
                 <span>{item.score}</span>
               </div>
             ))}
