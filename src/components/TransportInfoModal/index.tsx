@@ -18,7 +18,7 @@ interface TransferInfo {
 }
 
 interface RouteStep {
-  transportMode: 'transit' | 'car' | 'walk';
+  transportMode: 'bus' | 'subway' | 'bus_subway' | 'walk';
   line?: string;
   station?: string;
   direction?: string;
@@ -31,7 +31,7 @@ interface RouteStep {
 interface TransportRoute {
   friendId: number;
   friendName: string;
-  transportMode: 'transit' | 'car' | 'walk';
+  transportMode: 'bus' | 'subway' | 'bus_subway' | 'walk';
   duration: number;
   distance: number;
   details: string[];
@@ -96,8 +96,8 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   const [meetingTime, setMeetingTime] = useState('18:00');
   const [isLoading, setIsLoading] = useState(false);
   
-  // 교통수단 카테고리 선택 (대중교통, 자동차만)
-  const [selectedTransportMode, setSelectedTransportMode] = useState<'transit' | 'car'>('transit');
+  // 교통수단 카테고리 선택 (버스, 지하철, 버스+지하철)
+  const [selectedTransportMode, setSelectedTransportMode] = useState<'bus' | 'subway' | 'bus_subway'>('bus');
   
   // 중복 요청 방지를 위한 ref
   const isGeneratingRef = useRef(false);
@@ -178,7 +178,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
           placePosition.lat, placePosition.lng
         );
         
-        const duration = Math.round(distance * (selectedTransportMode === 'transit' ? 3 : 2));
+        const duration = Math.round(distance * (selectedTransportMode === 'bus' ? 4 : selectedTransportMode === 'subway' ? 3 : 3.5));
       const departureTime = calculateDepartureTime(meetingTime, duration);
         
         const routeSteps: RouteStep[] = [{
@@ -198,11 +198,21 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
           coords: generateRouteCoords(stationPosition, placePosition),
         departureTime,
         arrivalTime: meetingTime,
-        lastTrainTime: selectedTransportMode === 'transit' ? getLastTrainTime() : undefined,
+        lastTrainTime: selectedTransportMode === 'subway' || selectedTransportMode === 'bus_subway' ? getLastTrainTime() : undefined,
           routeSteps,
-          transferInfos: selectedTransportMode === 'transit' ? [{
+          transferInfos: selectedTransportMode === 'subway' ? [{
             station: stationName,
             line: '지하철',
+            direction: '추천장소 방향',
+            time: `${duration}분`
+          }] : selectedTransportMode === 'bus' ? [{
+            station: stationName,
+            line: '버스',
+            direction: '추천장소 방향',
+            time: `${duration}분`
+          }] : selectedTransportMode === 'bus_subway' ? [{
+            station: stationName,
+            line: '버스+지하철',
             direction: '추천장소 방향',
             time: `${duration}분`
           }] : []
@@ -237,14 +247,14 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   };
 
   // 경로 생성 (실제 API 호출 준비)
-  const generateSimulatedRoute = (friend: Friend, transportMode: 'transit' | 'car' = 'transit') => {
+  const generateSimulatedRoute = (friend: Friend, transportMode: 'bus' | 'subway' | 'bus_subway' = 'bus') => {
     // TODO: 실제 ODsay API 호출로 대체
     const distance = calculateDistance(
       friend.position.lat, friend.position.lng,
       stationPosition.lat, stationPosition.lng
     );
     
-    const duration = Math.round(distance * (transportMode === 'transit' ? 3 : 2));
+    const duration = Math.round(distance * (transportMode === 'bus' ? 4 : transportMode === 'subway' ? 3 : 3.5));
     const departureTime = calculateDepartureTime(meetingTime, duration);
     
     return {
@@ -257,7 +267,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       coords: generateRouteCoords(friend.position, stationPosition),
       departureTime,
       arrivalTime: meetingTime,
-      lastTrainTime: transportMode === 'transit' ? getLastTrainTime() : undefined,
+      lastTrainTime: transportMode === 'subway' || transportMode === 'bus_subway' ? getLastTrainTime() : undefined,
       routeSteps: [{
         transportMode,
         duration,
@@ -337,17 +347,11 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
 
   // 교통수단 아이콘
   const getTransportIcon = (mode: string, line?: string) => {
-    if (mode === 'transit' && line) {
-      if (line.includes('호선')) return '🚇';
-      if (line.includes('버스')) return '🚌';
-      return '🚇';
-    }
-    
     switch (mode) {
-      case 'transit': return '🚇';
-      case 'car': return '🚗';
-      case 'walk': return '🚶';
-      default: return '🚇';
+      case 'bus': return '🚌';
+      case 'subway': return '🚇';
+      case 'bus_subway': return '🚌🚇';
+      default: return '🚌';
     }
   };
 
@@ -471,21 +475,23 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
             <div className={styles.functionArea}>
           {/* 만남 시간 설정 */}
           <div className={styles.meetingTimeSection}>
-                <h4>⏰ 만남 시간</h4>
             <div className={styles.timeInput}>
-              <input
-                type="time"
-                value={meetingTime}
-                onChange={(e) => setMeetingTime(e.target.value)}
-                className={styles.timePicker}
-              />
-              <button 
-                onClick={handleRouteRecalculation}
-                className={styles.refreshButton}
-                disabled={isLoading}
-              >
-                    {isLoading ? '계산 중...' : '재계산'}
-              </button>
+              <h4>⏰ 만남 시간</h4>
+              <div className={styles.timeControls}>
+                <input
+                  type="time"
+                  value={meetingTime}
+                  onChange={(e) => setMeetingTime(e.target.value)}
+                  className={styles.timePicker}
+                />
+                <button 
+                  onClick={handleRouteRecalculation}
+                  className={styles.refreshButton}
+                  disabled={isLoading}
+                >
+                      {isLoading ? '계산 중...' : '재계산'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -494,16 +500,22 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                 <h4>🚇 교통수단</h4>
             <div className={styles.transportButtons}>
               <button
-                className={`${styles.transportButton} ${selectedTransportMode === 'transit' ? styles.active : ''}`}
-                onClick={() => setSelectedTransportMode('transit')}
+                className={`${styles.transportButton} ${selectedTransportMode === 'bus' ? styles.active : ''}`}
+                onClick={() => setSelectedTransportMode('bus')}
               >
-                    🚇 대중교통
+                버스
               </button>
               <button
-                className={`${styles.transportButton} ${selectedTransportMode === 'car' ? styles.active : ''}`}
-                onClick={() => setSelectedTransportMode('car')}
+                className={`${styles.transportButton} ${selectedTransportMode === 'subway' ? styles.active : ''}`}
+                onClick={() => setSelectedTransportMode('subway')}
               >
-                🚗 자동차
+                지하철
+              </button>
+              <button
+                className={`${styles.transportButton} ${selectedTransportMode === 'bus_subway' ? styles.active : ''}`}
+                onClick={() => setSelectedTransportMode('bus_subway')}
+              >
+                버스+지하철
               </button>
             </div>
           </div>

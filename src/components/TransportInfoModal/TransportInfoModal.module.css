@@ -263,7 +263,7 @@
   transition: all 0.2s ease;
   font-weight: 500;
   flex: 1;
-  min-width: 120px;
+  min-width: 80px;
 }
 
 .transportButton:hover {
@@ -391,6 +391,7 @@
   font-size: 14px;
   color: #6b7280;
   flex-wrap: wrap;
+  margin-top: 10px;
 }
 
 .lastTrainBadge {
@@ -416,6 +417,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: 5px;
 }
 
 .routeInfo {
@@ -923,13 +925,21 @@
 }
 
 .meetingTimeSection h4 {
-  margin: 0 0 8px 0;
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
+  white-space: nowrap;
 }
 
 .timeInput {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeControls {
   display: flex;
   gap: 8px;
   align-items: center;

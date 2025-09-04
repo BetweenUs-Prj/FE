@@ -286,18 +286,18 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
           
           markerOptions.image = customIcon;
         }
-        // 역 마커인 경우 지하철 아이콘 (크기 증가)
+        // 역 마커인 경우 위치 마커 (크기 증가)
         else if (markerInfo.id.startsWith('station-')) {
           const stationIcon = new window.kakao.maps.MarkerImage(
             `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-              <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                <rect x="5" y="5" width="22" height="22" rx="3" fill="#4A90E2" stroke="white" stroke-width="3"/>
-                <text x="16" y="22" text-anchor="middle" fill="white" font-size="14" font-weight="bold">🚇</text>
+              <svg width="50" height="50" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 3C10.93 3 7 6.93 7 12c0 7 9 17 9 17s9-10 9-17c0-5.07-3.93-9-9-9z" fill="#4A90E2" stroke="white" stroke-width="2"/>
+                <circle cx="16" cy="12" r="3" fill="white"/>
               </svg>
             `)}`,
-            new window.kakao.maps.Size(32, 32),
+            new window.kakao.maps.Size(40, 40),
             {
-              offset: new window.kakao.maps.Point(16, 16)
+              offset: new window.kakao.maps.Point(25, 25)
             }
           );
           

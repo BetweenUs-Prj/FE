@@ -83,8 +83,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
 
   // JWT 토큰을 가져오는 함수
   const getAuthToken = (): string | null => {
-    // localStorage에서 토큰 가져오기 (실제 구현에 맞게 수정)
-    return localStorage.getItem('authToken');
+    // 개발 중에는 임시로 토큰을 반환 (실제 구현 시에는 localStorage에서 가져오기)
+    // return localStorage.getItem('authToken');
+    return 'dev-token'; // 개발용 임시 토큰
   };
 
   // 사용자 위치 데이터를 백엔드로 전송하는 함수
@@ -358,9 +359,6 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     try {
       console.log('중간거리 찾기 버튼 클릭됨');
       console.log('전송할 좌표 데이터:', friends.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
-
-      // 백엔드로 사용자 위치 데이터 전송
-      await sendUserLocationsToBackend(friends, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined);
 
       // 중간거리 찾기 버튼 클릭 시 PaperDrawer 닫기 및 부모 컴포넌트에 알림
       setIsExpanded(false); // 항상 닫기로 고정
