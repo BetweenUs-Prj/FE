@@ -190,7 +190,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         
         const route: TransportRoute = {
           friendId: 0,
-          friendName: `${stationName} → 추천장소`,
+          friendName: '추천장소',
           transportMode: selectedTransportMode,
           duration,
           distance: Math.round(distance * 10) / 10,
@@ -257,13 +257,18 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     const duration = Math.round(distance * (transportMode === 'bus' ? 4 : transportMode === 'subway' ? 3 : 3.5));
     const departureTime = calculateDepartureTime(meetingTime, duration);
     
+    // 중복 제거: friend.location과 stationName이 같으면 하나만 표시
+    const details = friend.location === stationName 
+      ? [friend.location] 
+      : [friend.location, stationName];
+    
     return {
       friendId: friend.id,
       friendName: friend.name,
       transportMode,
       duration,
       distance: Math.round(distance * 10) / 10,
-      details: [friend.location, stationName + '역'],
+      details,
       coords: generateRouteCoords(friend.position, stationPosition),
       departureTime,
       arrivalTime: meetingTime,
@@ -272,7 +277,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         transportMode,
         duration,
         distance: Math.round(distance * 10) / 10,
-        details: [friend.location, stationName + '역']
+        details
       }],
       transferInfos: []
     };
