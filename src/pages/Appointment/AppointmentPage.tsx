@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import GameCreateModal from '../../components/modals/GameCreateModal';
 
 interface PenaltyInfo {
   loserUid: string;
@@ -17,6 +18,8 @@ export default function AppointmentPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as AppointmentState;
+  
+  const [isGameCreateModalOpen, setIsGameCreateModalOpen] = useState(false);
 
 
   // 기본 벌칙 정보 (state가 없을 때 사용)
@@ -33,8 +36,12 @@ export default function AppointmentPage() {
   };
 
   const handleCreateGame = () => {
-    // 게임 생성 페이지로 이동
-    navigate('/game/create');
+    // 모달 열기
+    setIsGameCreateModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsGameCreateModalOpen(false);
   };
 
 
@@ -238,11 +245,17 @@ export default function AppointmentPage() {
           {/* 추가 정보 */}
           <div className="pixel-box info-box">
             <p className="info-text">
-              💡 "새 게임 만들기" 버튼을 클릭하면 게임 생성 페이지로 이동하여 카테고리와 설정을 직접 선택할 수 있습니다<span className="blinking-cursor">_</span>
+              💡 "새 게임 만들기" 버튼을 클릭하면 모달이 열리고 게임 타입을 선택할 수 있습니다<span className="blinking-cursor">_</span>
             </p>
           </div>
         </div>
       </div>
+
+      {/* 게임 생성 모달 */}
+      <GameCreateModal 
+        isOpen={isGameCreateModalOpen}
+        onClose={handleCloseModal}
+      />
     </>
   );
 }

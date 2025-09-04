@@ -104,7 +104,7 @@ export default function QuizLobbySessionPage() {
 
     const copyInviteLink = async () => {
         if (!sessionDetails?.inviteCode) return;
-        const inviteUrl = `${window.location.origin}/join?code=${sessionDetails.inviteCode}`;
+        const inviteUrl = `${window.location.origin}/game/join?code=${sessionDetails.inviteCode}`;
         try {
             await navigator.clipboard.writeText(inviteUrl);
             alert('초대 링크가 복사되었습니다!');
@@ -244,240 +244,341 @@ export default function QuizLobbySessionPage() {
 
     return (
         <>
-            <style>{PIXEL_STYLES}</style>
-            <div className="pixel-lobby-body">
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+                
+                .pixel-quiz-lobby-body {
+                    font-family: 'Press Start 2P', cursive;
+                    background-color: #2c2d3c;
+                    color: #f2e9e4;
+                    background-image: 
+                        linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px);
+                    background-size: 4px 4px;
+                    image-rendering: pixelated;
+                    min-height: 100vh;
+                }
+
+                .pixel-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-start;
+                    min-height: 100vh;
+                    padding: 2rem;
+                    padding-top: 110px;
+                }
+
+                .pixel-header {
+                    background-color: #4a4e69;
+                    padding: 2rem 3rem;
+                    border: 4px solid #0d0d0d;
+                    box-shadow: 8px 8px 0px #0d0d0d;
+                    margin-bottom: 2rem;
+                    max-width: 700px;
+                    width: 100%;
+                }
+
+                .pixel-card {
+                    border: 4px solid #0d0d0d;
+                    box-shadow: 4px 4px 0px #0d0d0d;
+                    transition: transform 0.1s linear, box-shadow 0.1s linear;
+                    font-family: 'Press Start 2P', cursive;
+                }
+
+                .pixel-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 8px 8px 0px #0d0d0d;
+                }
+
+                .pixel-member-card {
+                    border: 4px solid #0d0d0d;
+                    background-color: #4a4e69;
+                    padding: 1rem;
+                    margin-bottom: 0.5rem;
+                    transition: all 0.1s linear;
+                }
+
+                .pixel-member-card:hover {
+                    transform: translateX(4px);
+                    background-color: #565b78;
+                }
+                
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+            `}</style>
+            <div className="pixel-quiz-lobby-body">
                 <TopBar 
                     title="퀴즈 게임 로비" 
                     onQuit={createLeaveSessionHandler(sessionId)} 
                     showQuit={!!sessionId}
                 />
                 
-                <div style={{
-                    paddingTop: '80px',
-                    minHeight: '100vh',
-                    padding: '2rem'
-                }}>
-                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                        {/* 게임 정보 */}
-                        <div style={{
-                            background: 'rgba(251, 191, 36, 0.1)',
-                            border: '3px solid #fbbf24',
-                            boxShadow: '6px 6px 0px #0d0d0d',
-                            padding: '2rem',
-                            marginBottom: '2rem',
-                            textAlign: 'center'
+                <div className="pixel-container">
+                    {/* 게임 헤더 */}
+                    <div className="pixel-header" style={{ textAlign: 'center' }}>
+                        <h1 style={{ 
+                            fontSize: '2.5rem', 
+                            color: '#ffadad',
+                            textShadow: '4px 4px 0px #0d0d0d',
+                            marginBottom: '1rem'
                         }}>
-                            <h1 style={{ 
-                                fontSize: '1.8rem', 
-                                fontWeight: 'bold',
-                                marginBottom: '0.5rem',
-                                color: '#fbbf24',
-                                textShadow: '2px 2px 0px #0d0d0d'
-                            }}>
-                                🧠 퀴즈 게임 로비
-                            </h1>
-                            <p style={{ 
-                                fontSize: '0.8rem',
-                                marginBottom: '1rem',
-                                color: '#d1d5db'
-                            }}>
-                                지식으로 승부하는 퀴즈 게임!
-                            </p>
-                            <div style={{
-                                display: 'inline-block',
-                                fontSize: '0.8rem',
-                                padding: '0.5rem 1rem',
-                                background: 'rgba(16, 185, 129, 0.2)',
-                                border: '2px solid #10b981',
-                                color: '#10b981',
-                                fontWeight: 'bold',
-                                marginBottom: '1rem'
-                            }}>
-                                {memberCount}/10명 참여
-                            </div>
-                            {session?.category && (
-                                <div style={{
-                                    display: 'block',
-                                    fontSize: '0.7rem',
-                                    color: '#9ca3af'
-                                }}>
-                                    카테고리: <span style={{ color: '#fbbf24' }}>{getCategoryLabel(session.category)}</span>
-                                </div>
-                            )}
+                            QUIZ LOBBY
+                        </h1>
+                        <p style={{ 
+                            fontSize: '1rem',
+                            color: '#c9c9c9',
+                            lineHeight: '1.5',
+                            marginBottom: '1rem'
+                        }}>
+                            지식과 재미를 동시에!
+                        </p>
+                        <div style={{
+                            display: 'inline-block',
+                            padding: '0.75rem 1.5rem',
+                            backgroundColor: '#ffadad',
+                            color: '#0d0d0d',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            border: '3px solid #0d0d0d',
+                            boxShadow: '3px 3px 0px #0d0d0d'
+                        }}>
+                            {memberCount}/10명
                         </div>
+                        {session?.category && (
+                            <p style={{
+                                fontSize: '0.8rem',
+                                color: '#ffd6a5',
+                                marginTop: '1rem'
+                            }}>
+                                카테고리: {getCategoryLabel(session.category)}
+                            </p>
+                        )}
+                    </div>
 
-                        {/* 참가자 목록 */}
-                        <div style={{
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            border: '3px solid #10b981',
-                            boxShadow: '6px 6px 0px #0d0d0d',
-                            padding: '1.5rem',
-                            marginBottom: '1.5rem'
+                    <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '900px' }}>
+                        {/* 참가자 목록 카드 */}
+                        <div className="pixel-card" style={{
+                            backgroundColor: '#4a4e69',
+                            padding: '2rem',
+                            flex: '1',
+                            minWidth: '350px'
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                <h3 style={{
-                                    fontSize: '1rem',
-                                    fontWeight: 'bold',
-                                    color: '#10b981',
-                                    textShadow: '2px 2px 0px #0d0d0d',
-                                    margin: 0
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h2 style={{
+                                    fontSize: '1.25rem',
+                                    color: '#ffd6a5',
+                                    textShadow: '2px 2px 0px #0d0d0d'
                                 }}>
-                                    👥 참가자 목록
-                                </h3>
-                                <PixelButton 
+                                    PLAYERS
+                                </h2>
+                                <button
                                     onClick={fetchLobby}
-                                    variant="default"
-                                    size="small"
                                     style={{
-                                        fontSize: '0.6rem',
-                                        backgroundColor: '#4b5563',
-                                        color: '#f2e9e4'
+                                        padding: '0.5rem 1rem',
+                                        backgroundColor: '#9a8c98',
+                                        color: '#f2e9e4',
+                                        border: '3px solid #0d0d0d',
+                                        boxShadow: '2px 2px 0px #0d0d0d',
+                                        fontSize: '0.7rem',
+                                        fontFamily: 'Press Start 2P',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.1s linear'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                        e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d';
                                     }}
                                 >
-                                    새로고침
-                                </PixelButton>
+                                    REFRESH
+                                </button>
                             </div>
                             
                             <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.75rem',
-                                maxHeight: '250px',
+                                maxHeight: '300px',
                                 overflowY: 'auto'
                             }}>
                                 {lobbyMembers.length > 0 ? lobbyMembers.map((member, index) => (
-                                    <div key={member.uid} style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '0.75rem 1rem',
-                                        background: 'rgba(13, 13, 13, 0.4)',
-                                        border: '2px solid #4b5563'
-                                    }}>
+                                    <div key={member.uid} className="pixel-member-card">
                                         <div style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.75rem'
+                                            gap: '1rem'
                                         }}>
                                             <span style={{
-                                                fontSize: '0.8rem',
-                                                fontWeight: 'bold',
-                                                minWidth: '2rem',
-                                                color: '#f2e9e4'
+                                                fontSize: '1.2rem',
+                                                color: '#ffadad',
+                                                fontWeight: 'bold'
                                             }}>
-                                                {index + 1}
+                                                #{index + 1}
                                             </span>
                                             <span style={{
-                                                fontSize: '0.8rem',
+                                                fontSize: '0.9rem',
                                                 color: '#f2e9e4',
-                                                wordBreak: 'break-all'
+                                                flex: '1'
                                             }}>
-                                                {member.uid === currentUserUid ? '>>> 나' : member.uid.substring(0, 12)}
+                                                {member.uid === currentUserUid ? '> YOU' : member.uid.substring(0, 8)}
                                             </span>
                                             {member.role === 'HOST' && (
                                                 <span style={{
-                                                    fontSize: '0.6rem',
-                                                    color: '#fbbf24',
-                                                    fontWeight: 'bold'
+                                                    fontSize: '0.7rem',
+                                                    color: '#ffd6a5',
+                                                    padding: '0.25rem 0.5rem',
+                                                    backgroundColor: '#0d0d0d',
+                                                    border: '2px solid #ffd6a5'
                                                 }}>
-                                                    👑 방장
+                                                    HOST
                                                 </span>
                                             )}
                                         </div>
                                     </div>
                                 )) : (
-                                    <p style={{ fontSize: '0.8rem', color: '#9ca3af', textAlign: 'center' }}>참가자를 기다리는 중...</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* 초대 링크 */}
-                        <div style={{
-                            background: 'rgba(13, 13, 13, 0.4)',
-                            border: '2px solid #4b5563',
-                            padding: '1.5rem',
-                            marginBottom: '1.5rem',
-                            textAlign: 'center'
-                        }}>
-                            <h3 style={{
-                                fontSize: '0.9rem',
-                                fontWeight: 'bold',
-                                marginBottom: '1rem',
-                                color: '#d1d5db'
-                            }}>
-                                🔗 초대 링크
-                            </h3>
-                            <p style={{ 
-                                fontSize: '1.2rem', 
-                                color: '#fbbf24', 
-                                wordBreak: 'break-all', 
-                                marginBottom: '1.5rem',
-                                fontWeight: 'bold'
-                            }}>
-                                {sessionDetails?.inviteCode}
-                            </p>
-                            <PixelButton
-                                onClick={copyInviteLink}
-                                variant="warning"
-                                size="medium"
-                                style={{ fontSize: '0.8rem' }}
-                            >
-                                초대 링크 복사
-                            </PixelButton>
-                        </div>
-
-                        {/* 게임 시작 버튼 - 방장만 표시 */}
-                        {isHost && (
-                            <div style={{ textAlign: 'center' }}>
-                                <PixelButton
-                                    onClick={handleStartGame}
-                                    disabled={isStarting || !canStart}
-                                    variant={canStart ? 'success' : 'default'}
-                                    style={{
-                                        fontSize: '0.9rem',
-                                        padding: '1rem 3rem',
-                                        width: '100%',
-                                        maxWidth: '300px',
-                                        backgroundColor: canStart ? '#10b981' : '#4b5563',
-                                        color: canStart ? '#0d0d0d' : '#9ca3af',
-                                        opacity: canStart ? 1 : 0.7
-                                    }}
-                                >
-                                    {isStarting ? '게임 시작 중...' : '🚀 게임 시작'}
-                                </PixelButton>
-                                {!canStart && (
-                                    <p style={{
-                                        fontSize: '0.7rem',
-                                        marginTop: '0.5rem',
-                                        color: '#9ca3af'
+                                    <p style={{ 
+                                        fontSize: '0.9rem', 
+                                        color: '#c9c9c9', 
+                                        textAlign: 'center',
+                                        animation: 'pulse 2s ease-in-out infinite'
                                     }}>
-                                        시작하려면 최소 2명이 필요합니다
+                                        Waiting for players...
                                     </p>
                                 )}
                             </div>
-                        )}
+                        </div>
 
-                        {/* 참가자용 대기 메시지 */}
-                        {!isHost && (
+                        {/* 게임 정보 및 초대 카드 */}
+                        <div className="pixel-card" style={{
+                            backgroundColor: '#4a4e69',
+                            padding: '2rem',
+                            flex: '1',
+                            minWidth: '350px'
+                        }}>
+                            <h2 style={{
+                                fontSize: '1.25rem',
+                                color: '#fdffb6',
+                                textShadow: '2px 2px 0px #0d0d0d',
+                                marginBottom: '1.5rem'
+                            }}>
+                                INVITE CODE
+                            </h2>
                             <div style={{
-                                background: 'rgba(13, 13, 13, 0.4)',
-                                border: '2px solid #4b5563',
+                                backgroundColor: '#0d0d0d',
                                 padding: '1.5rem',
+                                border: '3px solid #fdffb6',
+                                marginBottom: '1.5rem',
                                 textAlign: 'center'
                             }}>
-                                <p style={{
-                                    fontSize: '0.9rem',
+                                <p style={{ 
+                                    fontSize: '1.5rem', 
+                                    color: '#fdffb6', 
+                                    wordBreak: 'break-all',
                                     fontWeight: 'bold',
-                                    color: '#d1d5db',
-                                    marginBottom: '0.5rem'
+                                    letterSpacing: '2px'
                                 }}>
-                                    ⏳ 방장이 게임을 시작할 때까지 기다려주세요
+                                    {sessionDetails?.inviteCode}
+                                </p>
+                            </div>
+                            <button
+                                onClick={copyInviteLink}
+                                style={{
+                                    width: '100%',
+                                    padding: '1rem',
+                                    backgroundColor: '#fdffb6',
+                                    color: '#0d0d0d',
+                                    border: '4px solid #0d0d0d',
+                                    boxShadow: '4px 4px 0px #0d0d0d',
+                                    fontSize: '0.9rem',
+                                    fontFamily: 'Press Start 2P',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.1s linear'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '8px 8px 0px #0d0d0d';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d';
+                                }}
+                            >
+                                COPY LINK
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 게임 시작/대기 영역 */}
+                    <div style={{ 
+                        marginTop: '2rem',
+                        width: '100%',
+                        maxWidth: '700px',
+                        textAlign: 'center'
+                    }}>
+                        {isHost ? (
+                            <>
+                                <button
+                                    onClick={handleStartGame}
+                                    disabled={isStarting || !canStart}
+                                    style={{
+                                        padding: '1.5rem 3rem',
+                                        backgroundColor: canStart ? '#caffbf' : '#9a8c98',
+                                        color: '#0d0d0d',
+                                        border: '4px solid #0d0d0d',
+                                        boxShadow: canStart ? '6px 6px 0px #0d0d0d' : '3px 3px 0px #0d0d0d',
+                                        fontSize: '1.2rem',
+                                        fontFamily: 'Press Start 2P',
+                                        cursor: canStart ? 'pointer' : 'not-allowed',
+                                        opacity: canStart ? 1 : 0.6,
+                                        transition: 'all 0.1s linear'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (canStart) {
+                                            e.currentTarget.style.transform = 'translateY(-4px)';
+                                            e.currentTarget.style.boxShadow = '10px 10px 0px #0d0d0d';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (canStart) {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
+                                        }
+                                    }}
+                                >
+                                    {isStarting ? 'STARTING...' : 'START GAME'}
+                                </button>
+                                {!canStart && (
+                                    <p style={{
+                                        fontSize: '0.8rem',
+                                        marginTop: '1rem',
+                                        color: '#c9c9c9'
+                                    }}>
+                                        Need at least 2 players
+                                    </p>
+                                )}
+                            </>
+                        ) : (
+                            <div className="pixel-card" style={{
+                                backgroundColor: '#4a4e69',
+                                padding: '2rem'
+                            }}>
+                                <p style={{
+                                    fontSize: '1rem',
+                                    color: '#ffd6a5',
+                                    marginBottom: '1rem',
+                                    animation: 'pulse 2s ease-in-out infinite'
+                                }}>
+                                    WAITING FOR HOST
                                 </p>
                                 <p style={{
-                                    fontSize: '0.7rem',
-                                    color: '#9ca3af'
+                                    fontSize: '0.8rem',
+                                    color: '#c9c9c9',
+                                    lineHeight: '1.5'
                                 }}>
-                                    게임이 시작되면 자동으로 퀴즈 게임 페이지로 이동합니다
+                                    The game will start automatically<br/>when the host begins
                                 </p>
                             </div>
                         )}

@@ -295,17 +295,20 @@ export default function ResultPageREST() {
     } 
   };
 
-  // 픽셀 아트 스타일
+  // 개선된 픽셀 아트 스타일
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
     .pixel-game-body { 
-      font-family: 'Press Start 2P', cursive; 
+      font-family: 'Press Start 2P', cursive;
       background-color: #2c2d3c; 
       color: #f2e9e4; 
       background-image: linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px); 
       background-size: 4px 4px; 
       image-rendering: pixelated; 
       min-height: 100vh; 
+      font-size: 14px;
+      line-height: 1.6;
     }
     .pixel-container { 
       display: flex; 
@@ -317,43 +320,44 @@ export default function ResultPageREST() {
     }
     .pixel-box { 
       background-color: #4a4e69; 
-      padding: 1.5rem; 
+      padding: 2rem; 
       border: 4px solid #0d0d0d; 
       box-shadow: 8px 8px 0px #0d0d0d; 
       width: 100%; 
       margin-bottom: 2rem; 
       box-sizing: border-box; 
+      border-radius: 2px;
     }
     .pixel-header { 
       background-color: #22223b; 
       border-color: #0d0d0d; 
-      margin-bottom: 1.5rem; 
+      margin-bottom: 2rem; 
     }
     .pixel-title { 
-      font-size: 1.5rem; 
+      font-size: 22px; 
       color: #ffd6a5; 
-      text-shadow: 3px 3px 0px #0d0d0d; 
-      margin: 0 0 1.5rem 0; 
+      text-shadow: 2px 2px 4px rgba(13, 13, 13, 0.8); 
+      margin: 0 0 1rem 0; 
       text-align: center; 
     }
     .pixel-subtitle { 
-      font-size: 1.2rem; 
+      font-size: 14px; 
       color: #a7c957; 
-      text-shadow: 2px 2px 0px #0d0d0d; 
+      text-shadow: 1px 1px 2px rgba(13, 13, 13, 0.6); 
       margin: 0 0 1rem 0; 
       text-align: center; 
     }
     .pixel-button { 
       font-family: 'Press Start 2P', cursive; 
       color: #f2e9e4; 
-      border: 4px solid #0d0d0d; 
+      border: 3px solid #0d0d0d; 
       box-shadow: 4px 4px 0px #0d0d0d; 
-      padding: 1rem; 
+      padding: 0.875rem 1.5rem; 
       cursor: pointer; 
-      transition: transform 0.1s linear, box-shadow 0.1s linear; 
+      transition: all 0.15s ease; 
       text-align: center; 
       background-color: #22223b; 
-      font-size: 1rem; 
+      font-size: 12px; 
       margin: 0.5rem; 
     }
     .pixel-button.primary { 
@@ -380,56 +384,100 @@ export default function ResultPageREST() {
     }
     .rank-item { 
       background-color: #22223b; 
-      padding: 1rem; 
-      margin-bottom: 0.5rem; 
+      padding: 1.25rem; 
+      margin-bottom: 0.75rem; 
       border: 3px solid #0d0d0d; 
       box-shadow: 4px 4px 0px #0d0d0d; 
       display: flex; 
       align-items: center; 
       justify-content: space-between; 
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+    .rank-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 0px #0d0d0d;
     }
     .rank-info { 
       display: flex; 
       align-items: center; 
-      gap: 1rem; 
+      gap: 1.25rem; 
     }
     .rank-number { 
-      font-size: 1.2rem; 
+      font-size: 14px; 
       color: #ffd6a5; 
-      font-weight: bold; 
+      font-family: 'Press Start 2P', cursive;
     }
     .player-name { 
-      font-size: 1rem; 
+      font-size: 13px; 
       color: #f2e9e4; 
+      font-family: 'Press Start 2P', cursive;
     }
     .player-score { 
-      font-size: 1rem; 
+      font-size: 13px; 
       color: #a7c957; 
-      font-weight: bold; 
+      font-family: 'Press Start 2P', cursive;
     }
     .button-container { 
       display: flex; 
       gap: 1rem; 
       justify-content: center; 
       margin-top: 2rem; 
+      flex-wrap: wrap;
     }
     .loading-text { 
-      font-size: 1.2rem; 
+      font-size: 16px; 
       color: #f4a261; 
       text-align: center; 
       margin: 2rem 0; 
+      font-family: 'Press Start 2P', cursive;
     }
     .error-text { 
-      font-size: 1rem; 
+      font-size: 13px; 
       color: #e76f51; 
       text-align: center; 
       margin: 1rem 0; 
+      font-family: 'Press Start 2P', cursive;
     }
     .blinking-cursor { 
       animation: blink 1s step-end infinite; 
     }
+    .tie-info {
+      font-size: 12px;
+      font-family: 'Press Start 2P', cursive;
+      line-height: 1.8;
+    }
+    .tie-player-card {
+      font-size: 11px;
+      font-family: 'Press Start 2P', cursive;
+      line-height: 1.8;
+    }
+    .penalty-text {
+      font-size: 14px;
+      font-family: 'Press Start 2P', cursive;
+      line-height: 1.8;
+    }
     @keyframes blink { 
       50% { opacity: 0; } 
+    }
+    
+    /* 반응형 개선 */
+    @media (max-width: 768px) {
+      .pixel-title {
+        font-size: 18px;
+      }
+      .pixel-subtitle {
+        font-size: 12px;
+      }
+      .rank-item {
+        padding: 1rem;
+      }
+      .rank-number, .player-score {
+        font-size: 12px;
+      }
+      .player-name {
+        font-size: 11px;
+      }
     }
   `;
 
@@ -464,7 +512,7 @@ export default function ResultPageREST() {
               <div className="button-container">
                 <button 
                   className="pixel-button primary" 
-                  onClick={() => nav('/')}
+                  onClick={() => nav('/game')}
                   onMouseEnter={handleMouseOver}
                   onMouseLeave={handleMouseOut}
                   onMouseDown={handleMouseDown}
@@ -495,7 +543,7 @@ export default function ResultPageREST() {
               <div className="button-container">
                 <button 
                   className="pixel-button primary" 
-                  onClick={() => nav('/')}
+                  onClick={() => nav('/game')}
                   onMouseEnter={handleMouseOver}
                   onMouseLeave={handleMouseOut}
                   onMouseDown={handleMouseDown}
@@ -511,14 +559,37 @@ export default function ResultPageREST() {
     );
   }
 
-  // 우승자 찾기
+  // 우승자 및 동점 처리
   const winner = finalScores.find(score => score.userUid === gameResults.winnerUid);
+  
+  // 최고점 동점자 확인 (반응속도는 낮은 시간이 좋음)
+  const topScore = finalScores.length > 0 ? 
+    (isReactionGame ? Math.min(...finalScores.map(s => s.score)) : finalScores[0]?.score) : 0;
+  const tiedWinners = finalScores.filter(score => score.score === topScore);
+  const hasWinnerTie = tiedWinners.length > 1;
+  
+  // 최저점 동점자 확인 (벌칙 대상 - 반응속도는 높은 시간이 나쁨)
+  const lowestScore = finalScores.length > 0 ? 
+    (isReactionGame ? Math.max(...finalScores.map(s => s.score)) : Math.min(...finalScores.map(s => s.score))) : 0;
+  const tiedLosers = finalScores.filter(score => score.score === lowestScore);
+  
+  // 모든 플레이어가 동점인 경우 (예: 2명이 동점) - 벌칙 없음
+  const allPlayersHaveSameScore = topScore === lowestScore && finalScores.length > 1;
+  
+  // 벌칙 대상자 동점 처리 - 모든 플레이어가 동점이 아닐 때만
+  const hasLoserTie = !allPlayersHaveSameScore && tiedLosers.length > 1;
+  const loser = penaltyInfo ? finalScores.find(score => score.userUid === penaltyInfo.loserUid) : null;
   
   console.log('[RESULT] Rendering result screen with:', {
     gameResults,
     finalScores,
     penaltyInfo,
-    winner
+    winner,
+    hasWinnerTie,
+    tiedWinners,
+    hasLoserTie,
+    tiedLosers,
+    loser
   });
 
   return (
@@ -536,8 +607,112 @@ export default function ResultPageREST() {
             </div>
           </div>
 
-          {/* 우승자 */}
-          {winner && (
+          {/* 우승자 또는 동점 상황 */}
+          {allPlayersHaveSameScore ? (
+            <div className="pixel-box" style={{ backgroundColor: '#caffbf', color: '#0d0d0d' }}>
+              <div className="pixel-title" style={{ color: '#0d0d0d' }}>
+                🤝 완벽한 동점! 모두가 승자!
+              </div>
+              <div style={{
+                textAlign: 'center',
+                fontSize: '10px',
+                marginBottom: '1rem',
+                color: '#4a4e69',
+                fontFamily: 'Press Start 2P, cursive'
+              }}>
+                모든 플레이어가 같은 점수를 획득했습니다!
+              </div>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                justifyContent: 'center'
+              }}>
+                {finalScores.map((player) => (
+                  <div 
+                    key={player.userUid}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#0d0d0d',
+                      border: '2px solid #4a4e69',
+                      borderRadius: '4px',
+                      fontSize: '9px',
+                      fontFamily: 'Press Start 2P, cursive',
+                      color: '#caffbf'
+                    }}
+                  >
+                    {player.displayName || player.userUid}
+                    <br />
+                    <span style={{ color: '#ffffff', fontFamily: 'Press Start 2P, cursive' }}>
+                      {isReactionGame ? `${player.score}ms` : `${player.score}점`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{
+                marginTop: '1.5rem',
+                textAlign: 'center',
+                fontSize: '11px',
+                color: '#4a4e69',
+                fontFamily: 'Press Start 2P, cursive'
+              }}>
+                🎉 벌칙 없음 - 모두가 우승자입니다!
+              </div>
+            </div>
+          ) : hasWinnerTie ? (
+            <div className="pixel-box" style={{ backgroundColor: '#ffd6a5', color: '#0d0d0d' }}>
+              <div className="pixel-title" style={{ color: '#0d0d0d' }}>
+                🎲 1등 동점! 운도 실력이다!
+              </div>
+              <div style={{
+                textAlign: 'center',
+                fontSize: '10px',
+                marginBottom: '1rem',
+                color: '#4a4e69',
+                fontFamily: 'Press Start 2P, cursive'
+              }}>
+                {tiedWinners.length}명이 동점으로 승부가 결정되었습니다
+              </div>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                justifyContent: 'center'
+              }}>
+                {tiedWinners.map((player, index) => (
+                  <div 
+                    key={player.userUid}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#0d0d0d',
+                      border: '2px solid #4a4e69',
+                      borderRadius: '4px',
+                      fontSize: '9px',
+                      fontFamily: 'Press Start 2P, cursive',
+                      color: '#ffd6a5'
+                    }}
+                  >
+                    {player.displayName || player.userUid}
+                    <br />
+                    <span style={{ color: '#ffffff', fontFamily: 'Press Start 2P, cursive' }}>
+                      {isReactionGame ? `${player.score}ms` : `${player.score}점`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {winner && (
+                <div style={{
+                  marginTop: '1.5rem',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  color: '#0d0d0d',
+                  fontFamily: 'Press Start 2P, cursive'
+                }}>
+                  🎰 랜덤 선택된 우승자: {winner.displayName || winner.userUid}
+                </div>
+              )}
+            </div>
+          ) : winner ? (
             <div className="pixel-box winner-box">
               <div className="pixel-title">🏆 우승자</div>
               <div className="pixel-subtitle">
@@ -547,52 +722,179 @@ export default function ResultPageREST() {
                 {isReactionGame ? `${winner.score}ms` : `${winner.score}점`}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* 최종 순위 */}
           <div className="pixel-box">
             <div className="pixel-title">📊 최종 순위</div>
-            {finalScores.map((score, index) => (
-              <div key={score.userUid} className="rank-item">
-                <div className="rank-info">
-                  <span className="rank-number">
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}위`}
-                  </span>
-                  <span className="player-name">
-                    {score.displayName || score.userUid}
+            {finalScores.map((score, index) => {
+              // 동점자 확인
+              const sameScoreCount = finalScores.filter(s => s.score === score.score).length;
+              const isTied = sameScoreCount > 1;
+              const isWinner = score.userUid === gameResults.winnerUid;
+              const isLoser = loser && score.userUid === loser.userUid;
+              const isLastPlace = index === finalScores.length - 1;
+              
+              return (
+                <div 
+                  key={score.userUid} 
+                  className="rank-item"
+                  style={{
+                    backgroundColor: isWinner && hasWinnerTie ? '#ffd6a5' : 
+                                   isLoser && hasLoserTie ? '#ffadad' : '#22223b',
+                    color: (isWinner && hasWinnerTie) || (isLoser && hasLoserTie) ? '#0d0d0d' : '#f2e9e4'
+                  }}
+                >
+                  <div className="rank-info">
+                    <span className="rank-number" style={{
+                      color: (isWinner && hasWinnerTie) || (isLoser && hasLoserTie) ? '#0d0d0d' : 
+                             index === 0 ? '#ffd6a5' : '#f2e9e4'
+                    }}>
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}위`}
+                      {isTied && index === 0 && hasWinnerTie && (
+                        <span style={{ 
+                          fontSize: '8px', 
+                          marginLeft: '0.5rem',
+                          color: '#4a4e69',
+                          fontFamily: 'Press Start 2P, cursive'
+                        }}>
+                          (1등 동점)
+                        </span>
+                      )}
+                      {isTied && isLastPlace && hasLoserTie && (
+                        <span style={{ 
+                          fontSize: '8px', 
+                          marginLeft: '0.5rem',
+                          color: isLoser && hasLoserTie ? '#4a4e69' : '#9ca3af',
+                          fontFamily: 'Press Start 2P, cursive'
+                        }}>
+                          (꼴등 동점)
+                        </span>
+                      )}
+                    </span>
+                    <span className="player-name" style={{
+                      color: (isWinner && hasWinnerTie) || (isLoser && hasLoserTie) ? '#0d0d0d' : '#f2e9e4'
+                    }}>
+                      {score.displayName || score.userUid}
+                      {isWinner && hasWinnerTie && (
+                        <span style={{ 
+                          fontSize: '8px',
+                          marginLeft: '0.5rem',
+                          color: '#4a4e69',
+                          fontFamily: 'Press Start 2P, cursive'
+                        }}>
+                          🎰 랜덤 우승
+                        </span>
+                      )}
+                      {isLoser && hasLoserTie && (
+                        <span style={{ 
+                          fontSize: '8px',
+                          marginLeft: '0.5rem',
+                          color: '#4a4e69',
+                          fontFamily: 'Press Start 2P, cursive'
+                        }}>
+                          🎰 랜덤 벌칙
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <span className="player-score" style={{
+                    color: (isWinner && hasWinnerTie) || (isLoser && hasLoserTie) ? '#0d0d0d' : '#a7c957'
+                  }}>
+                    {isReactionGame ? 
+                      (score.falseStart ? 'False Start' : `${score.score}ms`) :
+                      `${score.score}점`
+                    }
                   </span>
                 </div>
-                <span className="player-score">
-                  {isReactionGame ? 
-                    (score.falseStart ? 'False Start' : `${score.score}ms`) :
-                    `${score.score}점`
-                  }
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* 벌칙 정보 */}
-          {penaltyInfo && (
+          {/* 벌칙 정보 - 모든 플레이어가 동점이 아닐 때만 표시 */}
+          {penaltyInfo && !allPlayersHaveSameScore && (
             <div className="pixel-box penalty-box">
-              <div className="pixel-title">🎯 벌칙</div>
+              <div className="pixel-title">
+                {hasLoserTie ? '🎲 벌칙 - 운도 실력이다!' : '🎯 벌칙'}
+              </div>
+              
+              {hasLoserTie && (
+                <div style={{
+                  textAlign: 'center',
+                  marginBottom: '1.5rem',
+                  padding: '1rem',
+                  backgroundColor: 'rgba(255, 173, 173, 0.2)',
+                  border: '2px solid #ffadad',
+                  borderRadius: '4px'
+                }}>
+                  <div style={{
+                    fontSize: '10px',
+                    color: '#f2e9e4',
+                    marginBottom: '1rem',
+                    fontFamily: 'Press Start 2P, cursive'
+                  }}>
+                    {tiedLosers.length}명이 꼴등 동점! 랜덤으로 벌칙 대상이 선택되었습니다
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem',
+                    justifyContent: 'center'
+                  }}>
+                    {tiedLosers.map((player) => (
+                      <div 
+                        key={player.userUid}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor: player.userUid === penaltyInfo.loserUid ? '#ffadad' : '#4a4e69',
+                          border: '2px solid #0d0d0d',
+                          borderRadius: '4px',
+                          fontSize: '9px',
+                          color: player.userUid === penaltyInfo.loserUid ? '#0d0d0d' : '#f2e9e4',
+                          fontFamily: 'Press Start 2P, cursive'
+                        }}
+                      >
+                        {player.displayName || player.userUid}
+                        {player.userUid === penaltyInfo.loserUid && (
+                          <span style={{ fontSize: '7px', display: 'block', fontFamily: 'Press Start 2P, cursive' }}>
+                            🎰 선택됨
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                 <div style={{ 
-                  fontSize: '1.5rem', 
+                  fontSize: '14px', 
                   color: '#f2e9e4', 
                   marginBottom: '1rem',
-                  fontWeight: 'bold'
+                  fontFamily: 'Press Start 2P, cursive'
                 }}>
                   벌칙 대상: {penaltyInfo.loserNickname || penaltyInfo.loserUid}
+                  {hasLoserTie && (
+                    <span style={{ 
+                      fontSize: '9px',
+                      display: 'block',
+                      color: '#ffadad',
+                      marginTop: '0.5rem',
+                      fontFamily: 'Press Start 2P, cursive'
+                    }}>
+                      🎰 동점자 중 랜덤 선택
+                    </span>
+                  )}
                 </div>
                 <div style={{
-                  fontSize: '1.2rem',
+                  fontSize: '12px',
                   color: '#ffd6a5',
-                  lineHeight: '1.5',
+                  lineHeight: '1.8',
                   padding: '1rem',
                   background: 'rgba(0, 0, 0, 0.3)',
                   border: '2px solid #ffd6a5',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontFamily: 'Press Start 2P, cursive'
                 }}>
                   {penaltyInfo.penaltyText}
                 </div>
@@ -633,7 +935,7 @@ export default function ResultPageREST() {
             </button>
             <button 
               className="pixel-button primary" 
-              onClick={() => nav('/')}
+              onClick={() => nav('/game')}
               onMouseEnter={handleMouseOver}
               onMouseLeave={handleMouseOut}
               onMouseDown={handleMouseDown}

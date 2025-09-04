@@ -13,6 +13,8 @@ import {
 } from '../../components';
 import QuizTimer from '../../components/game/quiz/QuizTimer';
 import QuizQuestionCard from '../../components/game/quiz/QuizQuestionCard';
+import AnswerFeedback from '../../components/game/quiz/AnswerFeedback';
+import WaitingForPlayers from '../../components/game/quiz/WaitingForPlayers';
 import { LiveScoreboard, type ScoreboardItem } from '../../components/quiz/LiveScoreboard';
 import { getUid, http } from '../../api/http';
 import { submitQuizAnswer } from '../../api/game';
@@ -80,6 +82,16 @@ export default function QuizGamePage() {
     submittedCount: number;
     expectedParticipants: number;
   } | null>(null);
+  
+  // 피드백 상태
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
+  
+  // 피드백 완료 콜백
+  const handleFeedbackComplete = useCallback(() => {
+    setShowFeedback(false);
+    // 피드백 완료 후에는 대기 화면이 표시됨 (waitingInfo가 있으면)
+  }, []);
   
   // Refs - 폴링 및 스코어 관리만 사용 (타이머는 useEffect로 대체)
   const timerRef = useRef<number | null>(null); // Legacy - kept for compatibility
@@ -175,7 +187,20 @@ export default function QuizGamePage() {
       
       if (rem <= 0) {
         console.log('[QUIZ] Time expired, checking next round...');
-        loadNextRoundImmediately();
+        // 시간 만료 시 답변하지 않은 경우
+        if (!hasSubmitted && currentQuestion) {
+          console.log('[QUIZ] Auto-handling timeout - marking as submitted and moving to next round');
+          setHasSubmitted(true);
+          setIsAnswered(true);
+          showToast('⏰ 시간 초과! 0점 처리됩니다.', 'error', 5000);
+          
+          // 잠시 대기 후 다음 라운드로 진행
+          setTimeout(() => {
+            loadNextRoundImmediately();
+          }, 1000);
+        } else {
+          loadNextRoundImmediately();
+        }
       }
     }, 500);
     
@@ -234,6 +259,7 @@ export default function QuizGamePage() {
     setInflight(false);
     setHasSubmitted(false);
     setWaitingInfo(null);
+    setShowFeedback(false); // 피드백 초기화
     setRoundStartTime(Date.now()); // 🔥 라운드 시작 시간 기록
     
     // 타이머 시작 (서버 권위 시간 사용)
@@ -374,6 +400,8 @@ export default function QuizGamePage() {
           setIsAnswered(false);
           setInflight(false);
           setHasSubmitted(false);
+          setShowFeedback(false); // 피드백 초기화
+          setWaitingInfo(null); // 대기 정보 초기화
           
           // 타이머 시작 (서버 권위 시간 사용)
           const ms = normalizeMillis(roundData.expiresAtMs || roundData.expireAtMillis || roundData.expiresAt);
@@ -463,15 +491,20 @@ export default function QuizGamePage() {
         });
         
         if (res.data?.alreadySubmitted) {
-          showToast('이미 답변을 제출하셨습니다.', 'info');
+          showToast('이미 답변을 제출하셨습니다.', 'info', 5000);
         } else {
-          showToast(res.data?.correct ? '정답입니다!' : '오답입니다!', res.data?.correct ? 'success' : 'error');
+          // 토스트 대신 애니메이션 피드백 표시
+          setLastAnswerCorrect(res.data?.correct || false);
+          setShowFeedback(true);
         }
         
         if (res.data?.allSubmitted) {
           console.debug('[QUIZ] All submitted - stopping polling and loading next round');
           stopRoundPolling();
-          loadNextRoundImmediately();
+          // 피드백 표시 후 다음 라운드로 진행
+          setTimeout(() => {
+            loadNextRoundImmediately();
+          }, showFeedback ? 3000 : 0);
         } else {
           console.debug('[QUIZ] Waiting for others:', res.data?.submittedCount, '/', res.data?.expectedParticipants);
           setWaitingInfo({
@@ -772,7 +805,7 @@ export default function QuizGamePage() {
       } catch (error) {
         console.log('[QUIZ] Score polling error:', error);
       }
-    }, 2000); // 2초마다 업데이트 (더 빠른 실시간성)
+    }, 1000); // 1초마다 업데이트 (실시간성 개선)
     
     return () => {
       if (scorePollingRef.current !== null) {
@@ -1001,10 +1034,32 @@ export default function QuizGamePage() {
       return (
         <div className="pixel-game-layout">
           <div className="pixel-main-panel">
-            <div className="pixel-box">
-              <p className="pixel-title">
-                다음 라운드 대기 중<span className="blinking-cursor">...</span>
-              </p>
+            <div className="pixel-box" style={{ backgroundColor: '#4a4e69' }}>
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem'
+              }}>
+                <div style={{
+                  fontSize: '3rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  ⏰
+                </div>
+                <p className="pixel-title" style={{
+                  fontSize: '1.5rem',
+                  color: '#fdffb6',
+                  textShadow: '3px 3px 0px #0d0d0d',
+                  marginBottom: '1rem'
+                }}>
+                  WAITING FOR NEXT ROUND
+                </p>
+                <p style={{
+                  fontSize: '0.8rem',
+                  color: '#c9c9c9'
+                }}>
+                  Get ready for the next question<span className="blinking-cursor">...</span>
+                </p>
+              </div>
             </div>
           </div>
           <div className="pixel-side-panel">
@@ -1064,18 +1119,63 @@ export default function QuizGamePage() {
           
           {/* 상태 표시 */}
           {inflight && (
-            <div className="pixel-box status-box">
-              <p>답안을 제출하는 중<span className="blinking-cursor">...</span></p>
+            <div className="pixel-box status-box" style={{ backgroundColor: '#c19454' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1rem'
+              }}>
+                <div style={{
+                  fontSize: '2rem'
+                }}>
+                  ⏳
+                </div>
+                <p style={{
+                  fontSize: '1rem',
+                  color: '#ffd6a5',
+                  textShadow: '2px 2px 0px #0d0d0d'
+                }}>
+                  SUBMITTING<span className="blinking-cursor">...</span>
+                </p>
+              </div>
             </div>
           )}
           
           {hasSubmitted && !inflight && (
-            <div className="pixel-box status-box">
-              <p>답안이 제출되었습니다. 다음 라운드를 기다리는 중<span className="blinking-cursor">...</span></p>
+            <div className="pixel-box status-box" style={{ backgroundColor: '#6a856f' }}>
+              <div style={{
+                fontSize: '1.2rem',
+                color: '#caffbf',
+                textShadow: '2px 2px 0px #0d0d0d',
+                marginBottom: '1rem',
+                textAlign: 'center'
+              }}>
+                ✅ ANSWER SUBMITTED!
+              </div>
+              <p style={{
+                fontSize: '0.9rem',
+                color: '#f2e9e4',
+                textAlign: 'center'
+              }}>
+                Waiting for next round<span className="blinking-cursor">...</span>
+              </p>
               {waitingInfo && (
-                <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
-                  답변 완료: {waitingInfo.submittedCount}/{waitingInfo.expectedParticipants}명
-                </p>
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem',
+                  backgroundColor: '#0d0d0d',
+                  border: '2px solid #caffbf',
+                  textAlign: 'center'
+                }}>
+                  <p style={{
+                    fontSize: '0.8rem',
+                    color: '#caffbf',
+                    fontWeight: 'bold'
+                  }}>
+                    COMPLETED: {waitingInfo.submittedCount}/{waitingInfo.expectedParticipants}
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -1108,6 +1208,22 @@ export default function QuizGamePage() {
           {renderContent()}
         </div>
       </div>
+      
+      {/* 답변 피드백 애니메이션 */}
+      {showFeedback && (
+        <AnswerFeedback 
+          isCorrect={lastAnswerCorrect}
+          onComplete={handleFeedbackComplete}
+        />
+      )}
+      
+      {/* 다른 플레이어 대기 화면 */}
+      {!showFeedback && waitingInfo && hasSubmitted && (
+        <WaitingForPlayers 
+          submittedCount={waitingInfo.submittedCount}
+          expectedParticipants={waitingInfo.expectedParticipants}
+        />
+      )}
     </>
   );
 }

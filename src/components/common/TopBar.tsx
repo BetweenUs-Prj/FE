@@ -35,105 +35,131 @@ export function TopBar({ title = '게임', onQuit, showQuit = true }: TopBarProp
     }
   };
 
+  const pixelStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  `;
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '60px',
-      background: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      zIndex: 1000,
-      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
-    }}>
-      <button
-        onClick={handleBack}
-        style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '12px',
-          padding: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          color: '#374151',
-          fontSize: '14px',
-          fontWeight: '500',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease'
-        }}
-        aria-label="뒤로 가기"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-          e.currentTarget.style.transform = 'translateY(-1px)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
-      >
-        <ArrowLeft size={18} />
-        <span style={{ display: window.innerWidth > 640 ? 'inline' : 'none' }}>뒤로</span>
-      </button>
-
-      <h1 style={{
-        fontSize: '18px',
-        fontWeight: '600',
-        color: '#1f2937',
-        margin: 0,
-        flex: 1,
-        textAlign: 'center',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        maxWidth: '300px'
+    <>
+      <style>{pixelStyles}</style>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '70px',
+        backgroundColor: '#2c2d3c',
+        border: 'none',
+        borderBottom: '4px solid #0d0d0d',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        zIndex: 1000,
+        boxShadow: '0 8px 0px #0d0d0d',
+        fontFamily: "'Press Start 2P', cursive",
+        backgroundImage: 'linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px)',
+        backgroundSize: '4px 4px',
+        imageRendering: 'pixelated'
       }}>
-        {title}
-      </h1>
-
-      {showQuit ? (
         <button
-          onClick={handleQuit}
+          onClick={handleBack}
           style={{
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '8px',
+            backgroundColor: '#4a4e69',
+            border: '3px solid #0d0d0d',
+            boxShadow: '4px 4px 0px #0d0d0d',
+            padding: '8px 12px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            color: 'white',
-            fontSize: '14px',
-            fontWeight: '500',
+            color: '#f2e9e4',
+            fontSize: '10px',
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+            transition: 'all 0.15s ease',
+            fontFamily: "'Press Start 2P', cursive",
+            textShadow: '1px 1px 0px #0d0d0d'
           }}
-          aria-label="게임 포기"
+          aria-label="뒤로 가기"
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+            e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'translateY(2px)';
+            e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
           }}
         >
-          <Home size={16} />
-          <span style={{ display: window.innerWidth > 640 ? 'inline' : 'none' }}>포기</span>
+          <ArrowLeft size={14} />
+          <span style={{ display: window.innerWidth > 640 ? 'inline' : 'none' }}>뒤로</span>
         </button>
-      ) : (
-        <div style={{ width: '48px' }}></div>
-      )}
-    </div>
+
+        <h1 style={{
+          fontSize: '12px',
+          color: '#ffd6a5',
+          margin: 0,
+          flex: 1,
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '300px',
+          fontFamily: "'Press Start 2P', cursive",
+          textShadow: '2px 2px 0px #0d0d0d'
+        }}>
+          {title}
+        </h1>
+
+        {showQuit ? (
+          <button
+            onClick={handleQuit}
+            style={{
+              backgroundColor: '#e76f51',
+              border: '3px solid #0d0d0d',
+              boxShadow: '4px 4px 0px #0d0d0d',
+              padding: '8px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              color: '#f2e9e4',
+              fontSize: '10px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              fontFamily: "'Press Start 2P', cursive",
+              textShadow: '1px 1px 0px #0d0d0d'
+            }}
+            aria-label="게임 포기"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'translateY(2px)';
+              e.currentTarget.style.boxShadow = '2px 2px 0px #0d0d0d';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
+            }}
+          >
+            <Home size={14} />
+            <span style={{ display: window.innerWidth > 640 ? 'inline' : 'none' }}>포기</span>
+          </button>
+        ) : (
+          <div style={{ width: '48px' }}></div>
+        )}
+      </div>
+    </>
   );
 }

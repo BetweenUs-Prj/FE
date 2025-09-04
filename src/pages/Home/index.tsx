@@ -212,7 +212,7 @@ export default function HomePage() {
             {/* 게임 만들기 카드 */}
             <div 
               className="menu-card game-card"
-              onClick={() => navigate('/game')}
+              onClick={() => navigate('/game/choice')}
               onMouseEnter={handleMouseOver}
               onMouseLeave={handleMouseOut}
               onMouseDown={handleMouseDown}
@@ -229,7 +229,7 @@ export default function HomePage() {
             {/* 게임 참여하기 카드 */}
             <div 
               className="menu-card join-card"
-              onClick={() => navigate('/join')}
+              onClick={() => navigate('/game/join')}
               onMouseEnter={handleMouseOver}
               onMouseLeave={handleMouseOut}
               onMouseDown={handleMouseDown}

@@ -401,42 +401,216 @@ export default function StableReactionPage() {
     };
   }, [initializeLifecycleManager, lifecycleManager]);
 
+  // 픽셀 아트 스타일
+  const pixelStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    .pixel-reaction-body {
+      font-family: 'Press Start 2P', cursive;
+      background-color: #2c2d3c;
+      color: #f2e9e4;
+      background-image: 
+        linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px);
+      background-size: 4px 4px;
+      image-rendering: pixelated;
+      min-height: 100vh;
+    }
+    
+    .pixel-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    .pixel-card {
+      border: 4px solid #0d0d0d;
+      box-shadow: 4px 4px 0px #0d0d0d;
+      transition: transform 0.1s linear, box-shadow 0.1s linear;
+      font-family: 'Press Start 2P', cursive;
+    }
+    
+    @keyframes pixel-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    @keyframes lightning-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px) rotate(-2deg); }
+      75% { transform: translateX(4px) rotate(2deg); }
+    }
+    
+    .game-area {
+      width: 100%;
+      max-width: 800px;
+      height: 500px;
+      border: 4px solid #0d0d0d;
+      box-shadow: 8px 8px 0px #0d0d0d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s linear;
+    }
+    
+    .game-area:active {
+      transform: translateY(4px);
+      box-shadow: 4px 4px 0px #0d0d0d;
+    }
+  `;
+
   // 에러 상태 렌더링
   if (error) {
     return (
-      <GameContainer>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2 style={{ color: '#ef4444', marginBottom: '1rem' }}>오류 발생</h2>
-          <p style={{ marginBottom: '2rem' }}>{error}</p>
-          <ThemeButton variant="primary" onClick={handleGiveUp}>
-            게임 홈으로 돌아가기
-          </ThemeButton>
+      <>
+        <style>{pixelStyles}</style>
+        <div className="pixel-reaction-body">
+          <div className="pixel-container">
+            <div className="pixel-card" style={{
+              backgroundColor: '#4a4e69',
+              padding: '2rem',
+              textAlign: 'center'
+            }}>
+              <h2 style={{ 
+                fontSize: '1.5rem',
+                color: '#ffadad',
+                textShadow: '2px 2px 0px #0d0d0d',
+                marginBottom: '1rem'
+              }}>
+                ERROR
+              </h2>
+              <p style={{ 
+                fontSize: '0.8rem',
+                color: '#c9c9c9',
+                marginBottom: '2rem',
+                lineHeight: '1.5'
+              }}>
+                {error}
+              </p>
+              <button
+                onClick={handleGiveUp}
+                style={{
+                  padding: '1rem 2rem',
+                  backgroundColor: '#fdffb6',
+                  color: '#0d0d0d',
+                  border: '4px solid #0d0d0d',
+                  boxShadow: '4px 4px 0px #0d0d0d',
+                  fontSize: '0.8rem',
+                  fontFamily: 'Press Start 2P',
+                  cursor: 'pointer',
+                  transition: 'all 0.1s linear'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '8px 8px 0px #0d0d0d';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d';
+                }}
+              >
+                GO HOME
+              </button>
+            </div>
+          </div>
         </div>
-      </GameContainer>
+      </>
     );
   }
 
   // 로딩/로비 상태 렌더링
   if (isLoading || gameState === GameLifecycleState.LOBBY || gameState === GameLifecycleState.PREPARING) {
     return (
-      <GameContainer>
-        <LoadingCard message={loadingMessage} variant="primary" spinnerColor="white" />
-        
-        {gameState === GameLifecycleState.LOBBY && session?.hostUid === userUid && (
-          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <p style={{ marginBottom: '1rem' }}>
-              준비된 플레이어: {readyCount}/{totalPlayers}
-            </p>
-            <ThemeButton
-              variant="primary"
-              onClick={handleStartGame}
-              disabled={readyCount < 2}
-            >
-              {readyCount >= 2 ? '게임 시작' : '플레이어 대기 중'}
-            </ThemeButton>
+      <>
+        <style>{pixelStyles}</style>
+        <div className="pixel-reaction-body">
+          <div className="pixel-container">
+            <div className="pixel-card" style={{
+              backgroundColor: '#4a4e69',
+              padding: '3rem',
+              textAlign: 'center',
+              minWidth: '400px'
+            }}>
+              <div style={{
+                fontSize: '4rem',
+                marginBottom: '2rem',
+                animation: 'lightning-shake 2s ease-in-out infinite'
+              }}>
+                ⚡
+              </div>
+              <h2 style={{
+                fontSize: '1.5rem',
+                color: '#fdffb6',
+                textShadow: '3px 3px 0px #0d0d0d',
+                marginBottom: '1rem'
+              }}>
+                REACTION GAME
+              </h2>
+              <p style={{
+                fontSize: '0.9rem',
+                color: '#c9c9c9',
+                marginBottom: '2rem',
+                animation: 'pixel-pulse 2s ease-in-out infinite'
+              }}>
+                {loadingMessage}
+              </p>
+              
+              {gameState === GameLifecycleState.LOBBY && session?.hostUid === userUid && (
+                <div>
+                  <div style={{
+                    display: 'inline-block',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: readyCount >= 2 ? '#caffbf' : '#9a8c98',
+                    color: '#0d0d0d',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    border: '3px solid #0d0d0d',
+                    boxShadow: '3px 3px 0px #0d0d0d',
+                    marginBottom: '1.5rem'
+                  }}>
+                    READY: {readyCount}/{totalPlayers}
+                  </div>
+                  <br />
+                  <button
+                    onClick={handleStartGame}
+                    disabled={readyCount < 2}
+                    style={{
+                      padding: '1rem 2rem',
+                      backgroundColor: readyCount >= 2 ? '#caffbf' : '#9a8c98',
+                      color: '#0d0d0d',
+                      border: '4px solid #0d0d0d',
+                      boxShadow: readyCount >= 2 ? '6px 6px 0px #0d0d0d' : '3px 3px 0px #0d0d0d',
+                      fontSize: '0.9rem',
+                      fontFamily: 'Press Start 2P',
+                      cursor: readyCount >= 2 ? 'pointer' : 'not-allowed',
+                      opacity: readyCount >= 2 ? 1 : 0.6,
+                      transition: 'all 0.1s linear'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (readyCount >= 2) {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '10px 10px 0px #0d0d0d';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (readyCount >= 2) {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
+                      }
+                    }}
+                  >
+                    {readyCount >= 2 ? 'START GAME' : 'WAITING...'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </GameContainer>
+        </div>
+      </>
     );
   }
 
@@ -444,140 +618,269 @@ export default function StableReactionPage() {
   if (gameState === GameLifecycleState.READY_CHECK || 
       (gameState === GameLifecycleState.IN_PROGRESS && gameStatus === 'WAITING')) {
     return (
-      <GameContainer>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2 style={{ marginBottom: '2rem' }}>⚡ 반응속도 게임 준비 중</h2>
-          <p style={{ marginBottom: '1rem' }}>{loadingMessage}</p>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '0.5rem',
-            marginTop: '2rem'
-          }}>
-            {Array.from({ length: totalPlayers }, (_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  backgroundColor: i < readyCount ? '#10B981' : 'rgba(0, 0, 0, 0.2)',
-                  transition: 'all 0.3s ease'
-                }}
-              />
-            ))}
+      <>
+        <style>{pixelStyles}</style>
+        <div className="pixel-reaction-body">
+          <div className="pixel-container">
+            <div className="pixel-card" style={{
+              backgroundColor: '#4a4e69',
+              padding: '3rem',
+              textAlign: 'center'
+            }}>
+              <h2 style={{
+                fontSize: '2rem',
+                color: '#fdffb6',
+                textShadow: '3px 3px 0px #0d0d0d',
+                marginBottom: '2rem',
+                animation: 'lightning-shake 2s ease-in-out infinite'
+              }}>
+                GET READY!
+              </h2>
+              <p style={{
+                fontSize: '1rem',
+                color: '#c9c9c9',
+                marginBottom: '2rem'
+              }}>
+                {loadingMessage}
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '1rem',
+                marginTop: '2rem'
+              }}>
+                {Array.from({ length: totalPlayers }, (_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      backgroundColor: i < readyCount ? '#caffbf' : '#4a4e69',
+                      border: '3px solid #0d0d0d',
+                      boxShadow: '2px 2px 0px #0d0d0d',
+                      animation: i < readyCount ? 'pixel-pulse 1s ease-in-out infinite' : 'none',
+                      animationDelay: `${i * 0.1}s`
+                    }}
+                  />
+                ))}
+              </div>
+              <p style={{
+                fontSize: '0.8rem',
+                color: '#9ca3af',
+                marginTop: '1.5rem'
+              }}>
+                Players Ready: {readyCount}/{totalPlayers}
+              </p>
+            </div>
           </div>
         </div>
-      </GameContainer>
+      </>
     );
   }
 
   // 메인 게임 진행 상태 렌더링
   return (
-    <GameContainer>
-      <GameHeader
-        title="⚡ 반응속도 게임 ⚡"
-        onGiveUp={handleGiveUp}
-        backPath="/game"
-      />
-      
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
-        {/* 참가자 수 표시 */}
+    <>
+      <style>{pixelStyles}</style>
+      <div className="pixel-reaction-body">
         <div style={{
-          textAlign: 'center',
-          marginBottom: '2rem',
-          padding: '1rem',
-          background: 'linear-gradient(135deg, #147781 0%, #1E9AA8 100%)',
-          borderRadius: '20px',
-          color: 'white',
-          fontSize: '1.2rem',
-          fontWeight: '600'
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          zIndex: 1000
         }}>
-          참가자: {totalPlayers}명
+          <button
+            onClick={handleGiveUp}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#9a8c98',
+              color: '#f2e9e4',
+              border: '3px solid #0d0d0d',
+              boxShadow: '3px 3px 0px #0d0d0d',
+              fontSize: '0.7rem',
+              fontFamily: 'Press Start 2P',
+              cursor: 'pointer',
+              transition: 'all 0.1s linear'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '5px 5px 0px #0d0d0d';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '3px 3px 0px #0d0d0d';
+            }}
+          >
+            ← HOME
+          </button>
         </div>
         
-        {/* 게임 상태 표시 */}
-        {(gameStatus === 'WAITING' || gameStatus === 'READY' || gameStatus === 'GO') && (
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '2rem',
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            color: gameStatus === 'GO' ? '#ef4444' : '#10B981'
-          }}>
-            {loadingMessage}
-          </div>
-        )}
-
-        {/* 메인 게임 영역 */}
-        <ReactionGameArea
-          status={gameStatus}
-          onGameClick={handleGameClick}
-          myResult={myResult ? {
-            reactionTimeMs: myResult.reactionTimeMs,
-            isFalseStart: myResult.isFalseStart,
-            rank: myResult.rank
-          } : undefined}
-          style={{ marginBottom: '2rem' }}
-        />
-
-        {/* 결과 표시 */}
-        {gameStatus === 'FINISHED' && myResult && (
-          <div style={{
-            textAlign: 'center',
-            padding: '2rem',
-            background: myResult.isFalseStart ? 
-              'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' :
-              'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-            borderRadius: '20px',
-            color: 'white',
-            marginBottom: '2rem'
-          }}>
-            <h3 style={{ marginBottom: '1rem' }}>
-              {myResult.isFalseStart ? '❌ False Start!' : '✅ 완료!'}
-            </h3>
-            {!myResult.isFalseStart && (
-              <>
-                <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-                  {myResult.reactionTimeMs}ms
+        <div className="pixel-container">
+          <div style={{ width: '100%', maxWidth: '900px' }}>
+            {/* 게임 헤더 */}
+            <div style={{
+              backgroundColor: '#4a4e69',
+              border: '4px solid #0d0d0d',
+              boxShadow: '6px 6px 0px #0d0d0d',
+              padding: '2rem',
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              <h1 style={{
+                fontSize: '2rem',
+                color: '#fdffb6',
+                textShadow: '4px 4px 0px #0d0d0d',
+                marginBottom: '1rem',
+                animation: 'lightning-shake 3s ease-in-out infinite'
+              }}>
+                REACTION SPEED
+              </h1>
+              <div style={{
+                display: 'inline-block',
+                padding: '0.5rem 1.5rem',
+                backgroundColor: '#fdffb6',
+                color: '#0d0d0d',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                border: '3px solid #0d0d0d',
+                boxShadow: '2px 2px 0px #0d0d0d'
+              }}>
+                PLAYERS: {totalPlayers}
+              </div>
+            </div>
+            
+            {/* 게임 상태 표시 */}
+            {(gameStatus === 'WAITING' || gameStatus === 'READY' || gameStatus === 'GO') && (
+              <div style={{
+                textAlign: 'center',
+                marginBottom: '2rem'
+              }}>
+                <p style={{
+                  fontSize: '1.2rem',
+                  color: gameStatus === 'GO' ? '#ffadad' : '#caffbf',
+                  textShadow: '2px 2px 0px #0d0d0d',
+                  animation: gameStatus === 'GO' ? 'pixel-pulse 0.5s ease-in-out infinite' : 'none'
+                }}>
+                  {loadingMessage}
                 </p>
-                <p style={{ fontSize: '1.2rem' }}>
-                  순위: {myResult.rank}등
-                </p>
-              </>
+              </div>
             )}
+
+            {/* 메인 게임 영역 */}
+            <div 
+              className="game-area"
+              onClick={handleGameClick}
+              style={{
+                backgroundColor: gameStatus === 'READY' ? '#2c5f2d' : 
+                                gameStatus === 'GO' ? '#dc2626' : 
+                                '#4a4e69',
+                marginBottom: '2rem',
+                position: 'relative'
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                {gameStatus === 'WAITING' && (
+                  <>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+                    <p style={{ fontSize: '1rem', color: '#c9c9c9' }}>WAITING...</p>
+                  </>
+                )}
+                {gameStatus === 'READY' && (
+                  <>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🟢</div>
+                    <p style={{ fontSize: '1.2rem', color: '#f2e9e4' }}>GET READY!</p>
+                    <p style={{ fontSize: '0.8rem', color: '#c9c9c9', marginTop: '1rem' }}>Wait for RED signal...</p>
+                  </>
+                )}
+                {gameStatus === 'GO' && !hasClicked && (
+                  <>
+                    <div style={{ fontSize: '5rem', marginBottom: '1rem', animation: 'pixel-pulse 0.3s ease-in-out infinite' }}>🔴</div>
+                    <p style={{ fontSize: '1.5rem', color: '#f2e9e4', textShadow: '2px 2px 0px #0d0d0d' }}>CLICK NOW!</p>
+                  </>
+                )}
+                {gameStatus === 'GO' && hasClicked && myResult && (
+                  <>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+                    <p style={{ fontSize: '1.2rem', color: '#f2e9e4' }}>CLICKED!</p>
+                    {!myResult.isFalseStart && (
+                      <p style={{ fontSize: '1.5rem', color: '#caffbf', marginTop: '1rem', fontWeight: 'bold' }}>
+                        {myResult.reactionTimeMs}ms
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* 결과 표시 */}
+            {gameStatus === 'FINISHED' && myResult && (
+              <div className="pixel-card" style={{
+                backgroundColor: myResult.isFalseStart ? '#dc2626' : '#4a4e69',
+                padding: '2rem',
+                textAlign: 'center',
+                marginBottom: '2rem'
+              }}>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  color: myResult.isFalseStart ? '#f2e9e4' : '#caffbf',
+                  textShadow: '2px 2px 0px #0d0d0d',
+                  marginBottom: '1rem'
+                }}>
+                  {myResult.isFalseStart ? 'FALSE START!' : 'SUCCESS!'}
+                </h3>
+                {!myResult.isFalseStart && (
+                  <>
+                    <p style={{ 
+                      fontSize: '2rem', 
+                      color: '#fdffb6',
+                      marginBottom: '1rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {myResult.reactionTimeMs}ms
+                    </p>
+                    <p style={{ 
+                      fontSize: '1rem',
+                      color: '#f2e9e4'
+                    }}>
+                      RANK: #{myResult.rank}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div style={{
+              textAlign: 'center',
+              marginTop: '2rem',
+              fontSize: '0.7rem',
+              color: '#9ca3af'
+            }}>
+              <p>Press SPACE or CLICK when you see RED signal</p>
+            </div>
           </div>
-        )}
-
-        {/* 하단 버튼 */}
-        <div style={{ textAlign: 'center' }}>
-          <ThemeButton variant="primary" onClick={handleGiveUp}>
-            홈으로
-          </ThemeButton>
         </div>
-
+        
         {/* 개발용 디버그 정보 */}
         {process.env.NODE_ENV === 'development' && (
           <div style={{
             position: 'fixed',
-            top: '1rem',
+            bottom: '1rem',
             right: '1rem',
-            padding: '1rem',
-            background: 'rgba(0, 0, 0, 0.8)',
-            borderRadius: '8px',
-            color: 'white',
-            fontSize: '0.8rem',
+            padding: '0.75rem',
+            backgroundColor: '#0d0d0d',
+            border: '2px solid #4a4e69',
+            color: '#c9c9c9',
+            fontSize: '0.6rem',
+            fontFamily: 'Press Start 2P',
             zIndex: 1000
           }}>
-            <div>Game State: {gameState}</div>
-            <div>Game Status: {gameStatus}</div>
+            <div>State: {gameState}</div>
+            <div>Status: {gameStatus}</div>
             <div>Session: {session?.sessionId}</div>
-            <div>Round: {currentRound?.roundId}</div>
-            <div>Clicked: {hasClicked ? 'Y' : 'N'}</div>
             <div>Ready: {readyCount}/{totalPlayers}</div>
           </div>
         )}
       </div>
-    </GameContainer>
+    </>
   );
 }

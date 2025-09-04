@@ -182,7 +182,7 @@ export default function GameHomePage() {
             
           {/* 뒤로가기 버튼 */}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/game')}
             className="pixel-card"
             style={{ 
                 marginTop: '3rem', 

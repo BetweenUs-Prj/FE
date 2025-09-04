@@ -563,252 +563,391 @@ export default function ReactionPage() {
   //     });
   // }, [sessionId, userUid, session?.status]);
 
+  // 픽셀 아트 스타일 정의
+  const pixelStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    .pixel-reaction-body {
+      font-family: 'Press Start 2P', cursive;
+      background-color: #2c2d3c;
+      color: #f2e9e4;
+      background-image: 
+        linear-gradient(rgba(242, 233, 228, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 233, 228, 0.05) 1px, transparent 1px);
+      background-size: 4px 4px;
+      image-rendering: pixelated;
+      min-height: 100vh;
+    }
+    
+    .pixel-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    .pixel-card {
+      border: 4px solid #0d0d0d;
+      box-shadow: 4px 4px 0px #0d0d0d;
+      transition: transform 0.1s linear, box-shadow 0.1s linear;
+      font-family: 'Press Start 2P', cursive;
+    }
+    
+    @keyframes pixel-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    @keyframes lightning-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px) rotate(-2deg); }
+      75% { transform: translateX(4px) rotate(2deg); }
+    }
+  `;
+
   // 로딩 상태 표시
   if (isLoading) {
     return (
-      <div 
-        style={{
-          background: '#FFFFFF',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#333333'
-        }}
-      >
-        <div style={{
-          fontSize: '1.2rem',
-          color: '#666666',
-          marginBottom: '1rem'
-        }}>
-          {loadingMessage}
+      <>
+        <style>{pixelStyles}</style>
+        <div className="pixel-reaction-body">
+          <div className="pixel-container">
+            <div className="pixel-card" style={{
+              backgroundColor: '#4a4e69',
+              padding: '3rem',
+              textAlign: 'center',
+              minWidth: '400px'
+            }}>
+              <div style={{
+                fontSize: '4rem',
+                marginBottom: '2rem',
+                animation: 'lightning-shake 2s ease-in-out infinite'
+              }}>
+                ⚡
+              </div>
+              <h2 style={{
+                fontSize: '1.5rem',
+                color: '#fdffb6',
+                textShadow: '3px 3px 0px #0d0d0d',
+                marginBottom: '1rem'
+              }}>
+                LOADING GAME
+              </h2>
+              <p style={{
+                fontSize: '0.9rem',
+                color: '#c9c9c9',
+                marginBottom: '2rem',
+                animation: 'pixel-pulse 2s ease-in-out infinite'
+              }}>
+                {loadingMessage}
+              </p>
+              
+              {/* 🧪 수동 테스트 버튼 (개발용) */}
+              {process.env.NODE_ENV === 'development' && (
+                <button
+                  onClick={() => {
+                    console.log('[REACTION] 🧪 Manual game start test');
+                    setStatus('WAITING');
+                    setIsWaitingForPlayers(false);
+                    setIsLoading(false);
+                    // 첫 라운드 시작 시뮬레이션
+                    handleRoundStart({
+                      type: 'ROUND_START',
+                      roundId: 'manual-round-1',
+                      roundNumber: 1
+                    });
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#ffadad',
+                    color: '#0d0d0d',
+                    border: '3px solid #0d0d0d',
+                    boxShadow: '3px 3px 0px #0d0d0d',
+                    fontSize: '0.7rem',
+                    fontFamily: 'Press Start 2P',
+                    cursor: 'pointer',
+                    transition: 'all 0.1s linear'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '5px 5px 0px #0d0d0d';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '3px 3px 0px #0d0d0d';
+                  }}
+                >
+                  DEBUG TEST
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-        
-        {/* 🧪 수동 테스트 버튼 (개발용) */}
-        {process.env.NODE_ENV === 'development' && (
-          <button
-            onClick={() => {
-              console.log('[REACTION] 🧪 Manual game start test');
-              setStatus('WAITING');
-              setIsWaitingForPlayers(false);
-              setIsLoading(false);
-              // 첫 라운드 시작 시뮬레이션
-              handleRoundStart({
-                type: 'ROUND_START',
-                roundId: 'manual-round-1',
-                roundNumber: 1
-              });
-            }}
-            style={{
-              background: 'rgba(249, 109, 60, 0.8)',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '0.5rem 1rem',
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              marginTop: '1rem'
-            }}
-          >
-            🧪 수동 게임 시작 테스트
-          </button>
-        )}
-      </div>
+      </>
     );
   }
 
   // 플레이어 대기 상태 표시
   if (isWaitingForPlayers) {
     return (
-      <GameContainer>
-        <div style={{ 
-          maxWidth: '600px', 
-          margin: '0 auto',
-          textAlign: 'center',
-          padding: '2rem'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #FCB422 0%, #F97B25 100%)',
-            borderRadius: '20px',
-            padding: '2rem',
-            marginBottom: '2rem',
-            boxShadow: '0 8px 32px rgba(252, 180, 34, 0.3)'
-          }}>
-            <h2 style={{
-              fontSize: '2rem',
-              color: '#FFFFFF',
-              marginBottom: '1rem',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+      <>
+        <style>{pixelStyles}</style>
+        <div className="pixel-reaction-body">
+          <div className="pixel-container">
+            <div className="pixel-card" style={{
+              backgroundColor: '#4a4e69',
+              padding: '3rem',
+              textAlign: 'center',
+              minWidth: '500px'
             }}>
-              ⚡ 반응속도 게임 준비 중
-            </h2>
-            <p style={{
-              fontSize: '1.2rem',
-              color: '#FFFFFF',
-              marginBottom: '2rem',
-              opacity: 0.9
-            }}>
-              다른 플레이어들이 게임 페이지에 도착할 때까지 기다려주세요
-            </p>
-            
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '15px',
-              padding: '1.5rem',
-              marginBottom: '1rem'
-            }}>
-              <div style={{
-                fontSize: '1.1rem',
-                color: '#FFFFFF',
-                marginBottom: '0.5rem'
+              <h2 style={{
+                fontSize: '2rem',
+                color: '#fdffb6',
+                textShadow: '3px 3px 0px #0d0d0d',
+                marginBottom: '2rem',
+                animation: 'lightning-shake 3s ease-in-out infinite'
               }}>
-                준비된 플레이어: {readyPlayers.length}/{totalPlayers}
-              </div>
+                WAITING FOR PLAYERS
+              </h2>
+              <p style={{
+                fontSize: '0.9rem',
+                color: '#c9c9c9',
+                marginBottom: '2rem',
+                lineHeight: '1.5'
+              }}>
+                Wait for other players to join the game
+              </p>
               
               <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                marginTop: '1rem'
+                backgroundColor: '#0d0d0d',
+                border: '3px solid #fdffb6',
+                padding: '1.5rem',
+                marginBottom: '2rem'
               }}>
-                {Array.from({ length: totalPlayers }, (_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '50%',
-                      backgroundColor: i < readyPlayers.length ? '#10B981' : 'rgba(255, 255, 255, 0.3)',
-                      transition: 'all 0.3s ease'
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {isHost && (
-              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <p style={{
-                  fontSize: '0.9rem',
-                  color: '#FFFFFF',
-                  opacity: 0.8,
-                  marginBottom: '1rem'
+                <div style={{
+                  fontSize: '1.2rem',
+                  color: '#fdffb6',
+                  marginBottom: '1rem',
+                  fontWeight: 'bold'
                 }}>
-                  호스트: 모든 플레이어가 준비되면 자동으로 게임이 시작됩니다
-                </p>
+                  READY: {readyPlayers.length}/{totalPlayers}
+                </div>
                 
-                <button
-                  onClick={() => startGameWhenAllReady(sessionId!)}
-                  disabled={readyPlayers.length < 2}
-                  style={{
-                    background: readyPlayers.length >= 2 
-                      ? 'linear-gradient(135deg, #147781 0%, #1E9AA8 100%)' 
-                      : 'rgba(255, 255, 255, 0.2)',
-                    color: '#FFFFFF',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '12px',
-                    padding: '0.8rem 1.5rem',
-                    fontSize: '0.9rem',
-                    cursor: readyPlayers.length >= 2 ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.3s ease',
-                    opacity: readyPlayers.length >= 2 ? 1 : 0.6
-                  }}
-                  onMouseEnter={(e) => {
-                    if (readyPlayers.length >= 2) {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(20, 119, 129, 0.4)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (readyPlayers.length >= 2) {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }
-                  }}
-                >
-                  {readyPlayers.length >= 2 ? '🚀 지금 게임 시작' : '⏳ 플레이어 대기 중'}
-                </button>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '1rem',
+                  marginTop: '1rem'
+                }}>
+                  {Array.from({ length: totalPlayers }, (_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        backgroundColor: i < readyPlayers.length ? '#caffbf' : '#4a4e69',
+                        border: '3px solid #0d0d0d',
+                        boxShadow: '2px 2px 0px #0d0d0d',
+                        animation: i < readyPlayers.length ? 'pixel-pulse 1s ease-in-out infinite' : 'none',
+                        animationDelay: `${i * 0.1}s`
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            )}
+              
+              {isHost && (
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{
+                    fontSize: '0.8rem',
+                    color: '#9ca3af',
+                    marginBottom: '1.5rem'
+                  }}>
+                    HOST: Game will start automatically when ready
+                  </p>
+                  
+                  <button
+                    onClick={() => startGameWhenAllReady(sessionId!)}
+                    disabled={readyPlayers.length < 2}
+                    style={{
+                      padding: '1rem 2rem',
+                      backgroundColor: readyPlayers.length >= 2 ? '#caffbf' : '#9a8c98',
+                      color: '#0d0d0d',
+                      border: '4px solid #0d0d0d',
+                      boxShadow: readyPlayers.length >= 2 ? '6px 6px 0px #0d0d0d' : '3px 3px 0px #0d0d0d',
+                      fontSize: '0.9rem',
+                      fontFamily: 'Press Start 2P',
+                      cursor: readyPlayers.length >= 2 ? 'pointer' : 'not-allowed',
+                      opacity: readyPlayers.length >= 2 ? 1 : 0.6,
+                      transition: 'all 0.1s linear'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (readyPlayers.length >= 2) {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '10px 10px 0px #0d0d0d';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (readyPlayers.length >= 2) {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '6px 6px 0px #0d0d0d';
+                      }
+                    }}
+                  >
+                    {readyPlayers.length >= 2 ? 'START NOW' : 'WAITING...'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </GameContainer>
+      </>
     );
   }
 
   return (
-    <GameContainer>
-      <GameHeader 
-        title="⚡ 반응속도 게임 ⚡"
-        onGiveUp={handleGiveUp}
-        backPath="/game"
-      />
-      
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* 참가자 수 표시 */}
-        <div 
-          style={{
-            marginBottom: '2rem',
-            padding: '1rem 2rem',
-            background: 'linear-gradient(135deg, #147781 0%, #1E9AA8 100%)',
-            borderRadius: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px rgba(20, 119, 129, 0.3)',
-            color: '#FFFFFF',
-            textAlign: 'center',
-            fontSize: '1.2rem',
-            fontWeight: '600',
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
-          }}
-        >
-          참가자: {participants}명
-        </div>
-
-        {/* 메인 게임 영역 */}
-        <ReactionGameArea
-          status={status}
-          onGameClick={handleClick}
-          myResult={myResult ? {
-            reactionTimeMs: myResult.reactionTimeMs,
-            isFalseStart: myResult.isFalseStart,
-            rank: myResult.rank
-          } : undefined}
-          style={{
-            marginBottom: '2rem'
-          }}
-        />
-
-        {/* 하단 버튼들 */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '1rem',
-          flexWrap: 'wrap'
+    <>
+      <style>{pixelStyles}</style>
+      <div className="pixel-reaction-body">
+        {/* 홈 버튼 */}
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          zIndex: 1000
         }}>
-          <ThemeButton
-            variant="primary"
-            onClick={handleGoHome}
+          <button
+            onClick={handleGiveUp}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#9a8c98',
+              color: '#f2e9e4',
+              border: '3px solid #0d0d0d',
+              boxShadow: '3px 3px 0px #0d0d0d',
+              fontSize: '0.7rem',
+              fontFamily: 'Press Start 2P',
+              cursor: 'pointer',
+              transition: 'all 0.1s linear'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '5px 5px 0px #0d0d0d';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '3px 3px 0px #0d0d0d';
+            }}
           >
-            홈으로
-          </ThemeButton>
+            ← HOME
+          </button>
         </div>
+        
+        <div className="pixel-container">
+          <div style={{ width: '100%', maxWidth: '900px' }}>
+            {/* 게임 헤더 */}
+            <div style={{
+              backgroundColor: '#4a4e69',
+              border: '4px solid #0d0d0d',
+              boxShadow: '6px 6px 0px #0d0d0d',
+              padding: '2rem',
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              <h1 style={{
+                fontSize: '2rem',
+                color: '#fdffb6',
+                textShadow: '4px 4px 0px #0d0d0d',
+                marginBottom: '1rem',
+                animation: 'lightning-shake 3s ease-in-out infinite'
+              }}>
+                REACTION SPEED
+              </h1>
+              <div style={{
+                display: 'inline-block',
+                padding: '0.5rem 1.5rem',
+                backgroundColor: '#fdffb6',
+                color: '#0d0d0d',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                border: '3px solid #0d0d0d',
+                boxShadow: '2px 2px 0px #0d0d0d'
+              }}>
+                PLAYERS: {participants}
+              </div>
+            </div>
+            
+            {/* 메인 게임 영역 */}
+            <div style={{
+              backgroundColor: '#4a4e69',
+              border: '4px solid #0d0d0d',
+              boxShadow: '6px 6px 0px #0d0d0d',
+              padding: '2rem',
+              marginBottom: '2rem',
+              minHeight: '400px'
+            }}>
+              <ReactionGameArea
+                status={status}
+                onGameClick={handleClick}
+                myResult={myResult ? {
+                  reactionTimeMs: myResult.reactionTimeMs,
+                  isFalseStart: myResult.isFalseStart,
+                  rank: myResult.rank
+                } : undefined}
+                style={{
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+            </div>
 
+            {/* 하단 홈 버튼 */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={handleGoHome}
+                style={{
+                  padding: '1rem 2rem',
+                  backgroundColor: '#9a8c98',
+                  color: '#f2e9e4',
+                  border: '4px solid #0d0d0d',
+                  boxShadow: '4px 4px 0px #0d0d0d',
+                  fontSize: '0.9rem',
+                  fontFamily: 'Press Start 2P',
+                  cursor: 'pointer',
+                  transition: 'all 0.1s linear'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '8px 8px 0px #0d0d0d';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '4px 4px 0px #0d0d0d';
+                }}
+              >
+                GO HOME
+              </button>
+            </div>
+          </div>
+        </div>
+        
         {/* 게임 상태 디버그 정보 (개발용) */}
         {process.env.NODE_ENV === 'development' && (
           <div 
             style={{
               position: 'fixed',
-              top: '1rem',
+              bottom: '1rem',
               right: '1rem',
-              padding: '1rem',
-              background: 'linear-gradient(135deg, #147781 0%, #1E9AA8 100%)',
-              borderRadius: '12px',
-              fontSize: '0.8rem',
-              opacity: 0.8,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
-              color: '#FFFFFF',
+              padding: '0.75rem',
+              backgroundColor: '#0d0d0d',
+              border: '2px solid #4a4e69',
+              color: '#c9c9c9',
+              fontSize: '0.6rem',
+              fontFamily: 'Press Start 2P',
               zIndex: 1000
             }}
           >
@@ -816,13 +955,11 @@ export default function ReactionPage() {
             <div>Session: {sessionId}</div>
             <div>Clicked: {hasClicked ? 'Y' : 'N'}</div>
             <div>Round: {currentRoundId || 'None'}</div>
-            <div>Loading: {isLoading ? 'Y' : 'N'}</div>
-            <div>Waiting: {isWaitingForPlayers ? 'Y' : 'N'}</div>
             <div>Host: {isHost ? 'Y' : 'N'}</div>
             <div>Players: {participants}</div>
           </div>
         )}
       </div>
-    </GameContainer>
+    </>
   );
 }

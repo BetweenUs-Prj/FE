@@ -397,72 +397,9 @@ export default function ReactionGameREST() {
         <div className="pixel-game-body">
           <div className="pixel-container">
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '4rem', marginBottom: '2rem' }}>⚡</div>
-              <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#fbbf24' }}>반응속도 게임</h1>
-              <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '2rem' }}>빨간 불이 켜지면 최대한 빠르게 클릭하세요!</p>
-
-              <div style={{ 
-                backgroundColor: 'rgba(13, 13, 13, 0.4)', 
-                border: '2px solid #4b5563',
-                padding: '1.5rem', 
-                marginBottom: '2rem', 
-                textAlign: 'left',
-                fontSize: '0.7rem',
-                lineHeight: '1.8',
-                color: '#d1d5db'
-              }}>
-                <p>• 준비 버튼을 눌러 게임을 시작하세요</p>
-                <p>• 카운트다운 후 랜덤 시간에 빨간 불이 켜집니다</p>
-                <p>• 빨간 불이 켜지면 화면을 클릭하거나 스페이스바를 누르세요</p>
-                <p>• 빨간 불이 켜지기 전에 클릭하면 부정출발입니다</p>
-              </div>
-
-              {!gameState.playerReady ? (
-                <button
-                  onClick={() => setPlayerReady(true)}
-                  onMouseOver={handleMouseOver}
-                  onMouseOut={handleMouseOut}
-                  onMouseDown={handleMouseDown}
-                  onMouseUp={handleMouseUp}
-                  style={{
-                    padding: '1.2rem 2.4rem',
-                    fontSize: '0.9rem',
-                    backgroundColor: '#fbbf24',
-                    color: '#0d0d0d',
-                    border: '2px solid #0d0d0d',
-                    boxShadow: '4px 4px 0px #0d0d0d',
-                    cursor: 'pointer',
-                    fontFamily: "'Press Start 2P', cursive"
-                  }}
-                >
-                  게임 참가
-                </button>
-              ) : (
-                <div>
-                  <p style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '1rem', fontWeight: 'bold' }}>
-                    참가 완료! 다른 플레이어를 기다리는 중…
-                  </p>
-                  <button
-                    onClick={createRoundHandler}
-                    onMouseOver={handleMouseOver}
-                    onMouseOut={handleMouseOut}
-                    onMouseDown={handleMouseDown}
-                    onMouseUp={handleMouseUp}
-                    style={{
-                      padding: '1.2rem 2.4rem',
-                      fontSize: '0.9rem',
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
-                      border: '2px solid #0d0d0d',
-                      boxShadow: '4px 4px 0px #0d0d0d',
-                      cursor: 'pointer',
-                      fontFamily: "'Press Start 2P', cursive"
-                    }}
-                  >
-                    게임 시작
-                  </button>
-                </div>
-              )}
+              <div style={{ fontSize: '3rem', marginBottom: '2rem', animation: 'countdown-pulse 2s ease-in-out infinite' }}>⚡</div>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#f2e9e4' }}>반응속도 게임 준비 중...</h2>
+              <p style={{ fontSize: '0.8rem', color: '#9ca3af' }}>게임을 로딩하고 있습니다</p>
             </div>
           </div>
         </div>

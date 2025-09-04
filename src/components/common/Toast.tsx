@@ -10,7 +10,7 @@ export interface ToastProps {
 export const Toast: React.FC<ToastProps> = ({ 
   message, 
   type = 'info', 
-  duration = 3000, 
+  duration = 4000, 
   onClose 
 }) => {
   const [visible, setVisible] = useState(true);
@@ -53,11 +53,13 @@ export const Toast: React.FC<ToastProps> = ({
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
       `}</style>
       <div
-        className="fixed top-4 right-4 z-[9999]"
+        className="fixed top-1/4 left-1/2 z-[9999] transform -translate-x-1/2 -translate-y-1/2"
         style={{
           ...getToastStyles(),
           opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0) scale(1)' : 'translateY(-1rem) scale(0.95)',
+          transform: visible ? 'translate(-50%, -50%) scale(1)' : 'translate(-50%, -60%) scale(0.95)',
+          minWidth: '300px',
+          textAlign: 'center'
         }}
       >
         {message}
@@ -94,7 +96,7 @@ export const ToastContainer: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-1/4 left-1/2 z-[9999] flex flex-col gap-3 pointer-events-none transform -translate-x-1/2 -translate-y-1/2">
       {toasts.map((toast, index) => (
         <div key={toast.id} className="pointer-events-auto">
           <Toast

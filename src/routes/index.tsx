@@ -21,11 +21,12 @@ import ReactionSpeedDemo from '../pages/dev/ReactionSpeedDemo';
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<GameHomePage />} />
       <Route path="/about" element={<AboutPage />} />
       
       {/* 게임 관련 라우트 */}
-      <Route path="/game" element={<GameHomePage />} />
+      <Route path="/game" element={<HomePage />} />
+      <Route path="/game/choice" element={<GameHomePage />} />
       <Route path="/game/create" element={<GameCreatePage />} />
       
       {/* 퀴즈 게임 */}
@@ -48,6 +49,7 @@ export default function AppRoutes() {
       {/* 공통 */}
       <Route path="/game/result/:sessionId" element={<ResultPageREST />} />
       <Route path="/game/penalty" element={<PenaltyPage />} />
+      <Route path="/game/join" element={<JoinPage />} />
       <Route path="/join" element={<JoinPage />} />
       
       {/* 약속 페이지 */}
