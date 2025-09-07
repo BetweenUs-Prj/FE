@@ -205,11 +205,11 @@ export const useHomeLogic = () => {
     }));
   }, []);
 
-  const generatePlaceCards = useCallback((stationId: number): MiddlePlaceCard[] => {
+  const generatePlaceCards = useCallback(async (stationId: number): Promise<MiddlePlaceCard[]> => {
     const station = getStationById(stationId);
     if (!station) return [];
 
-    const places = getPlacesByStationId(stationId);
+    const places = await getPlacesByStationId(stationId);
     const placeCards = places.map(place => ({
       id: place.id,
       title: place.title,
@@ -835,7 +835,7 @@ export const useHomeLogic = () => {
     });
   }, [disableMapInteraction, updateUiState, updateMapState]);
 
-  const handleCardClick = useCallback((cardId: number) => {
+  const handleCardClick = useCallback(async (cardId: number) => {
     // 연속 클릭 방지 (1.2초)
     const now = Date.now();
     if (now - (handleCardClick as any).lastClickTime < 1200) {
@@ -1106,7 +1106,7 @@ export const useHomeLogic = () => {
           });
           
           // 추천 장소 카드로 변경
-          const placeCards = generatePlaceCards(clickedCard.id);
+          const placeCards = await generatePlaceCards(clickedCard.id);
           setCards(placeCards);
           
           // 맵 상호작용 활성화
@@ -1244,7 +1244,7 @@ export const useHomeLogic = () => {
           // 친구들과 역, 모든 장소 마커를 다시 표시
           const currentStation = getStationById(uiState.selectedStationId || 0);
           if (currentStation) {
-            const places = getPlacesByStationId(currentStation.id);
+            const places = await getPlacesByStationId(currentStation.id);
             const placeMarkers = places.map(place => ({
               id: `place-${place.id}`,
               position: { lat: place.lat, lng: place.lng },
@@ -1296,7 +1296,7 @@ export const useHomeLogic = () => {
           }
         } else {
           // 🎯 새로운 장소 선택 시: 역과 해당 장소 간의 경로만 표시
-          const places = getPlacesByStationId(uiState.selectedStationId || 0);
+          const places = await getPlacesByStationId(uiState.selectedStationId || 0);
           const selectedPlace = places.find(place => place.id === clickedCard.id);
           if (selectedPlace) {
             const currentStation = getStationById(uiState.selectedStationId || 0);
