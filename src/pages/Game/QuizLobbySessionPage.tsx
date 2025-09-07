@@ -32,7 +32,7 @@ export default function QuizLobbySessionPage() {
 
     const currentUserUid = getUid();
 
-    const isHost = sessionDetails?.hostUid === currentUserUid;
+    const isHost = sessionDetails?.hostId === Number(currentUserUid);
     const memberCount = lobbyMembers.length;
     const sessionStatus = sessionDetails?.status || 'WAITING';
 
@@ -58,7 +58,7 @@ export default function QuizLobbySessionPage() {
             const gameSession = {
                 sessionId: details.sessionId,
                 category: details.category || 'default',
-                hostUid: details.hostUid,
+                hostUid: details.hostId,
                 participants: details.participants || [],
                 totalRounds: details.totalRounds || 5
             };
@@ -66,7 +66,7 @@ export default function QuizLobbySessionPage() {
             if (lobbyData && lobbyData.members) {
                 const members: LobbyMember[] = lobbyData.members.map((m: any) => ({
                     uid: m.userUid,
-                    role: m.userUid === details.hostUid ? 'HOST' : 'MEMBER',
+                    role: m.userUid === details.hostId ? 'HOST' : 'MEMBER',
                     score: 0,
                     joinedAt: m.joinedAt
                 }));
@@ -423,7 +423,7 @@ export default function QuizLobbySessionPage() {
                                                 color: '#f2e9e4',
                                                 flex: '1'
                                             }}>
-                                                {member.uid === currentUserUid ? '> YOU' : member.uid.substring(0, 8)}
+                                                {member.uid === currentUserUid ? '> YOU' : String(member.uid).substring(0, 8)}
                                             </span>
                                             {member.role === 'HOST' && (
                                                 <span style={{

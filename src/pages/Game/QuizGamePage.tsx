@@ -345,12 +345,18 @@ export default function QuizGamePage() {
       setParticipants(sessionData.participants || []);
       
       // 스코어보드 초기화
-      const initialScoreboard: ScoreboardItem[] = (sessionData.participants || []).map((p: any) => ({
-        userUid: p.userUid,
-        displayName: p.userUid,
-        score: 0,
-        rank: 1
-      }));
+      const initialScoreboard: ScoreboardItem[] = (sessionData.participants || []).map((p: any, index: number) => {
+        const userUid = String(p.userUid || 'unknown');
+        const displayName = p.nickname || p.displayName || 
+                           (userUid !== 'unknown' ? `Player ${userUid.slice(-4)}` : `User ${index + 1}`);
+        
+        return {
+          userUid: userUid,
+          displayName: displayName,
+          score: 0,
+          rank: 1
+        };
+      });
       console.log('[QUIZ] Initial scoreboard:', initialScoreboard);
       setScoreboard(initialScoreboard);
       
@@ -468,28 +474,14 @@ export default function QuizGamePage() {
     console.debug('[QUIZ] Response time calculated:', actualResponseTime, 'ms');
     
     try {
-      // 임시 패치 (✅ sessionId 추가 + 멱등키)
       const res = await http.post(
         `/mini-games/sessions/${sessionId}/rounds/${currentQuestion.roundId}/answers`,
-        {
-          // ★ 임시: 서버가 @NotNull sessionId를 기대한다면 바디에도 넣어줍니다.
-          sessionId: Number(sessionId),
-      
-          optionId: Number(optionId),                                // 숫자 보장
-          responseTimeMs: Math.max(0, Math.floor(actualResponseTime))
+        { 
+          optionId: parseInt(optionId),
+          responseTimeMs: actualResponseTime // 🔥 실제 응답시간 전송
         },
-        {
-          validateStatus: () => true,
-          headers: {
-            // ★ 멱등키: 재전송/더블클릭 시 중복처리 방지
-            'Idempotency-Key': crypto.randomUUID(),
-            // ★ 반드시 포함되게 확인 (http 유틸 인터셉터에서도 보장)
-            'X-USER-UID': String(getUid()),
-            'Content-Type': 'application/json'
-          }
-        }
+        { validateStatus: () => true }
       );
-      
       
       if (res.status === 200 || res.status === 409) {
         setHasSubmitted(true);
@@ -586,14 +578,26 @@ export default function QuizGamePage() {
       const response = await http.get(`/mini-games/sessions/${sessionId}/scores`);
       const scoresData = response.data;
         console.log('[QUIZ] Scores loaded:', scoresData);
+        console.log('[QUIZ] First score detail:', scoresData[0]);
+        if (scoresData[0]) {
+          console.log('[QUIZ] Score keys:', Object.keys(scoresData[0]));
+        }
         
         // 점수 데이터를 스코어보드 형식으로 변환
-        const scoreboardData: ScoreboardItem[] = scoresData.map((score: any, index: number) => ({
-          userUid: score.userUid,
-          displayName: score.userUid,
-          score: score.totalScore || 0,
-          rank: index + 1
-        }));
+        const scoreboardData: ScoreboardItem[] = scoresData.map((score: any, index: number) => {
+          console.log('[QUIZ] Score data:', score);
+          const userUid = String(score.userUid || 'unknown');
+          const displayName = score.nickname || score.displayName || 
+                             (userUid !== 'unknown' ? `Player ${userUid.slice(-4)}` : `User ${index + 1}`);
+          console.log('[QUIZ] Processed:', { userUid, displayName });
+          
+          return {
+            userUid: userUid,
+            displayName: displayName,
+            score: score.totalScore || 0,
+            rank: index + 1
+          };
+        });
         
       setScoreboard(scoreboardData);
     } catch (error) {
@@ -795,13 +799,19 @@ export default function QuizGamePage() {
       try {
         const response = await http.get(`/mini-games/sessions/${sessionId}/scores`);
         const scoresData = response.data;
-        const scoreboardData = scoresData.map((score: any, index: number) => ({
-          userUid: score.userUid,
-          displayName: score.userUid,
-          score: score.totalScore || 0,
-          rank: index + 1,
-          totalResponseTime: score.totalResponseTime || undefined
-        }));
+        const scoreboardData = scoresData.map((score: any, index: number) => {
+          const userUid = String(score.userUid || 'unknown');
+          const displayName = score.nickname || score.displayName || 
+                             (userUid !== 'unknown' ? `Player ${userUid.slice(-4)}` : `User ${index + 1}`);
+          
+          return {
+            userUid: userUid,
+            displayName: displayName,
+            score: score.totalScore || 0,
+            rank: index + 1,
+            totalResponseTime: score.totalResponseTime || undefined
+          };
+        });
         
         // 점수 변경 확인 (deep comparison) - 응답시간도 포함
         setScoreboard(prev => {
@@ -1079,10 +1089,9 @@ export default function QuizGamePage() {
           <div className="pixel-side-panel">
             <div className="pixel-box scoreboard-box">
               <h2 className="pixel-title scoreboard-title">SCORE</h2>
-              {scoreboard.map(item => (
-                <div key={item.userUid} className="scoreboard-item">
-                  <span>{item?.displayName?.substring?.(0, 12) ?? 'Player'}</span>
-                
+              {scoreboard.map((item, index) => (
+                <div key={`${item.userUid}-${index}-waiting`} className="scoreboard-item">
+                  <span>{(item.displayName || item.userUid || 'Unknown').substring(0,12)}</span>
                   <span>{item.score}</span>
                 </div>
               ))}
@@ -1200,10 +1209,9 @@ export default function QuizGamePage() {
         <div className="pixel-side-panel">
           <div className="pixel-box scoreboard-box">
             <h2 className="pixel-title scoreboard-title">SCORE</h2>
-            {scoreboard.map(item => (
-              <div key={item.userUid} className="scoreboard-item">
-                <span>{item?.displayName?.substring?.(0, 12) ?? 'Player'}</span>
-
+            {scoreboard.map((item, index) => (
+              <div key={`${item.userUid}-${index}`} className="scoreboard-item">
+                <span>{(item.displayName || item.userUid || 'Unknown').substring(0,12)}</span>
                 <span>{item.score}</span>
               </div>
             ))}

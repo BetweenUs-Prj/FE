@@ -25,7 +25,7 @@ export default function ReactionLobbySessionPage() {
   const startedRef = useRef(false);
 
   const currentUserUid = localStorage.getItem('betweenUs_userUid') || '';
-  const isHost = lobby?.hostUid === currentUserUid;
+  const isHost = sessionDetails?.hostId === Number(currentUserUid);
   const headCount = lobby?.total ?? lobby?.members?.length ?? 0;
   const sessionStatus = sessionDetails?.status || 'WAITING';
   
@@ -34,7 +34,7 @@ export default function ReactionLobbySessionPage() {
     sessionStatusRef.current = sessionStatus;
   }, [sessionStatus]);
   const readyCount = lobby?.readyCount ?? lobby?.members?.filter(m => m.isReady).length ?? 0;
-  const canStart = isHost && sessionStatus === 'WAITING' && headCount >= 2 && readyCount >= 2;
+  const canStart = isHost && sessionStatus === 'WAITING' && headCount >= 2;
 
   // 게임 페이지로 이동 (중복 방지)
   const goToGamePage = () => {
@@ -132,7 +132,7 @@ export default function ReactionLobbySessionPage() {
       const gameSession = {
         sessionId: details.sessionId,
         category: 'REACTION',
-        hostUid: details.hostUid,
+        hostUid: details.hostId,
         participants: details.participants || [],
         totalRounds: details.totalRounds || 5
       };
@@ -141,7 +141,7 @@ export default function ReactionLobbySessionPage() {
       // 플레이어 목록 업데이트
       const playerList = snapshot.members.map(member => ({
         id: member.userUid,
-        name: member.userUid.substring(0, 8),
+        name: String(member.userUid).substring(0, 8),
         score: 0,
       }));
       setPlayers(playerList);
@@ -574,7 +574,7 @@ export default function ReactionLobbySessionPage() {
                         color: '#f2e9e4',
                         flex: '1'
                       }}>
-                        {member.userUid === currentUserUid ? '> YOU' : member.userUid.substring(0, 8)}
+                        {member.userUid === Number(currentUserUid) ? '> YOU' : String(member.userUid).substring(0, 8)}
                       </span>
                       {member.userUid === session?.hostUid && (
                         <span style={{
@@ -732,8 +732,6 @@ export default function ReactionLobbySessionPage() {
                       ? 'Game in progress'
                       : headCount < 2
                       ? 'Need at least 2 players'
-                      : readyCount < 2
-                      ? 'All players must be ready'
                       : 'Cannot start game'
                     }
                   </p>

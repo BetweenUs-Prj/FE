@@ -22,7 +22,7 @@ export default defineConfig({
     hmr: { clientPort: 5173 },
     proxy: { 
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8084',  // 게임 서비스 포트
         changeOrigin: true,
         secure: false,
         timeout: 20000

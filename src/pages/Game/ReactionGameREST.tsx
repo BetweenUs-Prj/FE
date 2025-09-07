@@ -107,10 +107,28 @@ export default function ReactionGameREST() {
       });
 
       console.log('[REACTION-GAME] 📡 API Response status:', res.status, 'data:', res.data);
+      console.log('[REACTION-GAME] 📡 Response headers:', res.headers);
+
+      // 세션 상태 헤더 확인
+      const sessionStatus = res.headers['x-session-status'];
+      if (sessionStatus === 'FINISHED') {
+        console.log('[REACTION-GAME] 🎉 Session is FINISHED (from header), navigating to results');
+        goResult();
+        return;
+      }
 
       // 204 응답 처리
       if (res.status === 204 || !res.data) {
         console.log('[REACTION-GAME] 🔍 Got 204 response or empty data, current count:', noRoundCountRef.current);
+        console.log('[REACTION-GAME] 🔍 Session status from header:', sessionStatus);
+        
+        // 세션이 종료됨을 헤더로 확인
+        if (sessionStatus === 'FINISHED') {
+          console.log('[REACTION-GAME] 🎉 Session finished (header check), navigating to results');
+          goResult();
+          return;
+        }
+        
         // 204 응답 카운터 증가
         noRoundCountRef.current += 1;
         const newCount = noRoundCountRef.current;

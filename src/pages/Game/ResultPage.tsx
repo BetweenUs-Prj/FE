@@ -95,7 +95,7 @@ export default function ResultPage() {
 
     console.log('[RESULT] 🔍 Setting up WebSocket for game results - Session:', sessionId);
 
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS('http://localhost:8084/ws');
     const client = new Client({
       webSocketFactory: () => socket,
       debug: (str) => console.debug('[STOMP-RESULT]', str),
@@ -230,7 +230,7 @@ export default function ResultPage() {
         const apiScores: ScoreboardItem[] = results.ranking
           .map((player, index) => ({
             userUid: player.uid,
-            displayName: player.name || player.uid.substring(0, 8),
+            displayName: player.name || String(player.uid).substring(0, 8),
             score: Number(player.score) || 0,
             rank: player.rank || (index + 1)
           }))
@@ -452,6 +452,22 @@ export default function ResultPage() {
     return sorted;
   };
 
+  // Get winner and loser display names
+  const getWinnerUid = () => {
+    const sorted = convertToGameResultFormat();
+    if (sorted.length === 0) return undefined;
+    const winner = sorted.find(p => p.rank === 1);
+    return winner?.displayName || winner?.userUid;
+  };
+
+  const getLoserUid = () => {
+    const sorted = convertToGameResultFormat();
+    if (sorted.length === 0) return undefined;
+    const lastRank = Math.max(...sorted.map(p => p.rank));
+    const loser = sorted.find(p => p.rank === lastRank);
+    return loser?.displayName || loser?.userUid;
+  };
+
   const handlePlayAgain = () => {
     nav('/game');
   };
@@ -492,6 +508,8 @@ export default function ResultPage() {
         <PixelGameResult
           title="게임 결과"
           results={convertToGameResultFormat()}
+          winnerUid={getWinnerUid()}
+          loserUid={penaltyInfo ? getLoserUid() : undefined}
           penalty={penaltyInfo ? { 
             code: 'PENALTY', 
             text: penaltyInfo.penaltyText 

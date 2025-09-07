@@ -373,7 +373,7 @@ export default function ReactionPage() {
 
     console.log('[REACTION-STOMP] 🔌 Connecting to WebSocket for session:', sessionId);
     
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS('http://localhost:8084/ws');
     const client = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,

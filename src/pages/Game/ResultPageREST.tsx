@@ -102,6 +102,10 @@ export default function ResultPageREST() {
         // 정상 결과
         let data: GameResultData = await response.json();
         console.log('[RESULT] status=200 payload=', data); // 실제 데이터 로깅
+        if (data.players && data.players.length > 0) {
+          console.log('[RESULT] First player detail:', data.players[0]);
+          console.log('[RESULT] Player keys:', Object.keys(data.players[0]));
+        }
         
         // 게임 결과 설정
         setGameResults(data);
@@ -134,8 +138,8 @@ export default function ResultPageREST() {
           scores = data.overallRanking.map((player, index) => {
             console.log(`[RESULT] Processing player ${index}:`, player);
             const mappedPlayer = {
-              userUid: player.userUid || player.uid,
-              displayName: player.userUid || player.uid,
+              userUid: String(player.userId || player.userUid || player.uid), // Convert userId to string userUid
+              displayName: player.displayName || String(player.userId || player.userUid || player.uid),
               // 반응시간 필드 체크: deltaMs, avgReactionTime, reactionTime, score 등
               score: player.deltaMs || player.avgReactionTime || player.reactionTime || player.score || 0,
               rank: player.rank || (index + 1),
@@ -560,7 +564,9 @@ export default function ResultPageREST() {
   }
 
   // 우승자 및 동점 처리
-  const winner = finalScores.find(score => score.userUid === gameResults.winnerUid);
+  const winner = gameResults.winnerUid 
+    ? finalScores.find(score => score.userUid === gameResults.winnerUid)
+    : finalScores.find(score => score.rank === 1);
   
   // 최고점 동점자 확인 (반응속도는 낮은 시간이 좋음)
   const topScore = finalScores.length > 0 ? 

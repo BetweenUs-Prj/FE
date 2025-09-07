@@ -9,7 +9,8 @@ import { PixelGameResult } from '../../components/common/PixelUI/PixelGameResult
 import { PixelLoading } from '../../components/common/PixelUI/PixelLoading';
 
 type OverallRanking = {
-  userUid: string;
+  userId?: number;  // API response uses userId (number)
+  userUid?: string; // Frontend expects userUid (string) 
   displayName?: string;
   deltaMs: number;
   falseStart: boolean;
@@ -31,6 +32,8 @@ export default function ReactionResultPage() {
   const [overallRanking, setOverallRanking] = useState<OverallRanking[]>([]);
   const [myResult, setMyResult] = useState<OverallRanking | null>(null);
   const [penalty, setPenalty] = useState<PenaltyInfo | null>(null);
+  const [winnerId, setWinnerId] = useState<number | null>(null);
+  const [loserId, setLoserId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   const currentUserUid = localStorage.getItem('betweenUs_userUid') || '';
@@ -52,9 +55,19 @@ export default function ReactionResultPage() {
           const resultsData = JSON.parse(storedResults);
           if (resultsData.sessionId === sessionId && resultsData.overallRanking) {
             console.log('[REACTION-RESULT] Loading results from localStorage:', resultsData);
-            setOverallRanking(resultsData.overallRanking);
-            setMyResult(resultsData.overallRanking.find((r: OverallRanking) => r.userUid === currentUserUid) || null);
+            
+            // Convert localStorage data format to frontend format
+            const convertedRanking = resultsData.overallRanking.map((result: any) => ({
+              ...result,
+              userUid: String(result.userId || result.userUid), // Handle both formats
+              userId: result.userId
+            }));
+            
+            setOverallRanking(convertedRanking);
+            setMyResult(convertedRanking.find((r: OverallRanking) => r.userUid === currentUserUid) || null);
             setPenalty(resultsData.penalty || null);
+            setWinnerId(resultsData.winnerId || null);
+            setLoserId(resultsData.loserId || null);
             setIsLoading(false);
             
             // Clean up stored results after loading
@@ -66,85 +79,37 @@ export default function ReactionResultPage() {
         }
       }
 
-      // Try API first (for FINISHED sessions)
+      // API를 통해 결과 조회
       try {
-        console.log('[REACTION-RESULT] Trying to fetch results from API for session:', sessionId);
-        const response = await fetch(`http://localhost:8080/api/mini-games/reaction/sessions/${sessionId}/results`);
+        console.log('[REACTION-RESULT] Fetching results from API for session:', sessionId);
+        const response = await fetch(`http://localhost:8084/api/mini-games/reaction/sessions/${sessionId}/results`);
         
         if (response.ok) {
           const results = await response.json();
           console.log('[REACTION-RESULT] Loaded results from API:', results);
           
-          setOverallRanking(results.overallRanking || []);
-          setMyResult(results.overallRanking?.find((r: OverallRanking) => r.userUid === currentUserUid) || null);
+          // Convert API response format to frontend format
+          const convertedRanking = results.overallRanking?.map((result: any) => ({
+            ...result,
+            userUid: String(result.userId), // Convert userId to userUid string
+            userId: result.userId
+          })) || [];
+          
+          setOverallRanking(convertedRanking);
+          setMyResult(convertedRanking.find((r: OverallRanking) => r.userUid === currentUserUid) || null);
           setPenalty(results.penalty || null);
+          setWinnerId(results.winnerId || null);
+          setLoserId(results.loserId || null);
           setIsLoading(false);
           return;
-        } else if (response.status === 204) {
-          console.log('[REACTION-RESULT] Session results not ready yet, will try STOMP fallback');
+        } else {
+          console.log('[REACTION-RESULT] API returned status:', response.status);
+          setIsLoading(false);
         }
       } catch (error) {
-        console.log('[REACTION-RESULT] API fetch failed, trying STOMP fallback:', error);
+        console.error('[REACTION-RESULT] API fetch failed:', error);
+        setIsLoading(false);
       }
-
-      console.log('[REACTION-RESULT] Setting up STOMP connection for session:', sessionId);
-
-      // STOMP 연결 (fallback)
-      const socket = new SockJS('http://localhost:8080/ws');
-      const client = Stomp.over(socket);
-      
-      // 10초 타임아웃 설정
-      const timeoutId = setTimeout(() => {
-        console.warn('[REACTION-RESULT] STOMP connection timeout - no results received');
-        if (client.connected) {
-          client.disconnect();
-        }
-        setIsLoading(false);
-      }, 10000);
-      
-      client.connect({}, () => {
-        console.log('[REACTION-RESULT] STOMP connected, subscribing to results');
-        
-        // 결과 구독
-        client.subscribe(`/topic/reaction/${sessionId}/results`, (message) => {
-          try {
-            const results = JSON.parse(message.body);
-            console.log('[REACTION-RESULT] Received results via STOMP:', results);
-            
-            setOverallRanking(results.overallRanking || []);
-            setMyResult(results.overallRanking?.find((r: OverallRanking) => r.userUid === currentUserUid) || null);
-            setPenalty(results.penalty || null);
-            setIsLoading(false);
-            
-            clearTimeout(timeoutId);
-            client.disconnect();
-          } catch (error) {
-            console.error('[REACTION-RESULT] Error parsing STOMP message:', error);
-          }
-        });
-        
-        // 최종 결과 구독
-        client.subscribe(`/topic/reaction/${sessionId}/final`, (message) => {
-          try {
-            const results = JSON.parse(message.body);
-            console.log('[REACTION-RESULT] Received final results via STOMP:', results);
-            
-            setOverallRanking(results.overallRanking || []);
-            setMyResult(results.overallRanking?.find((r: OverallRanking) => r.userUid === currentUserUid) || null);
-            setPenalty(results.penalty || null);
-            setIsLoading(false);
-            
-            clearTimeout(timeoutId);
-            client.disconnect();
-          } catch (error) {
-            console.error('[REACTION-RESULT] Error parsing final STOMP message:', error);
-          }
-        });
-      }, (error: any) => {
-        console.error('[REACTION-RESULT] STOMP connection failed:', error);
-        clearTimeout(timeoutId);
-        setIsLoading(false);
-      });
     };
 
     loadResults();
@@ -179,6 +144,24 @@ export default function ReactionResultPage() {
     }));
   };
 
+  // Get winner and loser display names
+  const getWinnerUid = () => {
+    // Use convertToGameResultFormat() data to get winner
+    const results = convertToGameResultFormat();
+    if (results.length === 0) return undefined;
+    const winner = results.find(r => r.rank === 1);
+    return winner?.displayName || winner?.userUid;
+  };
+
+  const getLoserUid = () => {
+    // Use convertToGameResultFormat() data to get loser
+    const results = convertToGameResultFormat();
+    if (results.length === 0) return undefined;
+    const lastRank = Math.max(...results.map(r => r.rank));
+    const loser = results.find(r => r.rank === lastRank);
+    return loser?.displayName || loser?.userUid;
+  };
+
   return (
     <GameContainer>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -193,6 +176,8 @@ export default function ReactionResultPage() {
           <PixelGameResult
             title="반응속도 게임 결과"
             results={convertToGameResultFormat()}
+            winnerUid={getWinnerUid()}
+            loserUid={penalty ? getLoserUid() : undefined}
             penalty={penalty ? { code: penalty.code, text: penalty.text } : undefined}
             gameType="REACTION"
             onPlayAgain={handlePlayAgain}

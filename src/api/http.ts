@@ -1,7 +1,7 @@
 import axios, { AxiosHeaders } from 'axios';
 
-// 개발환경: 프록시 경유, 운영환경: 절대경로
-const API_BASE = import.meta.env.DEV ? '/api' : 'http://localhost:8080/api';
+// 개발환경: 프록시 경유, 운영환경: 게임서비스 포트
+const API_BASE = import.meta.env.DEV ? '/api' : 'http://localhost:8084/api';
 const UID_KEY = 'betweenUs_userUid';
 
 function resolveUid(): string {
