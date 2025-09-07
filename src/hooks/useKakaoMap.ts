@@ -13,6 +13,7 @@ interface RouteInfo {
   from: { lat: number; lng: number; id?: string };
   to: { lat: number; lng: number; id?: string };
   color?: string;
+  coords?: { lat: number; lng: number }[]; // 실제 경로 좌표 배열
 }
 
 interface UseKakaoMapProps {
@@ -256,6 +257,13 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       markers.forEach(markerInfo => {
         if (!markerInfo.isVisible) return;
 
+        // 🎯 좌표 검증 및 로깅
+        console.log(`🎯 마커 생성: ${markerInfo.id}`, {
+          lat: markerInfo.position.lat,
+          lng: markerInfo.position.lng,
+          title: markerInfo.title
+        });
+
         const position = new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng);
         
         // 🎯 친구 마커 커스텀 아이콘 설정
@@ -264,8 +272,43 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
           map: mapRef.current
         };
 
+        // 사용자 마커인 경우 특별한 스타일 적용
+        if (markerInfo.id.startsWith('user-')) {
+          const userId = parseInt(markerInfo.id.replace('user-', ''));
+          const colorIndex = (userId - 1) % friendColors.length;
+          const userColor = friendColors[colorIndex];
+          
+          // 사용자 마커: 별 모양 + 사용자 번호 (더 크고 눈에 띄게)
+          const userIcon = new window.kakao.maps.MarkerImage(
+            `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+              <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge> 
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <polygon points="20,2 24,14 36,14 26,22 30,34 20,26 10,34 14,22 4,14 16,14" 
+                         fill="${userColor}" 
+                         stroke="white" 
+                         stroke-width="3" 
+                         filter="url(#glow)"/>
+                <text x="20" y="26" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${userId}</text>
+              </svg>
+            `)}`,
+            new window.kakao.maps.Size(40, 40),
+            {
+              offset: new window.kakao.maps.Point(20, 20)
+            }
+          );
+          
+          markerOptions.image = userIcon;
+        }
         // 친구 마커인 경우 커스텀 아이콘 사용
-        if (markerInfo.id.startsWith('friend-')) {
+        else if (markerInfo.id.startsWith('friend-')) {
           const friendId = parseInt(markerInfo.id.replace('friend-', ''));
           const colorIndex = (friendId - 1) % friendColors.length;
           const friendColor = friendColors[colorIndex];
@@ -410,20 +453,32 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
 
     // 개선된 경로 생성 함수
     const createImprovedRoute = (routeInfo: any) => {
-      const path = [];
-      const steps = 12;
+      let path = [];
       
-      for (let i = 0; i <= steps; i++) {
-        const ratio = i / steps;
-        const lat = routeInfo.from.lat + (routeInfo.to.lat - routeInfo.from.lat) * ratio;
-        const lng = routeInfo.from.lng + (routeInfo.to.lng - routeInfo.from.lng) * ratio;
+      // 실제 경로 좌표가 있으면 그것을 사용
+      if (routeInfo.coords && routeInfo.coords.length > 0) {
+        console.log('🎯 실제 경로 좌표 사용:', {
+          coordsCount: routeInfo.coords.length,
+          firstCoord: routeInfo.coords[0],
+          lastCoord: routeInfo.coords[routeInfo.coords.length - 1]
+        });
+        path = routeInfo.coords.map((coord: { lat: number; lng: number }) => new window.kakao.maps.LatLng(coord.lat, coord.lng));
+      } else {
+        // 실제 경로 좌표가 없으면 곡선 경로 생성
+        const steps = 12;
         
-        if (i > 0 && i < steps) {
-          const curveIntensity = 0.001;
-          const offset = Math.sin(ratio * Math.PI) * curveIntensity;
-          path.push(new window.kakao.maps.LatLng(lat + offset, lng));
-        } else {
-          path.push(new window.kakao.maps.LatLng(lat, lng));
+        for (let i = 0; i <= steps; i++) {
+          const ratio = i / steps;
+          const lat = routeInfo.from.lat + (routeInfo.to.lat - routeInfo.from.lat) * ratio;
+          const lng = routeInfo.from.lng + (routeInfo.to.lng - routeInfo.from.lng) * ratio;
+          
+          if (i > 0 && i < steps) {
+            const curveIntensity = 0.001;
+            const offset = Math.sin(ratio * Math.PI) * curveIntensity;
+            path.push(new window.kakao.maps.LatLng(lat + offset, lng));
+          } else {
+            path.push(new window.kakao.maps.LatLng(lat, lng));
+          }
         }
       }
 

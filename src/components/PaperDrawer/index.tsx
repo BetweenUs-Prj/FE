@@ -141,7 +141,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       if (Array.isArray(responseData) && responseData.length > 0) {
         console.log('🎯 백엔드에서 받은 중간지점 배열:', responseData);
         
-        // 각 중간지점에서 필요한 정보 추출
+        // 각 중간지점에서 필요한 정보 추출 (segments 포함)
         const middlePoints = responseData.map((point, index) => ({
           id: index + 1,
           latitude: point.latitude,
@@ -150,7 +150,10 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
           totalTravelTime: point.totalTravelTime,
           transportType: point.transportType,
           travelCost: point.travelCost,
-          fairnessScore: point.fairnessScore
+          fairnessScore: point.fairnessScore,
+          segments: point.segments, // 🎯 segments 데이터 추가
+          trafficDistance: point.trafficDistance, // 🎯 교통거리 추가
+          totalWalk: point.totalWalk // 🎯 도보거리 추가
         }));
         
         console.log('🎯 추출된 중간지점 데이터:', middlePoints);

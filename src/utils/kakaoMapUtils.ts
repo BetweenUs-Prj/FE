@@ -40,7 +40,7 @@ export const calculateMiddlePoint = (lat1: number, lng1: number, lat2: number, l
 // 여러 지점의 중심점 계산
 export const calculateCenterPoint = (points: Array<{ lat: number, lng: number }>): { lat: number, lng: number } => {
   if (points.length === 0) {
-    return { lat: 37.5665, lng: 126.9780 }; // 서울시청 기본값
+    return { lat: 37.5663, lng: 126.9779 }; // 서울시청 기본값
   }
   
   const sumLat = points.reduce((sum, point) => sum + point.lat, 0);

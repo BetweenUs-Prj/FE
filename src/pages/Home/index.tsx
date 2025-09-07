@@ -18,33 +18,21 @@ import { useHomeLogic } from '@/hooks/useHomeLogic';
 
 const Home = () => {
   const {
-    // 상태
-    showCardList,
-    showHomeContent,
-    isHomeContentFading,
-    currentView,
-    cards,
-    mapCenter,
-    mapLevel,
-    mapMarkers,
-    mapRoutes,
-    selectedCardId,
-    showEasterEgg,
-    friends,
-    mapInteraction,
-    toast,
-    showTransportModal,
-    selectedStationInfo,
-    showScheduleConfirmModal,
-    scheduleData,
-    showFriendsModal,
-    showScheduleModal,
-    showMeetingModal,
-    schedules,
-    selectedMiddlePointData,
-
+    // ===== 🎯 통합된 상태 객체들 =====
+    uiState,
+    mapState,
+    modalState,
     
-    // 핸들러
+    // ===== 🎯 개별 상태들 =====
+    friends,
+    schedules,
+    cards,
+    toast,
+    
+    // ===== 🎯 상태 업데이트 함수들 =====
+    updateModalState,
+    
+    // ===== 🎯 핸들러들 =====
     hideToast,
     handleFriendClick,
     handleScheduleClick,
@@ -56,15 +44,8 @@ const Home = () => {
     handleSendInvitation,
     handleGoToSchedule,
     handleCloseScheduleConfirmModal,
-    handleRemoveSchedule,
-
-    
-    // 액션
-    setShowFriendsModal,
-    setShowScheduleModal,
-    setShowMeetingModal,
-    setShowTransportModal,
-
+    handleCloseTransportModal,
+    handleRemoveSchedule
   } = useHomeLogic();
 
   return (
@@ -73,17 +54,17 @@ const Home = () => {
       <div className={styles.mapBackground}>
                 <KakaoMap
           containerId="home-map"
-          center={mapCenter}
-          level={mapLevel}
-          zoomable={mapInteraction.zoomable}
-          draggable={mapInteraction.draggable}
+          center={mapState.center}
+          level={mapState.level}
+          zoomable={mapState.interaction.zoomable}
+          draggable={mapState.interaction.draggable}
           appKey={KAKAO_MAP_APP_KEY}
           className={styles.homeMapContainer}
-          markers={mapMarkers}
-          routes={mapRoutes}
+          markers={mapState.markers}
+          routes={mapState.routes}
           disableAutoCenter={false}
           onMarkerClick={(marker) => {
-            console.log('KakaoMap에 전달된 markers:', mapMarkers);
+            console.log('KakaoMap에 전달된 markers:', mapState.markers);
             // 친구 마커 클릭 처리
             if (marker.id.startsWith('friend-')) {
               const friendId = parseInt(marker.id.replace('friend-', ''));
@@ -92,12 +73,12 @@ const Home = () => {
                 console.log(`친구 마커 클릭: ${friend.name} - ${friend.location}`);
                 
                 // 경로는 유지 (기존 경로가 있으면 그대로 유지)
-                console.log('친구 마커 클릭 - 기존 경로 유지, 현재 경로 개수:', mapRoutes.length);
+                console.log('친구 마커 클릭 - 기존 경로 유지, 현재 경로 개수:', mapState.routes.length);
                 
                 // 경로가 사라지지 않도록 명시적으로 다시 설정 (같은 경로)
-                if (mapRoutes.length > 0) {
+                if (mapState.routes.length > 0) {
                   console.log('기존 경로 유지를 위해 경로 재설정');
-                  // setMapRoutes([...mapRoutes]); // 같은 경로를 다시 설정하여 유지
+                  // setMapRoutes([...mapState.routes]); // 같은 경로를 다시 설정하여 유지
                 }
               }
               return;
@@ -106,8 +87,8 @@ const Home = () => {
         />
       </div>
       
-      {showHomeContent && (
-        <div className={`${styles.homeContent} ${isHomeContentFading ? styles.fadeOut : ''}`}>
+      {uiState.showHomeContent && (
+        <div className={styles.homeContent}>
           <FadeIn delay={0.2} direction="up">
             <h1 className={styles.homeTitle}>우리 사이</h1>
             <p className={styles.mapDescription}>
@@ -123,7 +104,7 @@ const Home = () => {
       />
       
       <MiddlePlaceRecommendCard
-        isVisible={showCardList}
+        isVisible={uiState.showCardList}
         onCardClick={handleCardClick}
         onResetSelection={() => {
           if ((window as any).resetMiddlePlaceCardSelection) {
@@ -131,8 +112,8 @@ const Home = () => {
           }
         }}
         cards={cards}
-        currentView={currentView}
-        selectedCardId={selectedCardId}
+        currentView={uiState.currentView}
+        selectedCardId={null} // 🎯 selectedCardId 제거됨
       />
       
       <FloatingNav
@@ -141,8 +122,8 @@ const Home = () => {
         onMeetingClick={handleMeetingClick}
       />
       
-      {/* 삼육대학교 이스터 에그 */}
-      {showEasterEgg && (
+      {/* 🗑️ 제거: 삼육대학교 이스터 에그 */}
+      {/* {showEasterEgg && (
         <div className={styles.easterEgg}>
           <div className={styles.easterEggContent}>
             <div className={styles.easterEggIcon}>🎓</div>
@@ -152,7 +133,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
       
       {/* 토스트 메시지 */}
       <Toast
@@ -165,31 +146,29 @@ const Home = () => {
 
       {/* 모달들 */}
       <FriendsModal
-        isVisible={showFriendsModal}
-        onClose={() => setShowFriendsModal(false)}
+        isVisible={modalState.showFriends}
+        onClose={() => updateModalState({ showFriends: false })}
+        currentUserId={1} // TODO: 실제 사용자 ID로 교체
       />
       
       <ScheduleModal
-        isVisible={showScheduleModal}
-        onClose={() => setShowScheduleModal(false)}
+        isVisible={modalState.showSchedule}
+        onClose={() => updateModalState({ showSchedule: false })}
         schedules={schedules}
         onRemoveSchedule={handleRemoveSchedule}
 
       />
       
       <MeetingModal
-        isVisible={showMeetingModal}
-        onClose={() => setShowMeetingModal(false)}
+        isVisible={modalState.showMeeting}
+        onClose={() => updateModalState({ showMeeting: false })}
       />
       
       <TransportInfoModal
-        isVisible={showTransportModal}
-        onClose={() => {
-          console.log('TransportInfoModal 닫기');
-          setShowTransportModal(false);
-        }}
-        stationName={selectedStationInfo?.name || ''}
-        stationPosition={selectedStationInfo?.position || { lat: 0, lng: 0 }}
+        isVisible={modalState.showTransport}
+        onClose={handleCloseTransportModal}
+        stationName={modalState.selectedStationInfo?.name || ''}
+        stationPosition={modalState.selectedStationInfo?.position || { lat: 0, lng: 0 }}
         friends={friends.map(friend => ({
           id: friend.id,
           name: friend.name,
@@ -202,18 +181,18 @@ const Home = () => {
         onMapRouteUpdate={(routes) => {
           console.log('TransportInfoModal에서 맵 경로 업데이트:', routes);
         }}
-        isPlaceMode={selectedStationInfo?.name?.includes('→') || false}
-        placePosition={selectedStationInfo?.placePosition}
-        placeInfo={selectedStationInfo?.placeInfo}
+        isPlaceMode={modalState.selectedStationInfo?.name?.includes('→') || false}
+        placePosition={modalState.selectedStationInfo?.placePosition}
+        placeInfo={modalState.selectedStationInfo?.placeInfo}
         onAddSchedule={handleAddSchedule}
-        middlePointData={selectedMiddlePointData}
+        middlePointData={modalState.selectedMiddlePointData}
       />
       
       {/* 🎯 약속 추가 확인 모달 */}
       <ScheduleConfirmModal
-        isVisible={showScheduleConfirmModal}
+        isVisible={modalState.showScheduleConfirm}
         onClose={handleCloseScheduleConfirmModal}
-        scheduleData={scheduleData}
+        scheduleData={modalState.scheduleData}
         onSendInvitation={handleSendInvitation}
         onGoToSchedule={handleGoToSchedule}
       />

@@ -14,6 +14,7 @@ interface RouteInfo {
   from: { lat: number; lng: number };
   to: { lat: number; lng: number };
   color?: string;
+  coords?: { lat: number; lng: number }[]; // 실제 경로 좌표 배열
 }
 
 interface KakaoMapProps {

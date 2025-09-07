@@ -104,6 +104,25 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   // 중복 요청 방지를 위한 ref
   const isGeneratingRef = useRef(false);
   const lastGeneratedRef = useRef<string>('');
+  
+  // 스크롤 상태 관리
+  const [isScrollable, setIsScrollable] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // 스크롤 상태 체크 함수
+  const checkScrollState = useCallback(() => {
+    if (!contentRef.current) return;
+    
+    const { scrollHeight, clientHeight } = contentRef.current;
+    const canScroll = scrollHeight > clientHeight;
+    
+    setIsScrollable(canScroll);
+  }, []);
+
+  // 스크롤 이벤트 핸들러
+  const handleScroll = useCallback(() => {
+    checkScrollState();
+  }, [checkScrollState]);
 
   // 모달 상태 초기화
   useEffect(() => {
@@ -111,8 +130,39 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       setIsLoading(false);
       isGeneratingRef.current = false;
       lastGeneratedRef.current = '';
+      
+      // 모달이 닫힐 때 처리 중 상태 리셋
+      if ((window as any).handleCardClick && (window as any).handleCardClick.isProcessing) {
+        (window as any).handleCardClick.isProcessing = false;
+        console.log('TransportInfoModal 닫기: 처리 중 상태 리셋됨');
+      }
+    } else {
+      // 모달이 열릴 때 스크롤 상태 체크
+      setTimeout(checkScrollState, 100);
     }
-  }, [isVisible]);
+  }, [isVisible, checkScrollState]);
+
+  // 내용이 변경될 때 스크롤 상태 체크
+  useEffect(() => {
+    if (isVisible) {
+      // 여러 번 체크하여 확실하게 스크롤 상태 감지
+      setTimeout(checkScrollState, 100);
+      setTimeout(checkScrollState, 300);
+      setTimeout(checkScrollState, 500);
+    }
+  }, [routes, isVisible, checkScrollState]);
+
+  // 윈도우 리사이즈 시 스크롤 상태 체크
+  useEffect(() => {
+    if (isVisible) {
+      const handleResize = () => {
+        setTimeout(checkScrollState, 100);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [isVisible, checkScrollState]);
 
   // 모달이 열릴 때 자동으로 경로 계산
   useEffect(() => {
@@ -146,10 +196,9 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       // 백엔드에서 받은 segments 데이터를 활용
       const segments = middlePointData.segments || [];
       
-      // 교통수단 정보 추출
+      // 교통수단 정보 추출 (null 값 안전 처리)
       const transportType = middlePointData.transportType || '대중교통';
       const totalTravelTime = middlePointData.totalTravelTime || 0;
-      const travelCost = middlePointData.travelCost || 0;
       
       // 경로 단계 생성
       const routeSteps: RouteStep[] = segments.map((segment: any, index: number) => ({
@@ -168,30 +217,21 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       
       // 경로 요약 생성 (details 배열)
       const details = segments
-        .filter(segment => segment.trafficTypeName && segment.trafficTypeName !== '도보')
-        .map(segment => segment.startName || segment.endName || segment.trafficTypeName)
+        .filter((segment: any) => segment.trafficTypeName && segment.trafficTypeName !== '도보')
+        .map((segment: any) => segment.startName || segment.endName || segment.trafficTypeName)
         .filter(Boolean);
 
       return {
         friendId: friend.id,
         friendName: friend.name,
-        friendLocation: friend.location,
-        friendPosition: friend.position,
-        destinationName: middlePointData.lastEndStation || stationName,
-        destinationPosition: {
-          lat: middlePointData.latitude || stationPosition.lat,
-          lng: middlePointData.longitude || stationPosition.lng
-        },
-        totalDistance: middlePointData.trafficDistance || 0,
-        totalDuration: totalTravelTime,
-        totalCost: travelCost,
-        transportType: transportType,
-        transportMode: transportType, // transportMode 추가
+        transportMode: transportType as 'transit' | 'car' | 'walk',
+        duration: totalTravelTime,
+        distance: Math.round((middlePointData.trafficDistance || 0) / 1000 * 10) / 10,
+        details: details.length > 0 ? details : [friend.location, middlePointData.lastEndStation || stationName],
         departureTime: calculateDepartureTime(meetingTime, totalTravelTime),
         arrivalTime: meetingTime,
         routeSteps: routeSteps,
-        transferInfos: [], // 필요시 segments에서 환승 정보 추출
-        details: details.length > 0 ? details : [friend.location, middlePointData.lastEndStation || stationName] // details 배열 추가
+        transferInfos: [] // 필요시 segments에서 환승 정보 추출
       };
     });
     
@@ -457,13 +497,24 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
               isPlaceMode ? `📍 ${placeInfo?.title || '추천장소'}` : `🚇 ${stationName} 교통 정보`
             }
           </h3>
-          <button className={styles.closeButton} onClick={onClose}>
+          <button className={styles.closeButton} onClick={() => {
+            // 클릭 처리 상태 리셋
+            if ((window as any).handleCardClick && (window as any).handleCardClick.isProcessing) {
+              (window as any).handleCardClick.isProcessing = false;
+              console.log('TransportInfoModal 닫기: 처리 중 상태 리셋됨');
+            }
+            onClose();
+          }}>
             ✕
           </button>
         </div>
 
         {/* 컨텐츠 */}
-        <div className={styles.content}>
+        <div 
+          ref={contentRef}
+          className={`${styles.content} ${isScrollable ? styles.scrollable : ''}`}
+          onScroll={handleScroll}
+        >
           {/* 중간지점 데이터 정보 표시 */}
           {middlePointData && (
             <div className={styles.middlePointInfo}>
@@ -487,7 +538,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                 <span className={styles.infoLabel}>도보 거리:</span>
                 <span className={styles.infoValue}>{Math.round((middlePointData.totalWalk || 0) / 1000 * 10) / 10}km</span>
               </div>
-              {middlePointData.fairnessScore && (
+              {middlePointData.fairnessScore !== null && middlePointData.fairnessScore !== undefined && (
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>공정성 점수:</span>
                   <span className={styles.infoValue}>{Math.round(middlePointData.fairnessScore * 10) / 10}</span>
@@ -644,7 +695,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                         <div className={styles.routeSummary}>
                           <span className={styles.transportIcon}>{getTransportIcon(route.transportMode)}</span>
                           <span className={styles.routeText}>
-                            {route.details && route.details.length > 0 ? route.details.join(' → ') : `${route.friendLocation} → ${route.destinationName}`}
+                            {route.details && route.details.length > 0 ? route.details.join(' → ') : `${route.friendName} → ${stationName}`}
                           </span>
                         </div>
                       </div>

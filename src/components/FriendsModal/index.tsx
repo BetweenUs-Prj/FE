@@ -1,55 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './FriendsModal.module.css';
 import Toast from '../Toast';
-
-interface Friend {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  status: 'online' | 'offline' | 'busy';
-}
-
-interface FriendRequest {
-  id: number;
-  name: string;
-  email: string;
-  message?: string;
-  timestamp: string;
-}
-
-interface SentRequest {
-  id: number;
-  name: string;
-  email: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  timestamp: string;
-}
+import AddFriendModal from '../AddFriendModal';
+import {
+  getFriendsList,
+  getReceivedFriendRequests,
+  getSentFriendRequests,
+  getPendingRequestCount,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  cancelFriendRequest,
+  deleteFriend
+} from '@/services/friendService';
+import type {
+  Friend,
+  FriendRequest,
+  SentFriendRequest
+} from '@/types/friend.ts';
 
 interface FriendsModalProps {
   isVisible: boolean;
   onClose: () => void;
+  currentUserId?: number;
 }
 
-const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
+const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose, currentUserId = 1 }) => {
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'sent'>('friends');
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const [friends, setFriends] = useState<Friend[]>([
-    { id: 1, name: '김철수', email: 'kim@example.com', phone: '010-1234-5678', status: 'online' },
-    { id: 2, name: '이영희', email: 'lee@example.com', phone: '010-2345-6789', status: 'offline' },
-    { id: 3, name: '박민수', email: 'park@example.com', phone: '010-3456-7890', status: 'busy' },
-  ]);
-
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([
-    { id: 1, name: '최지영', email: 'choi@example.com', message: '안녕하세요! 친구가 되고 싶어요.', timestamp: '2024-01-15 14:30' },
-    { id: 2, name: '정민호', email: 'jung@example.com', timestamp: '2024-01-14 09:15' },
-  ]);
-
-  const [sentRequests, setSentRequests] = useState<SentRequest[]>([
-    { id: 1, name: '한소희', email: 'han@example.com', status: 'pending', timestamp: '2024-01-13 16:45' },
-    { id: 2, name: '윤태현', email: 'yoon@example.com', status: 'pending', timestamp: '2024-01-12 11:20' },
-    { id: 3, name: '송미라', email: 'song@example.com', status: 'pending', timestamp: '2024-01-11 13:10' },
-  ]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<SentFriendRequest[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const [toast, setToast] = useState<{
     isVisible: boolean;
@@ -73,42 +56,113 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  const handleAddFriend = () => {
-    showToast('친구 추가 기능이 곧 추가될 예정입니다!', 'info');
-  };
+  // 데이터 로드 함수
+  const loadFriendsData = async () => {
+    setIsLoading(true);
+    try {
+      const [friendsRes, requestsRes, sentRes, countRes] = await Promise.all([
+        getFriendsList(),
+        getReceivedFriendRequests(),
+        getSentFriendRequests(),
+        getPendingRequestCount()
+      ]);
 
-  const handleRemoveFriend = (id: number) => {
-    setFriends(prev => prev.filter(friend => friend.id !== id));
-    showToast('친구가 삭제되었습니다.', 'success');
-  };
-
-  const handleAcceptRequest = (id: number) => {
-    const request = friendRequests.find(req => req.id === id);
-    if (request) {
-      // 친구 목록에 추가
-      const newFriend: Friend = {
-        id: Date.now(),
-        name: request.name,
-        email: request.email,
-        phone: '010-0000-0000',
-        status: 'offline'
-      };
-      setFriends(prev => [...prev, newFriend]);
-      
-      // 요청 목록에서 제거
-      setFriendRequests(prev => prev.filter(req => req.id !== id));
-      showToast('친구 요청을 수락했습니다.', 'success');
+      if (friendsRes.success) {
+        setFriends(friendsRes.data);
+      }
+      if (requestsRes.success) {
+        setFriendRequests(requestsRes.data);
+      }
+      if (sentRes.success) {
+        setSentRequests(sentRes.data);
+      }
+      if (countRes.success) {
+        setPendingCount(countRes.data.count);
+      }
+    } catch (error) {
+      console.error('친구 데이터 로드 오류:', error);
+      showToast('친구 데이터를 불러오는 중 오류가 발생했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRejectRequest = (id: number) => {
-    setFriendRequests(prev => prev.filter(req => req.id !== id));
-    showToast('친구 요청을 거절했습니다.', 'info');
+  // 컴포넌트 마운트 시 데이터 로드
+  useEffect(() => {
+    if (isVisible) {
+      loadFriendsData();
+    }
+  }, [isVisible]);
+
+  const handleAddFriend = () => {
+    setShowAddFriendModal(true);
   };
 
-  const handleCancelSentRequest = (id: number) => {
-    setSentRequests(prev => prev.filter(req => req.id !== id));
-    showToast('보낸 친구 요청을 취소했습니다.', 'info');
+  const handleFriendAdded = () => {
+    loadFriendsData(); // 데이터 새로고침
+  };
+
+  const handleRemoveFriend = async (id: number) => {
+    try {
+      const response = await deleteFriend(id);
+      if (response.success) {
+        setFriends(prev => prev.filter(friend => friend.id !== id));
+        showToast('친구가 삭제되었습니다.', 'success');
+      } else {
+        showToast(response.message || '친구 삭제에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('친구 삭제 오류:', error);
+      showToast('친구 삭제 중 오류가 발생했습니다.', 'error');
+    }
+  };
+
+  const handleAcceptRequest = async (id: number) => {
+    try {
+      const response = await acceptFriendRequest(id);
+      if (response.success) {
+        // 요청 목록에서 제거
+        setFriendRequests(prev => prev.filter(req => req.id !== id));
+        // 친구 목록 새로고침
+        loadFriendsData();
+        showToast('친구 요청을 수락했습니다.', 'success');
+      } else {
+        showToast(response.message || '친구 요청 수락에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('친구 요청 수락 오류:', error);
+      showToast('친구 요청 수락 중 오류가 발생했습니다.', 'error');
+    }
+  };
+
+  const handleRejectRequest = async (id: number) => {
+    try {
+      const response = await rejectFriendRequest(id);
+      if (response.success) {
+        setFriendRequests(prev => prev.filter(req => req.id !== id));
+        showToast('친구 요청을 거절했습니다.', 'info');
+      } else {
+        showToast(response.message || '친구 요청 거절에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('친구 요청 거절 오류:', error);
+      showToast('친구 요청 거절 중 오류가 발생했습니다.', 'error');
+    }
+  };
+
+  const handleCancelSentRequest = async (id: number) => {
+    try {
+      const response = await cancelFriendRequest(id);
+      if (response.success) {
+        setSentRequests(prev => prev.filter(req => req.id !== id));
+        showToast('보낸 친구 요청을 취소했습니다.', 'info');
+      } else {
+        showToast(response.message || '친구 요청 취소에 실패했습니다.', 'error');
+      }
+    } catch (error) {
+      console.error('친구 요청 취소 오류:', error);
+      showToast('친구 요청 취소 중 오류가 발생했습니다.', 'error');
+    }
   };
 
   const getStatusColor = (status: Friend['status']) => {
@@ -129,21 +183,23 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
     }
   };
 
-  const getRequestStatusColor = (status: SentRequest['status']) => {
-    switch (status) {
-      case 'pending': return '#FF9800';
-      case 'accepted': return '#4CAF50';
-      case 'rejected': return '#F44336';
-      default: return '#9E9E9E';
-    }
-  };
-
-  const getRequestStatusText = (status: SentRequest['status']) => {
+  const getRequestStatusText = (status: SentFriendRequest['status']) => {
     switch (status) {
       case 'pending': return '대기중';
       case 'accepted': return '수락됨';
       case 'rejected': return '거절됨';
+      case 'cancelled': return '취소됨';
       default: return '대기중';
+    }
+  };
+
+  const getRequestStatusColor = (status: SentFriendRequest['status']) => {
+    switch (status) {
+      case 'pending': return '#FF9800';
+      case 'accepted': return '#4CAF50';
+      case 'rejected': return '#F44336';
+      case 'cancelled': return '#9E9E9E';
+      default: return '#9E9E9E';
     }
   };
 
@@ -172,6 +228,7 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
               onClick={() => setActiveTab('requests')}
             >
               친구 수락 ({friendRequests.length})
+              {pendingCount > 0 && <span className={styles.badge}>{pendingCount}</span>}
             </button>
             <button 
               className={`${styles.tabButton} ${activeTab === 'sent' ? styles.active : ''}`}
@@ -184,43 +241,59 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
           <div className={styles.content}>
             {activeTab === 'friends' && (
               <div className={styles.tabContent}>
-                <div className={styles.friendsList}>
-                  {friends.map(friend => (
-                    <div key={friend.id} className={styles.friendCard}>
-                      <div className={styles.friendInfo}>
-                        <div className={styles.avatar}>
-                          {friend.name.charAt(0)}
-                        </div>
-                        <div className={styles.details}>
-                          <h3 className={styles.friendName}>{friend.name}</h3>
-                          <p className={styles.friendEmail}>{friend.email}</p>
-                          <p className={styles.friendPhone}>{friend.phone}</p>
-                        </div>
-                        <div className={styles.status}>
-                          <span 
-                            className={styles.statusDot}
-                            style={{ backgroundColor: getStatusColor(friend.status) }}
-                          ></span>
-                          <span className={styles.statusText}>{getStatusText(friend.status)}</span>
-                        </div>
-                      </div>
-                      <div className={styles.actions}>
-                        <button 
-                          className={styles.removeButton}
-                          onClick={() => handleRemoveFriend(friend.id)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                <div className={styles.addFriendSection}>
+                  <button 
+                    className={styles.addFriendButton}
+                    onClick={handleAddFriend}
+                  >
+                    + 친구 추가
+                  </button>
                 </div>
+                
+                {isLoading ? (
+                  <div className={styles.loadingContainer}>
+                    <div className={styles.loadingSpinner}></div>
+                    <p>친구 목록을 불러오는 중...</p>
+                  </div>
+                ) : (
+                  <div className={styles.friendsList}>
+                    {friends.map(friend => (
+                      <div key={friend.id} className={styles.friendCard}>
+                        <div className={styles.friendInfo}>
+                          <div className={styles.avatar}>
+                            {friend.name.charAt(0)}
+                          </div>
+                          <div className={styles.details}>
+                            <h3 className={styles.friendName}>{friend.name}</h3>
+                            <p className={styles.friendEmail}>{friend.email}</p>
+                            {friend.phone && <p className={styles.friendPhone}>{friend.phone}</p>}
+                          </div>
+                          <div className={styles.status}>
+                            <span 
+                              className={styles.statusDot}
+                              style={{ backgroundColor: getStatusColor(friend.status) }}
+                            ></span>
+                            <span className={styles.statusText}>{getStatusText(friend.status)}</span>
+                          </div>
+                        </div>
+                        <div className={styles.actions}>
+                          <button 
+                            className={styles.removeButton}
+                            onClick={() => handleRemoveFriend(friend.id)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
 
-                {friends.length === 0 && (
-                  <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>👥</div>
-                    <h3>친구가 없습니다</h3>
-                    <p>친구를 추가해보세요!</p>
+                    {friends.length === 0 && (
+                      <div className={styles.emptyState}>
+                        <div className={styles.emptyIcon}>👥</div>
+                        <h3>친구가 없습니다</h3>
+                        <p>친구를 추가해보세요!</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -233,15 +306,17 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
                     <div key={request.id} className={styles.requestCard}>
                       <div className={styles.requestInfo}>
                         <div className={styles.avatar}>
-                          {request.name.charAt(0)}
+                          {request.sender.name.charAt(0)}
                         </div>
                         <div className={styles.details}>
-                          <h3 className={styles.requestName}>{request.name}</h3>
-                          <p className={styles.requestEmail}>{request.email}</p>
+                          <h3 className={styles.requestName}>{request.sender.name}</h3>
+                          <p className={styles.requestEmail}>{request.sender.email}</p>
                           {request.message && (
                             <p className={styles.requestMessage}>{request.message}</p>
                           )}
-                          <p className={styles.requestTime}>{request.timestamp}</p>
+                          <p className={styles.requestTime}>
+                            {new Date(request.createdAt).toLocaleString('ko-KR')}
+                          </p>
                         </div>
                       </div>
                       <div className={styles.requestActions}>
@@ -279,21 +354,33 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
                     <div key={request.id} className={styles.sentRequestCard}>
                       <div className={styles.requestInfo}>
                         <div className={styles.avatar}>
-                          {request.name.charAt(0)}
+                          {request.receiver.name.charAt(0)}
                         </div>
                         <div className={styles.details}>
-                          <h3 className={styles.requestName}>{request.name}</h3>
-                          <p className={styles.requestEmail}>{request.email}</p>
-                          <p className={styles.requestTime}>{request.timestamp}</p>
+                          <h3 className={styles.requestName}>{request.receiver.name}</h3>
+                          <p className={styles.requestEmail}>{request.receiver.email}</p>
+                          <p className={styles.requestTime}>
+                            {new Date(request.createdAt).toLocaleString('ko-KR')}
+                          </p>
                         </div>
                       </div>
                       <div className={styles.requestActions}>
-                        <button 
-                          className={styles.cancelButton}
-                          onClick={() => handleCancelSentRequest(request.id)}
-                        >
-                          취소
-                        </button>
+                        <div className={styles.requestStatus}>
+                          <span 
+                            className={styles.statusBadge}
+                            style={{ backgroundColor: getRequestStatusColor(request.status) }}
+                          >
+                            {getRequestStatusText(request.status)}
+                          </span>
+                        </div>
+                        {request.status === 'pending' && (
+                          <button 
+                            className={styles.cancelButton}
+                            onClick={() => handleCancelSentRequest(request.id)}
+                          >
+                            취소
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -318,6 +405,16 @@ const FriendsModal: React.FC<FriendsModalProps> = ({ isVisible, onClose }) => {
         type={toast.type}
         onClose={hideToast}
         duration={3000}
+      />
+
+      <AddFriendModal
+        isVisible={showAddFriendModal}
+        onClose={() => setShowAddFriendModal(false)}
+        onFriendAdded={handleFriendAdded}
+        existingFriends={friends}
+        sentRequests={sentRequests}
+        receivedRequests={friendRequests}
+        currentUserId={currentUserId}
       />
     </>
   );
