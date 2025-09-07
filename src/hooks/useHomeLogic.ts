@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllStations, getPlacesByStationId, getPlacesByStationAndPurpose, getStationById } from '@/constants/stationData';
+import { getAllStations, getPlacesByStationId, getPlacesByStationAndPurpose, getStationById, getPlaceById } from '@/constants/stationData';
+import type { PlaceInfo } from '@/constants/stationData';
 import { API_BASE_URLS } from '@/constants/config';
 
 interface MiddlePlaceCard {
@@ -168,10 +169,7 @@ export const useHomeLogic = () => {
     const station = getStationById(stationId);
     if (!station) return [];
 
-    // 목적이 있으면 새로운 통합 API 사용, 없으면 기존 API 사용
-    const places = meetingPurpose 
-      ? await getPlacesByStationAndPurpose(stationId, meetingPurpose)
-      : await getPlacesByStationId(stationId);
+    const places = await getPlacesByStationAndPurpose(stationId, meetingPurpose);
     
     const placeCards = places.map(place => ({
       id: place.id,
@@ -529,8 +527,13 @@ export const useHomeLogic = () => {
           }
         } else {
           // 🎯 새로운 장소 선택 시: 역과 해당 장소 간의 경로만 표시
-          const places = await getPlacesByStationId(selectedStationId || 0);
-          const selectedPlace = places.find(place => place.id === clickedCard.id);
+          // 이미 앞서 역을 클릭하면서 적재한 데이터가 있음. 이걸 이용해서 장소에 대한 정보를 표기할 것
+          // cards 배열에서 선택된 장소 정보를 직접 가져옴 (API 재호출 방지)
+          const selectedPlaceCard = cards.find(card => card.id === clickedCard.id && card.type === 'place');
+          if (!selectedPlaceCard) return; // 장소가 없으면 종료
+          
+          // 🎯 직접 장소 정보 조회로 최적화 (기존: 역의 모든 장소 조회 후 필터링)
+          const selectedPlace = await getPlaceById(clickedCard.id);
           if (selectedPlace) {
             const currentStation = getStationById(selectedStationId || 0);
             if (currentStation && selectedPlace) {
@@ -586,10 +589,9 @@ export const useHomeLogic = () => {
                   position: { lat: currentStation.lat, lng: currentStation.lng },
                   placePosition: { lat: selectedPlace.lat, lng: selectedPlace.lng },
                   placeInfo: {
-                    id: selectedPlace.id,
                     title: selectedPlace.title,
                     category: selectedPlace.category,
-                    description: selectedPlace.description || `${selectedPlace.title}는 ${selectedPlace.category} 카테고리의 장소입니다.`,
+                    description: selectedPlace.description,
                     duration: selectedPlace.duration,
                     lat: selectedPlace.lat,
                     lng: selectedPlace.lng,

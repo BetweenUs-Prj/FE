@@ -422,7 +422,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                     {/* 🎯 상세 설명 */}
                     <div className={styles.placeDescription}>
                       <h5>📍 장소 소개</h5>
-                      <p>{placeInfo.description || `${placeInfo.title}는 ${placeInfo.category} 카테고리의 인기 장소입니다.`}</p>
+                      <p>{placeInfo.description}</p>
                       
                       {/* 좌표 정보 표시 */}
                       {(placeInfo.lat && placeInfo.lng) && (
