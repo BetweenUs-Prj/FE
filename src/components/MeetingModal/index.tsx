@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './MeetingModal.module.css';
 import Toast from '../Toast';
 
@@ -19,41 +19,42 @@ interface MeetingModalProps {
   onClose: () => void;
 }
 
-// Backend data transformation utilities
-const transformBackendToFrontend = (backendMeeting: any): Meeting => ({
-  id: backendMeeting.meetingId,
-  title: backendMeeting.title,
-  date: backendMeeting.scheduledAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-  time: backendMeeting.scheduledAt?.split('T')[1]?.substring(0, 5) || '00:00',
-  location: backendMeeting.place?.placeName || '장소 미정',
-  description: backendMeeting.memo || '',
-  status: mapBackendStatus(backendMeeting.status),
-  participants: backendMeeting.participants?.map((p: any) => p.name || `User ${p.userId}`) || [],
-  category: inferCategoryFromLocation(backendMeeting.place?.placeName) || '모임'
-});
-
-const mapBackendStatus = (backendStatus: string): Meeting['status'] => {
-  switch (backendStatus) {
-    case 'SCHEDULED': return 'upcoming';
-    case 'CANCELLED': return 'cancelled';
-    case 'COMPLETED': return 'completed';
-    default: return 'upcoming';
-  }
-};
-
-const inferCategoryFromLocation = (location?: string): string => {
-  if (!location) return '모임';
-  const loc = location.toLowerCase();
-  if (loc.includes('카페') || loc.includes('coffee')) return '커피';
-  if (loc.includes('식당') || loc.includes('맛집') || loc.includes('restaurant')) return '식사';
-  if (loc.includes('술') || loc.includes('bar') || loc.includes('pub')) return '술';
-  if (loc.includes('영화') || loc.includes('cinema')) return '문화';
-  return '모임';
-};
-
 const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [meetings, setMeetings] = useState<Meeting[]>([
+    {
+      id: 1,
+      title: '친구들과 저녁 약속',
+      date: '2024-01-20',
+      time: '19:00',
+      location: '강남역 맛집',
+      description: '친구들과 저녁 먹으면서 수다 떨기',
+      status: 'upcoming',
+      participants: ['김철수', '이영희', '박민수'],
+      category: '식사'
+    },
+    {
+      id: 2,
+      title: '동창회',
+      date: '2024-01-25',
+      time: '18:30',
+      location: '홍대역 카페',
+      description: '고등학교 동창들과 만나기',
+      status: 'upcoming',
+      participants: ['동창들'],
+      category: '모임'
+    },
+    {
+      id: 3,
+      title: '영화 관람',
+      date: '2024-01-18',
+      time: '20:00',
+      location: 'CGV 강남점',
+      description: '새로 나온 영화 보기',
+      status: 'completed',
+      participants: ['연인'],
+      category: '문화'
+    }
+  ]);
 
   const [toast, setToast] = useState<{
     isVisible: boolean;
@@ -77,112 +78,13 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Fetch meetings from backend
-  const fetchMeetings = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/meetings', {
-        headers: {
-          'X-User-ID': '1' // TODO: Get from auth context
-        }
-      });
-
-      if (response.ok) {
-        const backendMeetings = await response.json();
-        const transformedMeetings = backendMeetings.map(transformBackendToFrontend);
-        setMeetings(transformedMeetings);
-      } else {
-        console.error('약속 목록 조회 실패:', response.statusText);
-        showToast('약속 목록을 불러오는데 실패했습니다.', 'error');
-      }
-    } catch (error) {
-      console.error('약속 목록 조회 중 오류:', error);
-      showToast('약속 목록을 불러오는 중 오류가 발생했습니다.', 'error');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleAddMeeting = () => {
+    showToast('만남 추가 기능이 곧 추가될 예정입니다!', 'info');
   };
 
-  // Load meetings when modal becomes visible
-  useEffect(() => {
-    if (isVisible) {
-      fetchMeetings();
-    }
-  }, [isVisible]);
-
-  const handleAddMeeting = async () => {
-    // TODO: Implement meeting creation form
-    // For now, create a sample meeting to test API connection
-    const sampleMeeting = {
-      title: '새로운 만남',
-      placeId: 1,
-      placeName: '만남 장소',
-      placeAddress: '서울특별시 강남구',
-      scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-      maxParticipants: 10,
-      memo: '새로운 만남입니다',
-      participantUserIds: []
-    };
-
-    try {
-      const response = await fetch('/api/meetings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-ID': '1' // TODO: Get from auth context
-        },
-        body: JSON.stringify(sampleMeeting)
-      });
-
-      if (response.ok) {
-        const newMeeting = await response.json();
-        // Transform backend format to frontend format
-        const frontendMeeting: Meeting = {
-          id: newMeeting.meetingId,
-          title: newMeeting.title,
-          date: newMeeting.scheduledAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-          time: newMeeting.scheduledAt?.split('T')[1]?.substring(0, 5) || '00:00',
-          location: newMeeting.place?.placeName || '장소 미정',
-          description: newMeeting.memo || '',
-          status: newMeeting.status === 'SCHEDULED' ? 'upcoming' : 'upcoming',
-          participants: newMeeting.participants?.map((p: any) => p.name) || [],
-          category: '모임'
-        };
-        
-        // Refresh the meetings list instead of manually adding
-        await fetchMeetings();
-        showToast('만남이 생성되었습니다!', 'success');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        showToast(`만남 생성에 실패했습니다: ${errorData.message || response.statusText}`, 'error');
-      }
-    } catch (error) {
-      console.error('만남 생성 중 오류:', error);
-      showToast('만남 생성 중 오류가 발생했습니다.', 'error');
-    }
-  };
-
-  const handleRemoveMeeting = async (id: number) => {
-    try {
-      const response = await fetch(`/api/meetings/${id}/cancel`, {
-        method: 'POST',
-        headers: {
-          'X-User-ID': '1' // TODO: Get from auth context
-        }
-      });
-
-      if (response.ok) {
-        // Refresh the meetings list instead of manually removing
-        await fetchMeetings();
-        showToast('만남이 취소되었습니다.', 'success');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        showToast(`만남 취소에 실패했습니다: ${errorData.message || response.statusText}`, 'error');
-      }
-    } catch (error) {
-      console.error('만남 취소 중 오류:', error);
-      showToast('만남 취소 중 오류가 발생했습니다.', 'error');
-    }
+  const handleRemoveMeeting = (id: number) => {
+    setMeetings(prev => prev.filter(meeting => meeting.id !== id));
+    showToast('만남이 삭제되었습니다.', 'success');
   };
 
   const getStatusColor = (status: Meeting['status']) => {
@@ -235,12 +137,7 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
             </div>
 
             <div className={styles.meetingList}>
-              {isLoading ? (
-                <div className={styles.loadingState}>
-                  <div className={styles.loadingIcon}>⏳</div>
-                  <p>약속 목록을 불러오는 중...</p>
-                </div>
-              ) : meetings.map(meeting => (
+              {meetings.map(meeting => (
                 <div key={meeting.id} className={styles.meetingCard}>
                   <div className={styles.meetingHeader}>
                     <div className={styles.meetingInfo}>
@@ -285,7 +182,7 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
               ))}
             </div>
 
-            {!isLoading && meetings.length === 0 && (
+            {meetings.length === 0 && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>🤝</div>
                 <h3>만남이 없습니다</h3>

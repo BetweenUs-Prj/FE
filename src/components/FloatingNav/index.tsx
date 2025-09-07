@@ -1,5 +1,27 @@
 import React, { useState } from 'react';
 import styles from './FloatingNav.module.css';
+import { API_BASE_URLS } from '../../constants/config';
+
+interface Meeting {
+  meetingId: number;
+  title: string;
+  status: 'SCHEDULED' | 'CANCELLED' | 'COMPLETED';
+  host: {
+    userId: number;
+    name: string;
+  };
+  place: {
+    placeId: number;
+    placeName: string;
+    address: string;
+  };
+  scheduledAt: string;
+  participants: {
+    userId: number;
+    role: 'HOST' | 'PARTICIPANT';
+    status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'LEFT';
+  }[];
+}
 
 interface FloatingNavProps {
   onFriendClick?: () => void;
@@ -34,6 +56,8 @@ const FloatingNav: React.FC<FloatingNavProps> = ({
   };
 
   const handleScheduleClick = () => {
+    // 여기서 정보를 적재
+    // 근데 어떻게? 사용자 정보는 토큰밖에 없는데?
     onScheduleClick?.();
     // 메뉴 클릭 시에는 닫히지 않도록 handleToggle() 제거
   };

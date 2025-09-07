@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
+import { getAllStations, getPlacesByStationId, getPlacesByStationAndPurpose, getStationById } from '@/constants/stationData';
+import { API_BASE_URLS } from '@/constants/config';
 
 interface MiddlePlaceCard {
   id: number;
@@ -92,6 +93,10 @@ export const useHomeLogic = () => {
   
   // 일정 관리 상태
   const [schedules, setSchedules] = useState<any[]>([]);
+  
+  // 모임 목적/카테고리 상태 (PaperDrawer에서 선택)
+  const [meetingPurpose, setMeetingPurpose] = useState<string>('');
+  const [meetingCategory, setMeetingCategory] = useState<string>('');
 
   // 지도 상호작용 상태 (동적 제어) - 🎯 초기값을 비활성화로 변경
   const [mapInteraction, setMapInteraction] = useState({
@@ -159,11 +164,15 @@ export const useHomeLogic = () => {
     }));
   }, []);
 
-  const generatePlaceCards = useCallback((stationId: number): MiddlePlaceCard[] => {
+  const generatePlaceCards = useCallback(async (stationId: number): Promise<MiddlePlaceCard[]> => {
     const station = getStationById(stationId);
     if (!station) return [];
 
-    const places = getPlacesByStationId(stationId);
+    // 목적이 있으면 새로운 통합 API 사용, 없으면 기존 API 사용
+    const places = meetingPurpose 
+      ? await getPlacesByStationAndPurpose(stationId, meetingPurpose)
+      : await getPlacesByStationId(stationId);
+    
     const placeCards = places.map(place => ({
       id: place.id,
       title: place.title,
@@ -179,7 +188,7 @@ export const useHomeLogic = () => {
     };
 
     return [...placeCards, backCard];
-  }, []);
+  }, [meetingPurpose]);
 
   const convertFriendsToMarkers = useCallback((friendsData: Friend[]): MapMarker[] => {
     return friendsData.map(friend => {
@@ -221,7 +230,9 @@ export const useHomeLogic = () => {
   }, []);
 
   const handleFindMiddle = useCallback(async (
-    friendsData?: Friend[]
+    friendsData?: Friend[],
+    category?: string,
+    customCategoryText?: string
   ) => {
     const now = Date.now();
     
@@ -239,6 +250,29 @@ export const useHomeLogic = () => {
     try {
       if (friendsData) {
         setFriends(friendsData);
+      }
+      
+      // 카테고리/목적 저장
+      if (category) {
+        setMeetingCategory(category);
+        if (category === 'CUSTOM' && customCategoryText) {
+          setMeetingPurpose(customCategoryText);
+        } else {
+          // 카테고리를 한국어 프리셋 이름으로 변환
+          const purposeMap: { [key: string]: string } = {
+            'DRINKING': '술약속',
+            'COFFEE': '커피약속', 
+            'DINING': '식사약속',
+            'MEETING': '회의약속',
+            'DATE': '데이트약속',
+            'STUDY': '스터디약속',
+            'ENTERTAINMENT': '오락약속',
+            'SHOPPING': '쇼핑약속',
+            'EXERCISE': '운동약속',
+            'CULTURE': '문화약속'
+          };
+          setMeetingPurpose(purposeMap[category] || category.toLowerCase());
+        }
       }
       
       setShowHomeContent(false);
@@ -308,7 +342,7 @@ export const useHomeLogic = () => {
     setMapRoutes([]);
   }, [disableMapInteraction]);
 
-  const handleCardClick = useCallback((cardId: number) => {
+  const handleCardClick = useCallback(async (cardId: number) => {
     // 연속 클릭 방지 (1.2초)
     const now = Date.now();
     if (now - (handleCardClick as any).lastClickTime < 1200) {
@@ -380,11 +414,19 @@ export const useHomeLogic = () => {
             });
             setShowTransportModal(true);
             
-            // 추천 장소 카드로 변경
-            const placeCards = generatePlaceCards(clickedCard.id);
-            setCards(placeCards);
+            // 즉시 로딩 상태로 변경
             setCurrentView('places');
+            setCards([]);
           });
+          
+          // 비동기로 장소 카드 로드
+          try {
+            const placeCards = await generatePlaceCards(clickedCard.id);
+            setCards(placeCards);
+          } catch (error) {
+            console.error('Failed to load place cards:', error);
+            setCards([]);
+          }
         }
       }
     } else {
@@ -436,7 +478,7 @@ export const useHomeLogic = () => {
           // 친구들과 역, 모든 장소 마커를 다시 표시
           const currentStation = getStationById(selectedStationId || 0);
           if (currentStation) {
-            const places = getPlacesByStationId(currentStation.id);
+            const places = await getPlacesByStationId(currentStation.id);
             const placeMarkers = places.map(place => ({
               id: `place-${place.id}`,
               position: { lat: place.lat, lng: place.lng },
@@ -487,7 +529,7 @@ export const useHomeLogic = () => {
           }
         } else {
           // 🎯 새로운 장소 선택 시: 역과 해당 장소 간의 경로만 표시
-          const places = getPlacesByStationId(selectedStationId || 0);
+          const places = await getPlacesByStationId(selectedStationId || 0);
           const selectedPlace = places.find(place => place.id === clickedCard.id);
           if (selectedPlace) {
             const currentStation = getStationById(selectedStationId || 0);
@@ -544,10 +586,18 @@ export const useHomeLogic = () => {
                   position: { lat: currentStation.lat, lng: currentStation.lng },
                   placePosition: { lat: selectedPlace.lat, lng: selectedPlace.lng },
                   placeInfo: {
+                    id: selectedPlace.id,
                     title: selectedPlace.title,
                     category: selectedPlace.category,
-                    description: `${selectedPlace.title}는 ${selectedPlace.category} 카테고리의 장소입니다.`,
-                    duration: selectedPlace.duration
+                    description: selectedPlace.description || `${selectedPlace.title}는 ${selectedPlace.category} 카테고리의 장소입니다.`,
+                    duration: selectedPlace.duration,
+                    lat: selectedPlace.lat,
+                    lng: selectedPlace.lng,
+                    address: selectedPlace.address,
+                    operatingHours: selectedPlace.operatingHours,
+                    contact: selectedPlace.contact,
+                    rating: selectedPlace.rating,
+                    reviewCount: selectedPlace.reviewCount
                   }
                 });
                 setShowTransportModal(true);
@@ -600,130 +650,96 @@ export const useHomeLogic = () => {
   }, [friends, showCardList]);
 
   // 🎯 약속 추가 관련 함수들
-  const handleAddSchedule = async (data: any) => {
-    console.log('🎯 handleAddSchedule 호출됨:', data);
+  const handleAddSchedule = (data: any) => {
+    console.log('🎯 handleAddSchedule 호출됨 - ScheduleConfirmModal 표시:', data);
     
-    // PromiseService에 약속 생성 요청
-    const meetingRequest = {
-      title: data.placeInfo.title,
-      placeId: data.placeInfo.id || 1,
-      placeName: data.placeInfo.title,
-      placeAddress: `${data.stationName}역 주변`,
-      scheduledAt: `${new Date().toISOString().split('T')[0]}T${data.meetingTime}:00`,
-      maxParticipants: data.friends.length + 1,
-      memo: data.placeInfo.description || `${data.placeInfo.title}에서 만남`,
-      participantUserIds: data.friends.map((f: any) => f.id).filter((id: any) => id && id !== 1) // Exclude host
-    };
+    // ScheduleConfirmModal 표시 (실제 생성은 scheduleButton에서 처리)
+    setScheduleData(data);
+    setShowScheduleConfirmModal(true);
+  };
 
+  const handleCreateSchedule = async () => {
+    if (!scheduleData) return;
+
+    console.log('🎯 handleCreateSchedule 호출됨 - 실제 약속 생성:', scheduleData);
+    
     try {
-      const response = await fetch('/api/meetings', {
+      // PromiseService CreateMeeting API 호출
+      const meetingCreateRequest = {
+        title: scheduleData.placeInfo.title,
+        placeId: scheduleData.placeInfo.id, // 장소 ID
+        placeName: scheduleData.placeInfo.title,
+        placeAddress: `${scheduleData.stationName}역 근처`, // 주소 정보가 없으면 기본값 사용
+        scheduledAt: new Date(`${new Date().toISOString().split('T')[0]}T${scheduleData.meetingTime}:00`).toISOString(),
+        maxParticipants: scheduleData.friends.length + 1, // 친구 수 + 호스트
+        memo: scheduleData.placeInfo.description || `${scheduleData.placeInfo.title}에서 만남`,
+        inviteMessage: `${scheduleData.placeInfo.title}에서 만나요!`,
+        participantUserIds: [], // 실제 사용자 ID가 있다면 여기에 추가
+        kakaoIds: [] // 카카오 ID가 있다면 여기에 추가
+      };
+
+      const response = await fetch(`${API_BASE_URLS.PROMISE_SERVICE}/meetings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-ID': '1' // TODO: Get from auth context
+          'X-User-ID': '1' // 실제 사용자 ID로 교체 필요
         },
-        body: JSON.stringify(meetingRequest)
+        body: JSON.stringify(meetingCreateRequest)
       });
 
       if (response.ok) {
-        const newMeeting = await response.json();
+        const meetingResponse = await response.json();
+        console.log('🎯 PromiseService에서 약속 생성 성공:', meetingResponse);
         
-        // Transform backend meeting to frontend schedule format
+        // 로컬 일정에도 추가 (기존 로직 유지)
         const newSchedule = {
-          id: newMeeting.meetingId,
-          title: newMeeting.title,
-          date: newMeeting.scheduledAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-          time: newMeeting.scheduledAt?.split('T')[1]?.substring(0, 5) || data.meetingTime,
-          location: `${data.stationName}역 → ${data.placeInfo.title}`,
-          description: newMeeting.memo || `${data.placeInfo.title}에서 만남`,
+          id: meetingResponse.meetingId || Date.now(),
+          title: scheduleData.placeInfo.title,
+          date: new Date().toISOString().split('T')[0],
+          time: scheduleData.meetingTime,
+          location: `${scheduleData.stationName}역 → ${scheduleData.placeInfo.title}`,
+          description: scheduleData.placeInfo.description || `${scheduleData.placeInfo.title}에서 만남`,
           type: 'social' as const,
-          participants: data.friends.map((f: any) => f.name),
-          placeInfo: data.placeInfo,
-          stationName: data.stationName,
-          routes: data.routes
+          participants: scheduleData.friends.map((f: any) => f.name),
+          placeInfo: scheduleData.placeInfo,
+          stationName: scheduleData.stationName,
+          routes: scheduleData.routes,
+          meetingId: meetingResponse.meetingId // 서버에서 받은 ID 저장
         };
         
-        console.log('🎯 일정 추가 완료:', newSchedule);
+        console.log('🎯 일정 추가 중:', newSchedule);
         setSchedules(prev => {
           const updatedSchedules = [...prev, newSchedule];
           console.log('🎯 업데이트된 일정 목록:', updatedSchedules);
           return updatedSchedules;
         });
-
-        showToast('일정이 생성되었습니다!', 'success');
         
-        // ScheduleConfirmModal을 위해 meetingId 포함된 데이터 설정
-        const enrichedData = {
-          ...data,
-          meetingId: newMeeting.meetingId
-        };
-        setScheduleData(enrichedData);
-        setShowScheduleConfirmModal(true);
+        showToast('약속이 성공적으로 생성되었습니다!', 'success');
+        
+        // 플로팅 네비바의 일정 관리 페이지 열기
+        setShowScheduleConfirmModal(false);
+        setShowScheduleModal(true);
+        // TransportInfoModal도 닫기
+        setShowTransportModal(false);
       } else {
-        console.error('일정 생성 실패:', response.statusText);
-        showToast('일정 생성에 실패했습니다.', 'error');
+        console.error('🎯 PromiseService API 호출 실패:', response.status, response.statusText);
+        showToast('약속 생성에 실패했습니다. 다시 시도해주세요.', 'error');
       }
     } catch (error) {
-      console.error('일정 생성 중 오류:', error);
-      showToast('일정 생성 중 오류가 발생했습니다.', 'error');
+      console.error('🎯 PromiseService API 호출 중 오류:', error);
+      showToast('약속 생성 중 오류가 발생했습니다.', 'error');
     }
   };
 
-  const handleSendInvitation = async () => {
-    if (!scheduleData?.meetingId) {
-      showToast('초대를 보낼 약속 정보가 없습니다.', 'error');
-      return;
-    }
-
-    try {
-      // Get participant user IDs from friends data
-      const participantIds = scheduleData.friends
-        ?.map((f: any) => f.id)
-        .filter((id: any) => id && id !== 1) || []; // Exclude host (assuming host is user 1)
-
-      if (participantIds.length === 0) {
-        showToast('초대할 참가자가 없습니다.', 'warning');
-        return;
-      }
-
-      const response = await fetch(`/api/meetings/${scheduleData.meetingId}/invites`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-ID': '1' // TODO: Get from auth context
-        },
-        body: JSON.stringify({
-          userIds: participantIds,
-          message: `${scheduleData.placeInfo.title}에서 만나요!`
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const invitedCount = result.invited?.length || 0;
-        showToast(`${invitedCount}명에게 초대장이 발송되었습니다!`, 'success');
-        
-        if (result.errors && result.errors.length > 0) {
-          console.warn('초대 중 일부 오류:', result.errors);
-        }
-      } else {
-        console.error('초대 발송 실패:', response.statusText);
-        showToast('초대장 발송에 실패했습니다.', 'error');
-      }
-    } catch (error) {
-      console.error('초대 발송 중 오류:', error);
-      showToast('초대장 발송 중 오류가 발생했습니다.', 'error');
-    }
-    
+  const handleSendInvitation = () => {
+    // TODO: 초대장 보내기 로직 구현
+    showToast('초대장이 발송되었습니다!', 'success');
     setShowScheduleConfirmModal(false);
   };
 
   const handleGoToSchedule = () => {
-    // 플로팅 네비바의 일정 관리 페이지 열기
-    setShowScheduleConfirmModal(false);
-    setShowScheduleModal(true);
-    // TransportInfoModal도 닫기
-    setShowTransportModal(false);
+    // 실제 약속 생성 후 일정 관리 페이지로 이동
+    handleCreateSchedule();
   };
 
   // 일정 관리 핸들러
@@ -746,26 +762,9 @@ export const useHomeLogic = () => {
     showToast('일정이 추가되었습니다!', 'success');
   };
 
-  const handleRemoveSchedule = useCallback(async (id: number) => {
-    try {
-      const response = await fetch(`/api/meetings/${id}/cancel`, {
-        method: 'POST',
-        headers: {
-          'X-User-ID': '1' // TODO: Get from auth context
-        }
-      });
-
-      if (response.ok) {
-        setSchedules(prev => prev.filter(schedule => schedule.id !== id));
-        showToast('일정이 취소되었습니다.', 'success');
-      } else {
-        console.error('일정 취소 실패:', response.statusText);
-        showToast('일정 취소에 실패했습니다.', 'error');
-      }
-    } catch (error) {
-      console.error('일정 취소 중 오류:', error);
-      showToast('일정 취소 중 오류가 발생했습니다.', 'error');
-    }
+  const handleRemoveSchedule = useCallback((id: number) => {
+    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+    showToast('일정이 삭제되었습니다.', 'success');
   }, [showToast]);
 
 
@@ -803,6 +802,8 @@ export const useHomeLogic = () => {
     showScheduleModal,
     showMeetingModal,
     schedules,
+    meetingPurpose,
+    meetingCategory,
     
     // 디바운싱 함수들
     setMapCenterDebounced,
