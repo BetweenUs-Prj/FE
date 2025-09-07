@@ -128,6 +128,28 @@
   line-height: 1.2;
 }
 
+/* 프로필 이미지 스타일 */
+.profileImageContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileImage {
+  width: min(3.5vw, 32px);
+  height: min(3.5vw, 32px);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.profileImage:hover {
+  border-color: var(--accent-color);
+  transform: scale(1.05);
+}
+
 .logoutButton {
   background-color: #ff6b6b;
   color: white;

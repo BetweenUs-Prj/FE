@@ -132,6 +132,39 @@
   min-height: 0;
 }
 
+/* 중간지점 정보 스타일 */
+.middlePointInfo {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.infoValue {
+  font-weight: 500;
+  color: #1f2937;
+  font-size: 14px;
+}
+
 .mainArea {
   flex-shrink: 0;
 }

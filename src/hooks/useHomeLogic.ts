@@ -92,6 +92,12 @@ export const useHomeLogic = () => {
   
   // 일정 관리 상태
   const [schedules, setSchedules] = useState<any[]>([]);
+  
+  // 중간지점 데이터 저장 (뒤로가기용)
+  const [originalMiddlePoints, setOriginalMiddlePoints] = useState<any[]>([]);
+  
+  // 선택된 중간지점 데이터 저장 (TransportInfoModal용)
+  const [selectedMiddlePointData, setSelectedMiddlePointData] = useState<any>(null);
 
   // 지도 상호작용 상태 (동적 제어) - 🎯 초기값을 비활성화로 변경
   const [mapInteraction, setMapInteraction] = useState({
@@ -221,7 +227,10 @@ export const useHomeLogic = () => {
   }, []);
 
   const handleFindMiddle = useCallback(async (
-    friendsData?: Friend[]
+    friendsData?: Friend[],
+    category?: any,
+    customCategoryText?: string,
+    middlePoints?: any[]
   ) => {
     const now = Date.now();
     
@@ -245,45 +254,88 @@ export const useHomeLogic = () => {
       // 카드가 표시되면 맵 상호작용 활성화
       enableMapInteraction();
       
-      const stationCards = generateStationCards();
-      setCards(stationCards);
-      setCurrentView('stations');
+      // 백엔드에서 받은 중간지점 데이터가 있으면 사용, 없으면 기본 역 카드 사용
+      if (middlePoints && middlePoints.length > 0) {
+        console.log('🎯 백엔드에서 받은 중간지점 데이터로 카드 생성:', middlePoints);
+        
+        // 중간지점 데이터 저장 (뒤로가기용)
+        setOriginalMiddlePoints(middlePoints);
+        
+        // 백엔드 데이터를 카드 형태로 변환
+        const middlePointCards = middlePoints.map((point, index) => ({
+          id: point.id || index + 1,
+          title: point.lastEndStation || `중간지점 ${index + 1}`,
+          duration: `${point.totalTravelTime}분 (${point.transportType})`,
+          type: 'station' as const
+        }));
+        
+        setCards(middlePointCards);
+        setCurrentView('stations');
+        
+        // 중간지점 마커 생성
+        const middlePointMarkers = middlePoints.map((point, index) => ({
+          id: `middle-${point.id || index + 1}`,
+          position: { 
+            lat: point.latitude || 37.5665, 
+            lng: point.longitude || 126.9780 
+          },
+          title: point.lastEndStation || `중간지점 ${index + 1}`,
+          type: 'station' as const,
+          isVisible: true,
+          isHighlighted: false
+        }));
+        
+        // 🎯 친구 데이터가 전달되었으면 사용, 아니면 기존 friends 상태 사용
+        const currentFriends = friendsData || friends;
+        const friendMarkers = convertFriendsToMarkers(currentFriends);
+        const allMarkers = [...friendMarkers, ...middlePointMarkers];
+        setMapMarkers(allMarkers);
+        
+        // 맵 중심을 중간지점들로 설정
+        if (middlePointMarkers.length > 0) {
+          const centerLat = middlePointMarkers.reduce((sum, marker) => sum + marker.position.lat, 0) / middlePointMarkers.length;
+          const centerLng = middlePointMarkers.reduce((sum, marker) => sum + marker.position.lng, 0) / middlePointMarkers.length;
+          setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+        }
+      } else {
+        // 기본 역 카드 사용
+        const stationCards = generateStationCards();
+        setCards(stationCards);
+        setCurrentView('stations');
+        
+        const allStations = getAllStations();
+        const stationMarkers = allStations.map(station => ({
+          id: `station-${station.id}`,
+          position: { lat: station.lat, lng: station.lng },
+          title: station.name,
+          type: 'station' as const,
+          isVisible: true,
+          isHighlighted: false
+        }));
+        
+        // 🎯 친구 데이터가 전달되었으면 사용, 아니면 기존 friends 상태 사용
+        const currentFriends = friendsData || friends;
+        const friendMarkers = convertFriendsToMarkers(currentFriends);
+        const allMarkers = [...friendMarkers, ...stationMarkers];
+        setMapMarkers(allMarkers);
+        
+        // 맵 중심을 역들과 친구들의 중앙으로 설정
+        const allPoints = [
+          ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
+          ...friendMarkers.map(marker => marker.position)
+        ];
+        
+        if (allPoints.length > 0) {
+          const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+          const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+          setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+        }
+      }
+      
       setSelectedStationId(null);
       setSelectedCardId(null);
       setShowCardList(true);
-      
-      const allStations = getAllStations();
-      const stationMarkers = allStations.map(station => ({
-        id: `station-${station.id}`,
-        position: { lat: station.lat, lng: station.lng },
-        title: station.name,
-        type: 'station' as const,
-        isVisible: true,
-        isHighlighted: false
-      }));
-      
-      // 🎯 친구 데이터가 전달되었으면 사용, 아니면 기존 friends 상태 사용
-      const currentFriends = friendsData || friends;
-      const friendMarkers = convertFriendsToMarkers(currentFriends);
-      const allMarkers = [...friendMarkers, ...stationMarkers];
-      setMapMarkers(allMarkers);
       setMapRoutes([]);
-      
-      // 🎯 동적 줌 레벨 계산을 위한 포인트 수집
-      const allPoints = [
-        ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
-        ...friendMarkers.map(marker => marker.position)
-      ];
-      
-      // 🎯 자동 영역 조정을 위해 중심점만 설정 (줌 레벨은 자동 조정됨)
-      if (allPoints.length > 0) {
-        const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-        const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-        setMapCenterDebounced({ lat: centerLat, lng: centerLng });
-        
-        console.log('🎯 중간거리 찾기 - 마커 자동 영역 조정 활성화');
-        // 줌 레벨은 useKakaoMap에서 자동으로 조정됨
-      }
     } catch (error) {
       console.error('중간거리 찾기 중 오류 발생:', error);
       showToast('중간거리 찾기 중 오류가 발생했습니다.', 'error');
@@ -296,6 +348,9 @@ export const useHomeLogic = () => {
     setShowCardList(false);
     setCurrentView('stations');
     setSelectedCardId(null);
+    
+    // 중간지점 데이터 초기화
+    setOriginalMiddlePoints([]);
     
     if ((window as any).resetMiddlePlaceCardSelection) {
       (window as any).resetMiddlePlaceCardSelection();
@@ -329,6 +384,34 @@ export const useHomeLogic = () => {
 
     if (currentView === 'stations') {
       if (clickedCard.type === 'station') {
+        // 중간지점 카드인지 확인 (originalMiddlePoints에 있는지 체크)
+        const isMiddlePointCard = originalMiddlePoints.length > 0 && 
+          originalMiddlePoints.some(point => (point.id || originalMiddlePoints.indexOf(point) + 1) === clickedCard.id);
+        
+        if (isMiddlePointCard) {
+          // 중간지점 카드 클릭 시 백엔드 데이터 저장
+          const middlePointData = originalMiddlePoints.find(point => 
+            (point.id || originalMiddlePoints.indexOf(point) + 1) === clickedCard.id
+          );
+          
+          if (middlePointData) {
+            console.log('🎯 중간지점 카드 클릭됨:', middlePointData);
+            setSelectedMiddlePointData(middlePointData);
+            
+            // 중간지점 정보로 TransportInfoModal 설정
+            setSelectedStationInfo({
+              name: middlePointData.lastEndStation || `중간지점 ${clickedCard.id}`,
+              position: { 
+                lat: middlePointData.latitude || 37.5665, 
+                lng: middlePointData.longitude || 126.9780 
+              }
+            });
+            setShowTransportModal(true);
+            return;
+          }
+        }
+        
+        // 기본 역 카드 클릭 시 기존 로직
         const station = getStationById(clickedCard.id);
         if (station) {
           setSelectedStationId(station.id);
@@ -389,45 +472,88 @@ export const useHomeLogic = () => {
       }
     } else {
       if (clickedCard.type === 'back') {
-        const stationCards = generateStationCards();
-        setCards(stationCards);
+        // 원래 중간지점 데이터가 있으면 그것을 사용, 없으면 기본 역 카드 사용
+        if (originalMiddlePoints.length > 0) {
+          console.log('🎯 뒤로가기: 원래 중간지점 카드로 복원');
+          const middlePointCards = originalMiddlePoints.map((point, index) => ({
+            id: point.id || index + 1,
+            title: point.lastEndStation || `중간지점 ${index + 1}`,
+            duration: `${point.totalTravelTime}분 (${point.transportType})`,
+            type: 'station' as const
+          }));
+          setCards(middlePointCards);
+        } else {
+          console.log('🎯 뒤로가기: 기본 역 카드로 복원');
+          const stationCards = generateStationCards();
+          setCards(stationCards);
+        }
         setCurrentView('stations');
         setSelectedStationId(null);
         setSelectedCardId(null);
         
-        const allStations = getAllStations();
-        const stationMarkers = allStations.map(station => ({
-          id: `station-${station.id}`,
-          position: { lat: station.lat, lng: station.lng },
-          title: station.name,
-          type: 'station' as const,
-          isVisible: true,
-          isHighlighted: false
-        }));
-        
-        const friendMarkers = convertFriendsToMarkers(friends);
-        const allMarkers = [...friendMarkers, ...stationMarkers];
-        
-        const allPoints = [
-          ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
-          ...friends.filter(friend => friend.coordinates).map(friend => friend.coordinates!)
-        ];
-        
-        // React 18의 자동 배치 업데이트 활용
-        React.startTransition(() => {
-          // 맵 상호작용 활성화
-          enableMapInteraction();
+        // 원래 중간지점 데이터가 있으면 중간지점 마커로 복원, 없으면 기본 역 마커 사용
+        if (originalMiddlePoints.length > 0) {
+          // 중간지점 마커 복원
+          const middlePointMarkers = originalMiddlePoints.map((point, index) => ({
+            id: `middle-${point.id || index + 1}`,
+            position: { 
+              lat: point.latitude || 37.5665, 
+              lng: point.longitude || 126.9780 
+            },
+            title: point.lastEndStation || `중간지점 ${index + 1}`,
+            type: 'station' as const,
+            isVisible: true,
+            isHighlighted: false
+          }));
           
-          setMapMarkers(allMarkers);
-          setMapRoutes([]);
+          const friendMarkers = convertFriendsToMarkers(friends);
+          const allMarkers = [...friendMarkers, ...middlePointMarkers];
           
-          if (allPoints.length > 0) {
-            const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-            const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-            setMapCenterDebounced({ lat: centerLat, lng: centerLng });
-            setMapLevelDebounced(7);
+          // 맵 중심을 중간지점들로 설정
+          if (middlePointMarkers.length > 0) {
+            const centerLat = middlePointMarkers.reduce((sum, marker) => sum + marker.position.lat, 0) / middlePointMarkers.length;
+            const centerLng = middlePointMarkers.reduce((sum, marker) => sum + marker.position.lng, 0) / middlePointMarkers.length;
+            
+            React.startTransition(() => {
+              enableMapInteraction();
+              setMapMarkers(allMarkers);
+              setMapRoutes([]);
+              setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+            });
           }
-        });
+        } else {
+          // 기본 역 마커 사용
+          const allStations = getAllStations();
+          const stationMarkers = allStations.map(station => ({
+            id: `station-${station.id}`,
+            position: { lat: station.lat, lng: station.lng },
+            title: station.name,
+            type: 'station' as const,
+            isVisible: true,
+            isHighlighted: false
+          }));
+          
+          const friendMarkers = convertFriendsToMarkers(friends);
+          const allMarkers = [...friendMarkers, ...stationMarkers];
+          
+          const allPoints = [
+            ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
+            ...friends.filter(friend => friend.coordinates).map(friend => friend.coordinates!)
+          ];
+          
+          React.startTransition(() => {
+            enableMapInteraction();
+            setMapMarkers(allMarkers);
+            setMapRoutes([]);
+            
+            if (allPoints.length > 0) {
+              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+              setMapCenterDebounced({ lat: centerLat, lng: centerLng });
+              setMapLevelDebounced(7);
+            }
+          });
+        }
       } else if (clickedCard.type === 'place') {
         if (selectedCardId === clickedCard.id) {
           // 🎯 이미 선택된 장소를 다시 클릭하면 원상복귀 (친구들에서 역으로의 경로 복원)
@@ -704,6 +830,7 @@ export const useHomeLogic = () => {
     showScheduleModal,
     showMeetingModal,
     schedules,
+    selectedMiddlePointData,
     
     // 디바운싱 함수들
     setMapCenterDebounced,

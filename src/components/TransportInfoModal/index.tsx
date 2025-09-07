@@ -67,6 +67,7 @@ interface TransportInfoModalProps {
     meetingTime: string;
     selectedTransportMode: string;
   }) => void;
+  middlePointData?: any; // 백엔드에서 받은 중간지점 데이터
 }
 
 const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
@@ -80,7 +81,8 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   isPlaceMode = false,
   placePosition,
   placeInfo,
-  onAddSchedule
+  onAddSchedule,
+  middlePointData
 }) => {
   const [routes, setRoutes] = useState<TransportRoute[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -119,7 +121,10 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       
       if (lastGeneratedRef.current === currentKey) return;
       
-      if (isPlaceMode) {
+      // 중간지점 데이터가 있으면 백엔드 데이터를 사용
+      if (middlePointData) {
+        generateMiddlePointRoutes();
+      } else if (isPlaceMode) {
         generatePlaceRoutes();
       } else {
         generateFriendRoutes();
@@ -127,9 +132,72 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       
       lastGeneratedRef.current = currentKey;
     }
-  }, [isVisible, isPlaceMode, friends.length, stationName, meetingTime]);
+  }, [isVisible, isPlaceMode, friends.length, stationName, meetingTime, middlePointData]);
 
 
+
+  // 중간지점 데이터를 활용한 경로 생성
+  const generateMiddlePointRoutes = () => {
+    if (!middlePointData) return;
+    
+    console.log('🎯 중간지점 데이터로 경로 생성:', middlePointData);
+    
+    const middlePointRoutes: TransportRoute[] = friends.map(friend => {
+      // 백엔드에서 받은 segments 데이터를 활용
+      const segments = middlePointData.segments || [];
+      
+      // 교통수단 정보 추출
+      const transportType = middlePointData.transportType || '대중교통';
+      const totalTravelTime = middlePointData.totalTravelTime || 0;
+      const travelCost = middlePointData.travelCost || 0;
+      
+      // 경로 단계 생성
+      const routeSteps: RouteStep[] = segments.map((segment: any, index: number) => ({
+        step: index + 1,
+        instruction: `${segment.trafficTypeName || '이동'} (${segment.sectionTime || 0}분)`,
+        distance: segment.distance || 0,
+        duration: segment.sectionTime || 0,
+        transportType: segment.trafficTypeName || '도보',
+        startName: segment.startName || '',
+        endName: segment.endName || '',
+        startPosition: segment.startX && segment.startY ? 
+          { lat: segment.startY, lng: segment.startX } : undefined,
+        endPosition: segment.endX && segment.endY ? 
+          { lat: segment.endY, lng: segment.endX } : undefined
+      }));
+      
+      // 경로 요약 생성 (details 배열)
+      const details = segments
+        .filter(segment => segment.trafficTypeName && segment.trafficTypeName !== '도보')
+        .map(segment => segment.startName || segment.endName || segment.trafficTypeName)
+        .filter(Boolean);
+
+      return {
+        friendId: friend.id,
+        friendName: friend.name,
+        friendLocation: friend.location,
+        friendPosition: friend.position,
+        destinationName: middlePointData.lastEndStation || stationName,
+        destinationPosition: {
+          lat: middlePointData.latitude || stationPosition.lat,
+          lng: middlePointData.longitude || stationPosition.lng
+        },
+        totalDistance: middlePointData.trafficDistance || 0,
+        totalDuration: totalTravelTime,
+        totalCost: travelCost,
+        transportType: transportType,
+        transportMode: transportType, // transportMode 추가
+        departureTime: calculateDepartureTime(meetingTime, totalTravelTime),
+        arrivalTime: meetingTime,
+        routeSteps: routeSteps,
+        transferInfos: [], // 필요시 segments에서 환승 정보 추출
+        details: details.length > 0 ? details : [friend.location, middlePointData.lastEndStation || stationName] // details 배열 추가
+      };
+    });
+    
+    setRoutes(middlePointRoutes);
+    console.log('🎯 생성된 중간지점 경로:', middlePointRoutes);
+  };
 
   // 시간 계산 함수들
   const calculateDepartureTime = (arrivalTime: string, durationMinutes: number): string => {
@@ -384,7 +452,10 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
         {/* 헤더 */}
         <div className={styles.header} onMouseDown={handleMouseDown}>
           <h3 className={styles.title}>
-            {isPlaceMode ? `📍 ${placeInfo?.title || '추천장소'}` : `🚇 ${stationName} 교통 정보`}
+            {middlePointData ? 
+              `🚇 ${stationName} (${middlePointData.transportType || '대중교통'})` :
+              isPlaceMode ? `📍 ${placeInfo?.title || '추천장소'}` : `🚇 ${stationName} 교통 정보`
+            }
           </h3>
           <button className={styles.closeButton} onClick={onClose}>
             ✕
@@ -393,6 +464,38 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
 
         {/* 컨텐츠 */}
         <div className={styles.content}>
+          {/* 중간지점 데이터 정보 표시 */}
+          {middlePointData && (
+            <div className={styles.middlePointInfo}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>교통수단:</span>
+                <span className={styles.infoValue}>{middlePointData.transportType || '대중교통'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>총 소요시간:</span>
+                <span className={styles.infoValue}>{middlePointData.totalTravelTime || 0}분</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>교통비:</span>
+                <span className={styles.infoValue}>{middlePointData.travelCost || 0}원</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>총 거리:</span>
+                <span className={styles.infoValue}>{Math.round((middlePointData.trafficDistance || 0) / 1000 * 10) / 10}km</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>도보 거리:</span>
+                <span className={styles.infoValue}>{Math.round((middlePointData.totalWalk || 0) / 1000 * 10) / 10}km</span>
+              </div>
+              {middlePointData.fairnessScore && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>공정성 점수:</span>
+                  <span className={styles.infoValue}>{Math.round(middlePointData.fairnessScore * 10) / 10}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
           {isPlaceMode ? (
             <div className={styles.placeModeContent}>
               {placeInfo && (
@@ -541,7 +644,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                         <div className={styles.routeSummary}>
                           <span className={styles.transportIcon}>{getTransportIcon(route.transportMode)}</span>
                           <span className={styles.routeText}>
-                            {route.details.join(' → ')}
+                            {route.details && route.details.length > 0 ? route.details.join(' → ') : `${route.friendLocation} → ${route.destinationName}`}
                           </span>
                         </div>
                       </div>

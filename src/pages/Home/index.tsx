@@ -41,6 +41,7 @@ const Home = () => {
     showScheduleModal,
     showMeetingModal,
     schedules,
+    selectedMiddlePointData,
 
     
     // 핸들러
@@ -205,6 +206,7 @@ const Home = () => {
         placePosition={selectedStationInfo?.placePosition}
         placeInfo={selectedStationInfo?.placeInfo}
         onAddSchedule={handleAddSchedule}
+        middlePointData={selectedMiddlePointData}
       />
       
       {/* 🎯 약속 추가 확인 모달 */}
