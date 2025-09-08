@@ -35,7 +35,7 @@
   background: linear-gradient(-45deg, transparent 30%, #d1d5db 30%, #d1d5db 50%, transparent 50%);
   cursor: nw-resize;
   pointer-events: auto;
-  border-radius: 0 0 16px 0;
+  border-radius: 16px;
 }
 
 .header {
@@ -52,6 +52,7 @@
   -moz-user-select: none;
   -ms-user-select: none;
   flex-shrink: 0;
+  border-radius: 16px;
 }
 
 .header:active {
@@ -1204,6 +1205,10 @@
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .placeCategory {

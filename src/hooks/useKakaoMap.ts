@@ -37,7 +37,8 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
   const markersRef = useRef<any[]>([]);
   const routesRef = useRef<any[]>([]); // 경로 라인들을 저장할 ref
   
-
+  // 맵 조정 디바운싱을 위한 ref
+  const mapAdjustmentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // 각 친구별 고유 색상 배열
   const friendColors = [
@@ -52,6 +53,50 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
     '#BB8FCE', // 보라색
     '#85C1E9'  // 하늘색
   ];
+
+  // 부드러운 맵 조정 함수 (디바운싱 적용)
+  const smoothAdjustMap = useCallback((bounds: any, isForRoutes = false) => {
+    if (!mapRef.current || disableAutoCenter) return;
+
+    // 이전 타이머 취소하여 덜컹거림 방지
+    if (mapAdjustmentTimeoutRef.current) {
+      clearTimeout(mapAdjustmentTimeoutRef.current);
+    }
+
+    mapAdjustmentTimeoutRef.current = setTimeout(() => {
+      try {
+        const sw = bounds.getSouthWest();
+        const ne = bounds.getNorthEast();
+        
+        const latDiff = ne.getLat() - sw.getLat();
+        const lngDiff = ne.getLng() - sw.getLng();
+        
+        // 경로용은 더 작은 여백, 마커용은 더 큰 여백
+        const paddingMultiplier = isForRoutes ? 0.1 : 0.2;
+        const minPadding = isForRoutes ? 0.005 : 0.008;
+        const maxPadding = isForRoutes ? 0.015 : 0.04;
+        
+        const latPadding = Math.max(minPadding, Math.min(maxPadding, latDiff * paddingMultiplier));
+        const lngPadding = Math.max(minPadding, Math.min(maxPadding, lngDiff * paddingMultiplier));
+        
+        const paddedBounds = new window.kakao.maps.LatLngBounds(
+          new window.kakao.maps.LatLng(sw.getLat() - latPadding, sw.getLng() - lngPadding),
+          new window.kakao.maps.LatLng(ne.getLat() + latPadding, ne.getLng() + lngPadding)
+        );
+        
+        console.log(`🎯 ${isForRoutes ? '경로' : '마커'} 부드러운 영역 조정:`, {
+          type: isForRoutes ? 'routes' : 'markers',
+          여백: { lat: latPadding, lng: lngPadding }
+        });
+        
+        // 부드러운 전환
+        mapRef.current.setBounds(paddedBounds);
+        
+      } catch (error) {
+        console.error('부드러운 맵 조정 실패:', error);
+      }
+    }, isForRoutes ? 100 : 200); // 경로는 빠르게, 마커는 조금 더 기다려서 부드럽게
+  }, [disableAutoCenter]);
 
 
 
@@ -201,8 +246,15 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         console.log('🎯 맵 옵션 업데이트:', {
           draggable: options.draggable,
           zoomable: options.zoomable,
-          level: options.level
+          level: options.level,
+          center: options.center
         });
+        
+        // center 변경시 진행 중인 자동 조정을 취소
+        if (mapAdjustmentTimeoutRef.current) {
+          clearTimeout(mapAdjustmentTimeoutRef.current);
+          console.log('🛑 진행 중인 맵 자동 조정 취소 (center 변경)');
+        }
         
         const center = new window.kakao.maps.LatLng(options.center.lat, options.center.lng);
         mapRef.current.setCenter(center);
@@ -376,49 +428,36 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         markersRef.current.push(marker);
       });
       
-      // 🎯 모든 마커가 화면에 보이도록 맵 영역 자동 조정
+      // 🎯 모든 마커가 화면에 보이도록 맵 영역 부드럽게 조정
+      // 단, center가 명시적으로 설정된 경우 자동 조정 건너뛰기
       if (markers.length > 0 && !disableAutoCenter) {
-        // 약간의 지연을 두어 마커가 완전히 렌더링된 후 영역 조정
-        setTimeout(() => {
-          if (!mapRef.current) return;
-          
-          const bounds = new window.kakao.maps.LatLngBounds();
-          
-          markers.forEach(markerInfo => {
-            if (markerInfo.isVisible) {
-              bounds.extend(new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng));
-            }
-          });
-          
-          // 경계에 여백 추가
-          const sw = bounds.getSouthWest();
-          const ne = bounds.getNorthEast();
-          
-          const latDiff = ne.getLat() - sw.getLat();
-          const lngDiff = ne.getLng() - sw.getLng();
-          
-          // 여백 계산 (최소 0.01, 최대 0.05)
-          const latPadding = Math.max(0.01, Math.min(0.05, latDiff * 0.2));
-          const lngPadding = Math.max(0.01, Math.min(0.05, lngDiff * 0.2));
-          
-          const paddedBounds = new window.kakao.maps.LatLngBounds(
-            new window.kakao.maps.LatLng(sw.getLat() - latPadding, sw.getLng() - lngPadding),
-            new window.kakao.maps.LatLng(ne.getLat() + latPadding, ne.getLng() + lngPadding)
-          );
-          
-          console.log('🎯 마커 자동 영역 조정:', {
-            마커수: markers.length,
-            남서쪽: { lat: sw.getLat(), lng: sw.getLng() },
-            북동쪽: { lat: ne.getLat(), lng: ne.getLng() },
-            여백: { lat: latPadding, lng: lngPadding }
-          });
-          
-          try {
-            mapRef.current.setBounds(paddedBounds);
-          } catch (error) {
-            console.error('맵 영역 조정 실패:', error);
+        const bounds = new window.kakao.maps.LatLngBounds();
+        
+        markers.forEach(markerInfo => {
+          if (markerInfo.isVisible) {
+            bounds.extend(new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng));
           }
-        }, 100);
+        });
+        
+        // options에서 명시적으로 center가 설정되지 않은 경우에만 자동 조정
+        const optionsCenter = options?.center;
+        
+        // level이 명시적으로 설정된 경우 자동 조정 건너뛰기
+        const hasExplicitLevel = options?.level !== undefined;
+        const isDefaultCenter = !optionsCenter || 
+          (Math.abs(optionsCenter.lat - 37.5663) < 0.001 && Math.abs(optionsCenter.lng - 126.9779) < 0.001);
+        
+        if (isDefaultCenter && !hasExplicitLevel) {
+          console.log('🎯 마커 기반 자동 영역 조정 실행');
+          smoothAdjustMap(bounds, false);
+        } else {
+          console.log('🛑 명시적 level/center 설정으로 인해 마커 자동 조정 건너뛰기:', {
+            isDefaultCenter,
+            hasExplicitLevel,
+            optionsLevel: options?.level,
+            optionsCenter: optionsCenter
+          });
+        }
       }
       
     } catch (error) {
@@ -438,7 +477,7 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       });
       markersRef.current = [];
     };
-  }, [markers, onMarkerClick, disableAutoCenter]);
+  }, [markers, onMarkerClick, smoothAdjustMap, options]);
 
   // 경로 관리 useEffect (깔끔한 전환)
   useEffect(() => {
@@ -575,7 +614,8 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       }
     });
 
-    // 경로가 생성된 후 지도의 시점을 자동으로 조정
+    // 경로가 생성된 후 지도의 시점을 부드럽게 조정
+    // 단, center가 명시적으로 설정된 경우 자동 조정 건너뛰기
     if (routes.length > 0 && !disableAutoCenter) {
       const bounds = new window.kakao.maps.LatLngBounds();
       
@@ -584,24 +624,26 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         bounds.extend(new window.kakao.maps.LatLng(route.to.lat, route.to.lng));
       });
       
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
+      // options에서 명시적으로 center나 level이 설정된 경우 자동 조정 건너뛰기
+      const optionsCenter = options?.center;
+      const hasExplicitLevel = options?.level !== undefined;
+      const isDefaultCenter = !optionsCenter || 
+        (Math.abs(optionsCenter.lat - 37.5663) < 0.001 && Math.abs(optionsCenter.lng - 126.9779) < 0.001);
       
-      const latDiff = ne.getLat() - sw.getLat();
-      const lngDiff = ne.getLng() - sw.getLng();
-      
-      const latPadding = Math.max(0.005, Math.min(0.02, latDiff * 0.2));
-      const lngPadding = Math.max(0.005, Math.min(0.02, lngDiff * 0.2));
-      
-      const paddedBounds = new window.kakao.maps.LatLngBounds(
-        new window.kakao.maps.LatLng(sw.getLat() - latPadding, sw.getLng() - lngPadding),
-        new window.kakao.maps.LatLng(ne.getLat() + latPadding, ne.getLng() + lngPadding)
-      );
-      
-      mapRef.current.setBounds(paddedBounds);
+      if (isDefaultCenter && !hasExplicitLevel) {
+        console.log('🎯 경로 기반 자동 영역 조정 실행');
+        smoothAdjustMap(bounds, true);
+      } else {
+        console.log('🛑 명시적 level/center 설정으로 인해 경로 자동 조정 건너뛰기:', {
+          isDefaultCenter,
+          hasExplicitLevel,
+          optionsLevel: options?.level,
+          optionsCenter: optionsCenter
+        });
+      }
     }
     
-  }, [routes, disableAutoCenter]);
+  }, [routes, smoothAdjustMap, options]);
 
   const initializeMap = () => {
     const mapContainer = document.getElementById(containerId);
@@ -642,6 +684,15 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
   };
 
 
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (mapAdjustmentTimeoutRef.current) {
+        clearTimeout(mapAdjustmentTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return { map: mapRef.current };
 };

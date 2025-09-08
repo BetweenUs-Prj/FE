@@ -1206,7 +1206,7 @@ export const useHomeLogic = () => {
               markers: allMarkers,
               routes: friendRoutes, // 🎯 상세 경로 추가
               center: middlePointMarker.position, // 중간지점을 중심으로 설정
-              level: 4, // 더 가까운 줌 레벨로 설정
+              level: 8, // 역 클릭시 줌아웃 상태 유지
               interaction: {
                 zoomable: true,
                 draggable: true
@@ -1276,7 +1276,7 @@ export const useHomeLogic = () => {
             markers: allMarkers,
             routes: friendRoutes,
             center: mapCenter,
-            level: 6,
+            level: 8, // 역 클릭시 줌아웃 상태 유지
             interaction: {
               zoomable: true,
               draggable: true
@@ -1476,11 +1476,18 @@ export const useHomeLogic = () => {
               mapCenter = { lat: centerLat, lng: centerLng };
             }
             
+            console.log('🚉 역 카드 클릭 - 줌아웃 상태 설정:', {
+              level: 8,
+              center: mapCenter,
+              markersCount: allMarkers.length,
+              routesCount: friendRoutes.length
+            });
+            
             updateMapState({
               markers: allMarkers,
               routes: friendRoutes,
               center: mapCenter,
-              level: 6
+              level: 8 // 역 클릭시 줌아웃 상태 유지
             });
             enableMapInteraction();
           }
