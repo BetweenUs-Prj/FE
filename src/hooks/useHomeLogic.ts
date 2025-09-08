@@ -1,49 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
+import { 
+  getFriendColor, 
+  validateFriendCoordinates
+} from '@/utils/mapUtils';
+import type { 
+  MapMarker, 
+  MapRoute, 
+  StationInfo, 
+  MiddlePlaceCard, 
+  Friend
+} from '@/types/map';
 
-interface MiddlePlaceCard {
-  id: number;
-  title: string;
-  duration: string;
-  type: 'station' | 'place' | 'back';
-}
+// 타입들은 @/types/map.ts에서 import
 
-interface Friend {
-  id: number;
-  name: string;
-  location: string;
-  coordinates?: { lat: number; lng: number };
-}
+// StationInfo는 @/types/map.ts에서 import
 
-interface MapMarker {
-  id: string;
-  position: { lat: number; lng: number };
-  title: string;
-  type: 'station' | 'place' | 'friend';
-  isHighlighted?: boolean;
-  isVisible?: boolean;
-}
-
-interface MapRoute {
-  from: { lat: number; lng: number };
-  to: { lat: number; lng: number };
-  color?: string;
-  coords?: { lat: number; lng: number }[]; // 실제 경로 좌표 배열
-}
-
-interface StationInfo {
-  name: string;
-  position: { lat: number; lng: number };
-  placePosition?: { lat: number; lng: number };
-  placeInfo?: {
-    title: string;
-    category: string;
-    description?: string;
-    duration: string;
-  };
-}
-
-// 수도권 주요 역 주변 지역 랜덤 좌표 생성 함수 + 삼육대학교 이스터 에그
 const generateRandomLocation = () => {
   // 삼육대학교 이스터 에그 (1% 확률)
   if (Math.random() < 0.01) {
@@ -89,8 +61,8 @@ export const useHomeLogic = () => {
   });
 
   // ===== 🎯 지도 상태 통합 (1개 객체) =====
-  const [mapState, setMapState] = useState({
-    center: generateRandomLocation(),
+  const [mapState, setMapState] = useState(() => ({
+    center: generateRandomLocation(), // 초기 로딩 시에만 랜덤 위치
     level: 2,
     markers: [] as MapMarker[],
     routes: [] as MapRoute[],
@@ -98,7 +70,7 @@ export const useHomeLogic = () => {
       zoomable: false,
       draggable: false
     }
-  });
+  }));
 
   // ===== 🎯 모달 상태 통합 (1개 객체) =====
   const [modalState, setModalState] = useState({
@@ -129,6 +101,7 @@ export const useHomeLogic = () => {
   // ===== 🎯 ref로 대체 가능한 상태들 =====
   const lastFindMiddleTimeRef = useRef(0);
   const isFindingMiddleRef = useRef(false);
+  const initialRandomLocationRef = useRef(generateRandomLocation()); // 초기 랜덤 위치 저장
 
   // ===== 🎯 상태 업데이트 헬퍼 함수들 =====
   const updateUiState = useCallback((updates: Partial<typeof uiState>) => {
@@ -250,7 +223,7 @@ export const useHomeLogic = () => {
         id: isUser ? `user-${friend.id}` : `friend-${friend.id}`,
         position: position,
         title: isUser ? 
-          `⭐ 사용자 ${index + 1}: ${friend.location || '위치 미입력'}` : 
+          `사용자 ${index + 1}: ${friend.location || '위치 미입력'}` : 
           `친구 ${index + 1}: ${friend.location || '위치 미입력'}`,
         type: 'friend' as const,
         isHighlighted: false,
@@ -331,6 +304,8 @@ export const useHomeLogic = () => {
   }, [friends]);
 
   // segments 데이터를 이용해 실제 경로 생성 (중복 제거 및 친구별 색상 구분)
+  // 🚫 중간거리 찾기 시에는 경로를 표시하지 않으므로 이 함수는 사용하지 않음
+  /*
   const generateRoutesFromSegments = useCallback((middlePoints: any[], friends: Friend[]): MapRoute[] => {
     const routes: MapRoute[] = [];
     const processedSegments = new Set(); // 중복 segment 방지
@@ -495,78 +470,114 @@ export const useHomeLogic = () => {
     console.log('🎯 생성된 경로들:', routes);
     return routes;
   }, []);
+  */
 
 
-  // 교통수단별 색상 반환
-  const getTransportTypeColor = (transportType: string) => {
-    switch (transportType) {
-      case '버스':
-        return '#FF6B6B'; // 빨간색
-      case '지하철':
-        return '#4A90E2'; // 파란색
-      case '도보':
-        return '#8B4513'; // 갈색
-      case '택시':
-        return '#FFD93D'; // 노란색
-      default:
-        return '#9E9E9E'; // 회색
-    }
-  };
+  // 유틸리티 함수들은 @/utils/mapUtils.ts에서 import
 
-  // 친구별 색상 반환 (도보 경로용)
-  const getFriendColor = (friendIndex: number) => {
-    const colors = ['#50C878', '#FFD93D', '#6C5CE7', '#A29BFE', '#FF9F43', '#10AC84'];
-    return colors[friendIndex % colors.length];
-  };
 
-  // 개별 segment에서 좌표 추출 (순서 정렬)
-  const extractSegmentCoordinates = (segment: any) => {
-    const coords: { lat: number; lng: number }[] = [];
+  // 백엔드에서 받은 segments 데이터를 활용한 경로 생성 함수
+  const generateRoutesFromBackendSegments = useCallback((friends: Friend[], station: any, middlePoints?: any[]) => {
+    console.log('🚌 백엔드 segments 데이터로 경로 생성:', {
+      friendsCount: friends.length,
+      stationName: station.name,
+      middlePointsCount: middlePoints?.length || 0
+    });
+
+    const routes: MapRoute[] = [];
     
-    // segment 시작점 추가 - 🎯 좌표 순서 수정: startX = lng, startY = lat
-    if (segment.startX && segment.startY) {
-      coords.push({ lat: segment.startY, lng: segment.startX });
-    }
-    
-    // passStops에서 정류장/역 좌표 추출 (index 순서대로 정렬)
-    if (segment.passStops && segment.passStops.length > 0) {
-      // index 순서대로 정렬
-      const sortedStops = segment.passStops.sort((a: any, b: any) => (a.index || 0) - (b.index || 0));
+    // 중간지점 데이터가 있으면 segments를 활용
+    if (middlePoints && middlePoints.length > 0) {
+      // 첫 번째 중간지점의 segments 사용 (모든 친구가 같은 경로를 사용한다고 가정)
+      const firstMiddlePoint = middlePoints[0];
       
-      sortedStops.forEach((stop: any) => {
-        if (stop.x && stop.y) {
-          // 🎯 좌표 순서 수정: x = lng, y = lat
-          coords.push({ lat: stop.y, lng: stop.x });
+      if (firstMiddlePoint.segments && Array.isArray(firstMiddlePoint.segments)) {
+        console.log('🎯 중간지점 segments 데이터 활용:', firstMiddlePoint.segments);
+        
+        // 각 친구별로 segments 기반 경로 생성
+        friends.forEach((friend, friendIndex) => {
+          if (!validateFriendCoordinates(friend, friendIndex)) {
+            return;
+          }
+
+          const friendColor = getFriendColor(friendIndex);
+          
+          // segments에서 전체 경로 좌표 추출
+          const allCoords: { lat: number; lng: number }[] = [];
+          
+          // 친구 위치에서 첫 번째 segment 시작점까지의 경로
+          if (firstMiddlePoint.segments.length > 0) {
+            const firstSegment = firstMiddlePoint.segments[0];
+            if (firstSegment.startX && firstSegment.startY && friend.coordinates) {
+              allCoords.push(friend.coordinates);
+              allCoords.push({ lat: firstSegment.startY, lng: firstSegment.startX });
+            }
+          }
+          
+          // 각 segment의 좌표들 추가
+          firstMiddlePoint.segments.forEach((segment: any) => {
+            if (segment.startX && segment.startY) {
+              allCoords.push({ lat: segment.startY, lng: segment.startX });
+            }
+            
+            // passStops 좌표들 추가
+            if (segment.passStops && segment.passStops.length > 0) {
+              const sortedStops = segment.passStops.sort((a: any, b: any) => (a.index || 0) - (b.index || 0));
+              sortedStops.forEach((stop: any) => {
+                if (stop.x && stop.y) {
+                  allCoords.push({ lat: stop.y, lng: stop.x });
+                }
+              });
+            }
+            
+            if (segment.endX && segment.endY) {
+              allCoords.push({ lat: segment.endY, lng: segment.endX });
+            }
+          });
+          
+          // 마지막 segment 끝점에서 역까지의 경로
+          allCoords.push({ lat: station.lat, lng: station.lng });
+          
+          if (allCoords.length > 0 && friend.coordinates) {
+            routes.push({
+              from: friend.coordinates,
+              to: { lat: station.lat, lng: station.lng },
+              color: friendColor,
+              coords: allCoords // 구불구불한 실제 경로 좌표
+            });
+            console.log(`✅ 친구 ${friend.name}의 segments 기반 경로 생성 완료:`, allCoords.length, '개 좌표');
+          }
+        });
+      } else {
+        console.warn('⚠️ 중간지점에 segments 데이터가 없습니다.');
+        // segments가 없으면 직선 경로 사용
+        friends.forEach(friend => {
+          if (friend.coordinates) {
+            routes.push({
+              from: friend.coordinates,
+              to: { lat: station.lat, lng: station.lng },
+              color: '#4A90E2'
+            });
+          }
+        });
+      }
+    } else {
+      console.warn('⚠️ 중간지점 데이터가 없어 직선 경로를 사용합니다.');
+      // 중간지점 데이터가 없으면 직선 경로 사용
+      friends.forEach(friend => {
+        if (friend.coordinates) {
+          routes.push({
+            from: friend.coordinates,
+            to: { lat: station.lat, lng: station.lng },
+            color: '#4A90E2'
+          });
         }
       });
     }
-    
-    // segment 끝점 추가 (시작점과 다를 경우만)
-    if (segment.endX && segment.endY) {
-      // 🎯 좌표 순서 수정: endX = lng, endY = lat
-      const endCoord = { lat: segment.endY, lng: segment.endX };
-      const lastCoord = coords[coords.length - 1];
-      if (!lastCoord || lastCoord.lat !== endCoord.lat || lastCoord.lng !== endCoord.lng) {
-        coords.push(endCoord);
-      }
-    }
-    
-    console.log(`🎯 segment (${segment.trafficTypeName}) 좌표 추출:`, {
-      startPoint: coords[0],
-      endPoint: coords[coords.length - 1],
-      totalCoords: coords.length,
-      passStopsCount: segment.passStops?.length || 0,
-      rawSegment: {
-        startX: segment.startX,
-        startY: segment.startY,
-        endX: segment.endX,
-        endY: segment.endY
-      }
-    });
-    
-    return coords;
-  };
 
+    console.log('🚌 백엔드 segments 기반 경로 생성 완료:', routes.length, '개');
+    return routes;
+  }, []);
 
   // 이벤트 핸들러들
   const showToast = useCallback((message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
@@ -729,11 +740,11 @@ export const useHomeLogic = () => {
         const friendMarkers = convertFriendsToMarkers(currentFriends);
         const allMarkers = [...friendMarkers, ...middlePointMarkers];
         
-        // 🎯 segments 데이터를 이용해 실제 경로 생성
-        const routesFromSegments = generateRoutesFromSegments(middlePoints, currentFriends);
+        // 🎯 중간거리 찾기 시에는 경로를 표시하지 않음 (역 클릭 시에만 표시)
+        // const routesFromSegments = generateRoutesFromSegments(middlePoints, currentFriends);
         
         // 맵 중심을 중간지점들로 설정
-        let mapCenter = mapState.center;
+        let mapCenter = initialRandomLocationRef.current; // 초기 랜덤 위치 사용
         if (middlePointMarkers.length > 0) {
           const centerLat = middlePointMarkers.reduce((sum, marker) => sum + marker.position.lat, 0) / middlePointMarkers.length;
           const centerLng = middlePointMarkers.reduce((sum, marker) => sum + marker.position.lng, 0) / middlePointMarkers.length;
@@ -743,7 +754,7 @@ export const useHomeLogic = () => {
         // 🎯 모든 맵 상태를 한 번에 업데이트 (렌더링 최적화!)
         updateMapState({
           markers: allMarkers,
-          routes: routesFromSegments,
+          routes: [], // 🎯 경로는 빈 배열로 설정 (역 클릭 시에만 표시)
           center: mapCenter
         });
         
@@ -752,7 +763,7 @@ export const useHomeLogic = () => {
           middlePointMarkersCount: middlePointMarkers.length,
           friendMarkersCount: friendMarkers.length,
           allMarkersCount: allMarkers.length,
-          routesCount: routesFromSegments.length
+          routesCount: 0 // 중간거리 찾기 시에는 경로 없음
         });
         updateUiState({ showCardList: true });
       } else {
@@ -776,24 +787,11 @@ export const useHomeLogic = () => {
         const friendMarkers = convertFriendsToMarkers(currentFriends);
         const allMarkers = [...friendMarkers, ...stationMarkers];
         
-        // 맵 중심을 역들과 친구들의 중앙으로 설정
-        const allPoints = [
-          ...allStations.map(station => ({ lat: station.lat, lng: station.lng })),
-          ...friendMarkers.map(marker => marker.position)
-        ];
-        
-        let mapCenter = mapState.center;
-        if (allPoints.length > 0) {
-          const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-          const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-          mapCenter = { lat: centerLat, lng: centerLng };
-        }
-        
-        // 🎯 모든 맵 상태를 한 번에 업데이트 (렌더링 최적화!)
+        // 🎯 모든 맵 상태를 한 번에 업데이트 (자동 영역 조정 사용)
+        // center는 제거하여 useKakaoMap의 자동 영역 조정 기능이 작동하도록 함
         updateMapState({
           markers: allMarkers,
-          routes: [],
-          center: mapCenter
+          routes: []
         });
       }
       
@@ -808,7 +806,7 @@ export const useHomeLogic = () => {
     } finally {
       isFindingMiddleRef.current = false;
     }
-  }, [generateStationCards, convertFriendsToMarkers, showToast, enableMapInteraction, updateUiState, updateMapState, mapState.center]);
+  }, [generateStationCards, convertFriendsToMarkers, showToast, enableMapInteraction, updateUiState, updateMapState]);
 
   const handleHideCards = useCallback(() => {
     // 🎯 UI 상태 초기화
@@ -1031,15 +1029,22 @@ export const useHomeLogic = () => {
             updateMapState({
               markers: allMarkers,
               center: middlePointMarker.position, // 중간지점을 중심으로 설정
-              level: 4 // 더 가까운 줌 레벨로 설정
+              level: 4, // 더 가까운 줌 레벨로 설정
+              interaction: {
+                zoomable: false,
+                draggable: false
+              }
             });
             
             // 중간지점 정보로 TransportInfoModal 설정
             updateModalState({
-              selectedStationInfo: {
-                name: middlePointData.lastEndStation || `중간지점 ${actualMiddlePointId}`,
-                position: markerPosition
-              },
+            selectedStationInfo: {
+              id: actualMiddlePointId,
+              name: middlePointData.lastEndStation || `중간지점 ${actualMiddlePointId}`,
+              lat: markerPosition.lat,
+              lng: markerPosition.lng,
+              position: markerPosition
+            },
               showTransport: true
             });
             
@@ -1065,23 +1070,23 @@ export const useHomeLogic = () => {
           
           // 상태 업데이트 최적화 (배치 처리)
           const allMarkers = [...friendMarkers, stationMarker];
-          const friendRoutes = friends.map(friend => ({
-            from: { lat: friend.coordinates?.lat || 37.5663, lng: friend.coordinates?.lng || 126.9779 },
-            to: { lat: station.lat, lng: station.lng },
-            color: '#4A90E2' // 파란색 (대중교통 경로)
-          }));
+          
+          // 🚌 백엔드 segments 데이터를 활용한 구불구불한 경로 생성
+          console.log('🚌 역 클릭 - 백엔드 segments 기반 경로 생성 시작');
+          const friendRoutes = generateRoutesFromBackendSegments(friends, station, originalMiddlePoints);
           
           const allPoints = [
             ...friendMarkers.map(marker => marker.position),
             stationMarker.position
           ];
           
-          // 맵 중심 계산
-          let mapCenter = mapState.center;
+          // 맵 중심 계산 - 모든 마커가 보이도록 중심점 계산
+          let mapCenter = { lat: 37.5663, lng: 126.9779 }; // 기본값: 서울시청
           if (allPoints.length > 0) {
             const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
             const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
             mapCenter = { lat: centerLat, lng: centerLng };
+            console.log('🎯 역 클릭 - 맵 중심점 계산:', mapCenter, '포인트 개수:', allPoints.length);
           }
           
           // 🎯 모든 상태를 한 번에 업데이트 (렌더링 최적화!)
@@ -1094,12 +1099,19 @@ export const useHomeLogic = () => {
             markers: allMarkers,
             routes: friendRoutes,
             center: mapCenter,
-            level: 6
+            level: 6,
+            interaction: {
+              zoomable: false,
+              draggable: false
+            }
           });
           
           updateModalState({
             selectedStationInfo: {
+              id: station.id,
               name: station.name,
+              lat: station.lat,
+              lng: station.lng,
               position: { lat: station.lat, lng: station.lng }
             },
             showTransport: true
@@ -1222,7 +1234,7 @@ export const useHomeLogic = () => {
             ...friends.filter(friend => friend.coordinates).map(friend => friend.coordinates!)
           ];
           
-          let mapCenter = mapState.center;
+          let mapCenter = initialRandomLocationRef.current; // 초기 랜덤 위치 사용
           if (allPoints.length > 0) {
             const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
             const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
@@ -1279,12 +1291,13 @@ export const useHomeLogic = () => {
               stationMarker.position
             ];
             
-            let mapCenter = mapState.center;
-            if (allPoints.length > 0) {
-              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-              mapCenter = { lat: centerLat, lng: centerLng };
-            }
+          // 맵 중심점을 모든 마커 중심으로 계산 (mapState.center 의존성 제거)
+          let mapCenter = { lat: 37.5663, lng: 126.9779 }; // 기본값: 서울시청
+          if (allPoints.length > 0) {
+            const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+            const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+            mapCenter = { lat: centerLat, lng: centerLng };
+          }
             
             updateMapState({
               markers: allMarkers,
@@ -1340,12 +1353,19 @@ export const useHomeLogic = () => {
                 markers: [stationMarker, selectedPlaceMarker], // 🎯 친구 마커 제거
                 routes: [stationToPlaceRoute], // 🎯 친구 경로 제거
                 center: { lat: centerLat, lng: centerLng },
-                level: 1 // 🎯 줌 레벨을 1로 변경 (더 가깝게)
+                level: 1, // 🎯 줌 레벨을 1로 변경 (더 가깝게)
+                interaction: {
+                  zoomable: false,
+                  draggable: false
+                }
               });
               
               updateModalState({
                 selectedStationInfo: {
+                  id: currentStation.id,
                   name: `${currentStation.name} → ${selectedPlace.title}`,
+                  lat: currentStation.lat,
+                  lng: currentStation.lng,
                   position: { lat: currentStation.lat, lng: currentStation.lng },
                   placePosition: { lat: selectedPlace.lat, lng: selectedPlace.lng },
                   placeInfo: {
@@ -1367,7 +1387,7 @@ export const useHomeLogic = () => {
     
     // 처리 완료 후 상태 리셋
     (handleCardClick as any).isProcessing = false;
-  }, [cards, uiState.currentView, uiState.selectedStationId, friends, convertFriendsToMarkers, generatePlaceCards, generateStationCards, enableMapInteraction, updateUiState, updateMapState, updateModalState, mapState.center]);
+  }, [cards, uiState.currentView, uiState.selectedStationId, friends, convertFriendsToMarkers, generatePlaceCards, generateStationCards, enableMapInteraction, updateUiState, updateMapState, updateModalState]);
 
   // Effects
   // 🗑️ 제거: 이스터 에그 useEffect (불필요한 기능)

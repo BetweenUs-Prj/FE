@@ -16,8 +16,8 @@ export const SEOUL_CENTER = {
 export const DEFAULT_MAP_LEVEL = 3;
 
 export const API_BASE_URLS = {
-  PROMISE_SERVICE: 'http://localhost:8083/api',
-  RECOMMENDATION_SERVICE: 'http://localhost:8082/api'
+  PROMISE_SERVICE: 'https://loark.kr/api',
+  RECOMMENDATION_SERVICE: 'https://loark.kr/api'
 };
 
 export const MAP_PRESETS = {

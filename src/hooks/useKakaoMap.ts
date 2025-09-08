@@ -278,7 +278,7 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
           const colorIndex = (userId - 1) % friendColors.length;
           const userColor = friendColors[colorIndex];
           
-          // 사용자 마커: 별 모양 + 사용자 번호 (더 크고 눈에 띄게)
+          // 사용자 마커: 원형 + 사용자 번호 (더 크고 눈에 띄게)
           const userIcon = new window.kakao.maps.MarkerImage(
             `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
               <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
@@ -291,12 +291,12 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
                     </feMerge>
                   </filter>
                 </defs>
-                <polygon points="20,2 24,14 36,14 26,22 30,34 20,26 10,34 14,22 4,14 16,14" 
-                         fill="${userColor}" 
-                         stroke="white" 
-                         stroke-width="3" 
-                         filter="url(#glow)"/>
-                <text x="20" y="26" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${userId}</text>
+                <circle cx="20" cy="20" r="16" 
+                        fill="${userColor}" 
+                        stroke="white" 
+                        stroke-width="3" 
+                        filter="url(#glow)"/>
+                <text x="20" y="26" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${userId}</text>
               </svg>
             `)}`,
             new window.kakao.maps.Size(40, 40),
@@ -378,38 +378,47 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       
       // 🎯 모든 마커가 화면에 보이도록 맵 영역 자동 조정
       if (markers.length > 0 && !disableAutoCenter) {
-        const bounds = new window.kakao.maps.LatLngBounds();
-        
-        markers.forEach(markerInfo => {
-          if (markerInfo.isVisible) {
-            bounds.extend(new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng));
+        // 약간의 지연을 두어 마커가 완전히 렌더링된 후 영역 조정
+        setTimeout(() => {
+          if (!mapRef.current) return;
+          
+          const bounds = new window.kakao.maps.LatLngBounds();
+          
+          markers.forEach(markerInfo => {
+            if (markerInfo.isVisible) {
+              bounds.extend(new window.kakao.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng));
+            }
+          });
+          
+          // 경계에 여백 추가
+          const sw = bounds.getSouthWest();
+          const ne = bounds.getNorthEast();
+          
+          const latDiff = ne.getLat() - sw.getLat();
+          const lngDiff = ne.getLng() - sw.getLng();
+          
+          // 여백 계산 (최소 0.01, 최대 0.05)
+          const latPadding = Math.max(0.01, Math.min(0.05, latDiff * 0.2));
+          const lngPadding = Math.max(0.01, Math.min(0.05, lngDiff * 0.2));
+          
+          const paddedBounds = new window.kakao.maps.LatLngBounds(
+            new window.kakao.maps.LatLng(sw.getLat() - latPadding, sw.getLng() - lngPadding),
+            new window.kakao.maps.LatLng(ne.getLat() + latPadding, ne.getLng() + lngPadding)
+          );
+          
+          console.log('🎯 마커 자동 영역 조정:', {
+            마커수: markers.length,
+            남서쪽: { lat: sw.getLat(), lng: sw.getLng() },
+            북동쪽: { lat: ne.getLat(), lng: ne.getLng() },
+            여백: { lat: latPadding, lng: lngPadding }
+          });
+          
+          try {
+            mapRef.current.setBounds(paddedBounds);
+          } catch (error) {
+            console.error('맵 영역 조정 실패:', error);
           }
-        });
-        
-        // 경계에 여백 추가
-        const sw = bounds.getSouthWest();
-        const ne = bounds.getNorthEast();
-        
-        const latDiff = ne.getLat() - sw.getLat();
-        const lngDiff = ne.getLng() - sw.getLng();
-        
-        // 여백 계산 (최소 0.01, 최대 0.05)
-        const latPadding = Math.max(0.01, Math.min(0.05, latDiff * 0.2));
-        const lngPadding = Math.max(0.01, Math.min(0.05, lngDiff * 0.2));
-        
-        const paddedBounds = new window.kakao.maps.LatLngBounds(
-          new window.kakao.maps.LatLng(sw.getLat() - latPadding, sw.getLng() - lngPadding),
-          new window.kakao.maps.LatLng(ne.getLat() + latPadding, ne.getLng() + lngPadding)
-        );
-        
-        console.log('🎯 마커 자동 영역 조정:', {
-          마커수: markers.length,
-          남서쪽: { lat: sw.getLat(), lng: sw.getLng() },
-          북동쪽: { lat: ne.getLat(), lng: ne.getLng() },
-          여백: { lat: latPadding, lng: lngPadding }
-        });
-        
-        mapRef.current.setBounds(paddedBounds);
+        }, 100);
       }
       
     } catch (error) {

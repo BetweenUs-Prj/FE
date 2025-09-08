@@ -62,26 +62,15 @@ const Home = () => {
           className={styles.homeMapContainer}
           markers={mapState.markers}
           routes={mapState.routes}
-          disableAutoCenter={false}
+          disableAutoCenter={uiState.currentView === 'places'}
           onMarkerClick={(marker) => {
-            console.log('KakaoMap에 전달된 markers:', mapState.markers);
-            // 친구 마커 클릭 처리
+            // 친구 마커 클릭 처리 (현재는 특별한 동작 없음)
             if (marker.id.startsWith('friend-')) {
               const friendId = parseInt(marker.id.replace('friend-', ''));
               const friend = friends.find(f => f.id === friendId);
               if (friend) {
                 console.log(`친구 마커 클릭: ${friend.name} - ${friend.location}`);
-                
-                // 경로는 유지 (기존 경로가 있으면 그대로 유지)
-                console.log('친구 마커 클릭 - 기존 경로 유지, 현재 경로 개수:', mapState.routes.length);
-                
-                // 경로가 사라지지 않도록 명시적으로 다시 설정 (같은 경로)
-                if (mapState.routes.length > 0) {
-                  console.log('기존 경로 유지를 위해 경로 재설정');
-                  // setMapRoutes([...mapState.routes]); // 같은 경로를 다시 설정하여 유지
-                }
               }
-              return;
             }
           }}
         />
@@ -122,18 +111,6 @@ const Home = () => {
         onMeetingClick={handleMeetingClick}
       />
       
-      {/* 🗑️ 제거: 삼육대학교 이스터 에그 */}
-      {/* {showEasterEgg && (
-        <div className={styles.easterEgg}>
-          <div className={styles.easterEggContent}>
-            <div className={styles.easterEggIcon}>🎓</div>
-            <div className={styles.easterEggTitle}>삼육대학교 발견!</div>
-            <div className={styles.easterEggMessage}>
-              개발자의 모교를 찾으셨네요! 🎉
-            </div>
-          </div>
-        </div>
-      )} */}
       
       {/* 토스트 메시지 */}
       <Toast
@@ -175,12 +152,8 @@ const Home = () => {
           location: friend.location,
           position: friend.coordinates || { lat: 0, lng: 0 }
         }))}
-        onRouteUpdate={(routes) => {
-          console.log('TransportInfoModal에서 경로 업데이트:', routes);
-        }}
-        onMapRouteUpdate={(routes) => {
-          console.log('TransportInfoModal에서 맵 경로 업데이트:', routes);
-        }}
+        onRouteUpdate={() => {}}
+        onMapRouteUpdate={() => {}}
         isPlaceMode={modalState.selectedStationInfo?.name?.includes('→') || false}
         placePosition={modalState.selectedStationInfo?.placePosition}
         placeInfo={modalState.selectedStationInfo?.placeInfo}

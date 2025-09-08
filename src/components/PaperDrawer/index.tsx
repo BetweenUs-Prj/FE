@@ -96,11 +96,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   // 사용자 위치 데이터를 백엔드로 전송하는 함수
   const sendUserLocationsToBackend = async (friendsData: Friend[], category: MeetingCategory, customCategoryText?: string) => {
     try {
-      // JWT 토큰 가져오기
+      // JWT 토큰 가져오기 (임시로 토큰 없이도 진행)
       const token = getAuthToken();
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
-      }
+      console.log('🔍 JWT 토큰 상태:', token ? '토큰 있음' : '토큰 없음');
             
       const requestData = {
         locations: friendsData.map(friend => ({
@@ -117,18 +115,31 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       console.log('🔍 백엔드로 전송할 데이터:', requestData);
       console.log('🔍 JWT 토큰:', token);
 
+      // 헤더 구성 (토큰이 있을 때만 Authorization 헤더 추가)
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/middle/points/multiple-locations', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(requestData)
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('❌ 백엔드 에러 응답:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('❌ 에러 응답 파싱 실패:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();
