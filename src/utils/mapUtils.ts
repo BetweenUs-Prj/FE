@@ -1,7 +1,7 @@
 // 맵 관련 공통 유틸리티 함수들
 
-// 친구별 색상 배열
-export const FRIEND_COLORS = ['#50C878', '#FF1744', '#6C5CE7', '#A29BFE', '#FF9F43', '#10AC84'];
+// 친구별 색상 배열 (더 대비가 강한 색상)
+export const FRIEND_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA726', '#AB47BC', '#66BB6A'];
 
 // 교통수단별 색상
 export const TRANSPORT_COLORS = {

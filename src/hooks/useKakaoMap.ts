@@ -460,8 +460,8 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       return;
     }
 
-    // 개선된 경로 생성 함수
-    const createImprovedRoute = (routeInfo: any) => {
+    // 개선된 경로 생성 함수 (친구별 스타일 적용)
+    const createImprovedRoute = (routeInfo: any, routeIndex: number) => {
       let path = [];
       
       // 실제 경로 좌표가 있으면 그것을 사용 (상세 경로)
@@ -510,12 +510,34 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
 
       // path가 유효한 경우에만 Polyline 생성
       if (path.length >= 2) {
+        // 친구별 색상 구분을 위한 스타일링
+        const routeColor = routeInfo.color || '#FF6B6B';
+        
+        // zIndex 계산: 경로별로 다른 레이어 설정
+        const zIndex = 1000 + (routeIndex * 10);
+        
+        // 친구별로 다른 스타일 적용
+        const isFirstFriend = routeColor === '#FF6B6B';
+        const strokeWeight = isFirstFriend ? 8 : 6;
+        const strokeOpacity = isFirstFriend ? 0.9 : 0.85;
+        const strokeStyle = isFirstFriend ? 'solid' : 'longdash';
+        
+        console.log(`🎨 경로 스타일링:`, {
+          routeIndex,
+          color: routeColor,
+          weight: strokeWeight,
+          opacity: strokeOpacity,
+          style: strokeStyle,
+          zIndex
+        });
+        
         const polyline = new window.kakao.maps.Polyline({
           path: path,
-          strokeWeight: 6, // 선 굵기 조정
-          strokeColor: routeInfo.color || '#FF6B6B',
-          strokeOpacity: 0.8, // 약간 투명하게
-          strokeStyle: 'solid'
+          strokeWeight: strokeWeight,
+          strokeColor: routeColor,
+          strokeOpacity: strokeOpacity,
+          strokeStyle: strokeStyle,
+          zIndex: zIndex
         });
 
         polyline.setMap(mapRef.current);
@@ -538,7 +560,7 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         routeInfo.color = friendColors[colorIndex];
       }
       
-      const polyline = createImprovedRoute(routeInfo);
+      const polyline = createImprovedRoute(routeInfo, index);
       
       if (polyline) {
         routesRef.current.push(polyline);
