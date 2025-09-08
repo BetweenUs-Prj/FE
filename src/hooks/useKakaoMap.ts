@@ -464,14 +464,31 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
     const createImprovedRoute = (routeInfo: any) => {
       let path = [];
       
-      // 실제 경로 좌표가 있으면 그것을 사용
+      // 실제 경로 좌표가 있으면 그것을 사용 (상세 경로)
       if (routeInfo.coords && routeInfo.coords.length > 0) {
-        console.log('🎯 실제 경로 좌표 사용:', {
+        console.log('🎯 상세 경로 좌표 사용:', {
           coordsCount: routeInfo.coords.length,
           firstCoord: routeInfo.coords[0],
-          lastCoord: routeInfo.coords[routeInfo.coords.length - 1]
+          lastCoord: routeInfo.coords[routeInfo.coords.length - 1],
+          routeColor: routeInfo.color
         });
-        path = routeInfo.coords.map((coord: { lat: number; lng: number }) => new window.kakao.maps.LatLng(coord.lat, coord.lng));
+        
+        // 유효한 좌표만 필터링
+        const validCoords = routeInfo.coords.filter((coord: { lat: number; lng: number }) => 
+          coord.lat && coord.lng && 
+          typeof coord.lat === 'number' && 
+          typeof coord.lng === 'number' &&
+          !isNaN(coord.lat) && !isNaN(coord.lng)
+        );
+        
+        if (validCoords.length >= 2) {
+          path = validCoords.map((coord: { lat: number; lng: number }) => 
+            new window.kakao.maps.LatLng(coord.lat, coord.lng)
+          );
+        } else {
+          console.warn('⚠️ 유효한 좌표가 부족합니다:', validCoords.length);
+          return null; // 유효한 경로가 없으면 null 반환
+        }
       } else {
         // 실제 경로 좌표가 없으면 곡선 경로 생성
         const steps = 12;
@@ -491,16 +508,22 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
         }
       }
 
-      const polyline = new window.kakao.maps.Polyline({
-        path: path,
-        strokeWeight: 8,
-        strokeColor: routeInfo.color || '#FF6B6B',
-        strokeOpacity: 1.0,
-        strokeStyle: 'solid'
-      });
+      // path가 유효한 경우에만 Polyline 생성
+      if (path.length >= 2) {
+        const polyline = new window.kakao.maps.Polyline({
+          path: path,
+          strokeWeight: 6, // 선 굵기 조정
+          strokeColor: routeInfo.color || '#FF6B6B',
+          strokeOpacity: 0.8, // 약간 투명하게
+          strokeStyle: 'solid'
+        });
 
-      polyline.setMap(mapRef.current);
-      return polyline;
+        polyline.setMap(mapRef.current);
+        return polyline;
+      } else {
+        console.warn('⚠️ 경로 좌표가 부족하여 Polyline을 생성하지 않습니다.');
+        return null;
+      }
     };
 
     // 새로운 경로들 생성
@@ -509,12 +532,25 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       const friendNumber = fromId.replace('friend-', '');
       const friendIndex = parseInt(friendNumber) - 1;
       const colorIndex = friendIndex % friendColors.length;
-      const routeColor = friendColors[colorIndex];
       
-      routeInfo.color = routeColor;
+      // routeInfo에 색상이 없는 경우에만 기본 색상 적용
+      if (!routeInfo.color) {
+        routeInfo.color = friendColors[colorIndex];
+      }
       
       const polyline = createImprovedRoute(routeInfo);
-      routesRef.current.push(polyline);
+      
+      if (polyline) {
+        routesRef.current.push(polyline);
+        console.log(`✅ 상세 경로 ${index + 1} 생성 완료:`);
+        console.log(`  🎨 색상: ${routeInfo.color}`);
+        console.log(`  📍 시작점:`, routeInfo.from);
+        console.log(`  📍 도착점:`, routeInfo.to);
+        console.log(`  🛣️ 좌표 수: ${routeInfo.coords?.length || 0}`);
+        console.log(`  🗺️ 맵에 추가됨: ${polyline ? 'YES' : 'NO'}`);
+      } else {
+        console.warn(`❌ 경로 ${index + 1} 생성 실패`);
+      }
     });
 
     // 경로가 생성된 후 지도의 시점을 자동으로 조정

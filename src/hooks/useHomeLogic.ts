@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getAllStations, getPlacesByStationId, getStationById } from '@/constants/stationData';
 import { 
   getFriendColor, 
-  validateFriendCoordinates
+  validateFriendCoordinates,
+  extractSegmentCoordinates,
+  isValidCoordinates
 } from '@/utils/mapUtils';
 import type { 
   MapMarker, 
@@ -475,13 +477,165 @@ export const useHomeLogic = () => {
 
   // 유틸리티 함수들은 @/utils/mapUtils.ts에서 import
 
+  // 친구별 상세 경로 생성 함수
+  const generateDetailedRoutesForFriend = useCallback((
+    friend: Friend,
+    segments: any[],
+    station: any,
+    friendColor: string
+  ): MapRoute[] => {
+    console.log(`🚀 generateDetailedRoutesForFriend 시작: ${friend.name}`);
+    const routes: MapRoute[] = [];
+    
+    console.log(`🚌 친구 ${friend.name}의 상세 경로 생성 시작:`, {
+      segmentsCount: segments.length,
+      friendLocation: friend.location
+    });
+
+    // 각 segment별 상세 경로 생성 (친구별 출발지 반영)
+    segments.forEach((segment: any, segmentIndex: number) => {
+      let segmentCoords = extractSegmentCoordinates(segment);
+      
+      if (segmentCoords.length >= 2) {
+        // 모든 segment에서 친구의 실제 출발지 반영
+        if (friend.coordinates) {
+          if (segmentIndex === 0) {
+            // 첫 번째 segment: 친구 출발지 → segment 경로
+            segmentCoords = [friend.coordinates, ...segmentCoords];
+            console.log(`🏠 친구 ${friend.name}: 첫 번째 segment에 실제 출발지 ${friend.coordinates.lat}, ${friend.coordinates.lng} 반영`);
+          } else {
+            // 나머지 segment: 친구별로 다른 시작점 적용
+            console.log(`🔄 친구 ${friend.name}: segment ${segmentIndex + 1} - 친구별 위치 보정 적용`);
+          }
+        }
+        
+        // segment별 개별 경로 생성 (친구별 색상 사용)
+        const segmentColor = friendColor; // 친구별 구분을 위해 친구 색상 사용
+        
+        routes.push({
+          from: segmentCoords[0],
+          to: segmentCoords[segmentCoords.length - 1],
+          color: segmentColor,
+          coords: segmentCoords
+        });
+        
+        console.log(`🚌 친구 ${friend.name}: segment ${segmentIndex + 1} (${segment.trafficTypeName}) - ${segmentCoords.length}개 좌표`);
+      } else {
+        // 좌표 정보가 부족한 segment는 건너뛰기
+        console.warn(`⚠️ 친구 ${friend.name}: segment ${segmentIndex + 1} 좌표 부족 - 건너뛰기`);
+      }
+    });
+    
+    // 3. segments에서 유효한 좌표를 찾지 못한 경우, 친구 위치에서 역까지 곡선 경로 생성
+    if (routes.length === 0 && friend.coordinates) {
+      console.log(`🌀 친구 ${friend.name}: segments 좌표 부족으로 곡선 경로 대체`);
+      const curvedRoute = generateCurvedRoute(friend.coordinates, { lat: station.lat, lng: station.lng }, friendColor);
+      routes.push(curvedRoute);
+    }
+
+    // 4. 마지막 segment에서 목적지 역까지 도보 경로
+    if (segments.length > 0) {
+      const lastSegment = segments[segments.length - 1];
+      if (lastSegment.endX && lastSegment.endY) {
+        const endPoint = { lat: lastSegment.endY, lng: lastSegment.endX };
+        const stationPoint = { lat: station.lat, lng: station.lng };
+        
+        // 끝점과 역이 다른 위치인 경우에만 도보 경로 추가
+        const distance = Math.sqrt(
+          Math.pow(endPoint.lat - stationPoint.lat, 2) + 
+          Math.pow(endPoint.lng - stationPoint.lng, 2)
+        );
+        
+        if (distance > 0.001) { // 100m 이상 차이나는 경우
+          routes.push({
+            from: endPoint,
+            to: stationPoint,
+            color: friendColor,
+            coords: [endPoint, stationPoint]
+          });
+          console.log(`🚶 친구 ${friend.name}: 도보 경로 (도착점 → 역)`);
+        }
+      }
+    }
+
+    console.log(`✅ 친구 ${friend.name}의 상세 경로 생성 완료: ${routes.length}개 경로`);
+    console.log(`🎯 ${friend.name} 최종 경로 상세:`, routes.map((route, index) => ({
+      index: index + 1,
+      color: route.color,
+      coordsCount: route.coords?.length || 0
+    })));
+    return routes;
+  }, []);
+
+  // segment 타입별 색상 결정 (현재 사용하지 않음 - 친구별 색상 사용)
+  // const getSegmentColor = useCallback((trafficTypeName: string, baseColor: string): string => {
+  //   switch (trafficTypeName) {
+  //     case '지하철':
+  //     case '전철':
+  //       return '#4A90E2'; // 파란색
+  //     case '버스':
+  //       return '#FF6B6B'; // 빨간색
+  //     case '도보':
+  //       return baseColor; // 친구별 색상
+  //     default:
+  //       return '#8B4513'; // 갈색 (기타)
+  //   }
+  // }, []);
+
+  // 곡선 경로 생성 함수 (좌표 정보가 부족한 경우 대안)
+  const generateCurvedRoute = useCallback((
+    from: { lat: number; lng: number }, 
+    to: { lat: number; lng: number }, 
+    color: string
+  ): MapRoute => {
+    // 곡선 경로를 위한 중간 좌표들 생성
+    const steps = 20; // 더 부드러운 곡선을 위해 증가
+    const coords: { lat: number; lng: number }[] = [];
+    
+    for (let i = 0; i <= steps; i++) {
+      const ratio = i / steps;
+      
+      // 기본 직선 보간
+      const lat = from.lat + (to.lat - from.lat) * ratio;
+      const lng = from.lng + (to.lng - from.lng) * ratio;
+      
+      // 곡선 효과를 위한 오프셋 (사인 함수 사용)
+      const distance = Math.sqrt(Math.pow(to.lat - from.lat, 2) + Math.pow(to.lng - from.lng, 2));
+      const curveIntensity = Math.min(distance * 0.1, 0.01); // 거리에 비례하지만 최대값 제한
+      const offset = Math.sin(ratio * Math.PI) * curveIntensity;
+      
+      // 수직 방향으로 오프셋 적용 (더 자연스러운 곡선)
+      const perpLat = -(to.lng - from.lng) / distance;
+      const perpLng = (to.lat - from.lat) / distance;
+      
+      coords.push({
+        lat: lat + (perpLat * offset),
+        lng: lng + (perpLng * offset)
+      });
+    }
+    
+    console.log(`🌀 곡선 경로 생성: ${coords.length}개 좌표, 색상: ${color}`);
+    
+    return {
+      from,
+      to,
+      color,
+      coords
+    };
+  }, []);
 
   // 백엔드에서 받은 segments 데이터를 활용한 경로 생성 함수
   const generateRoutesFromBackendSegments = useCallback((friends: Friend[], station: any, middlePoints?: any[]) => {
     console.log('🚌 백엔드 segments 데이터로 경로 생성:', {
       friendsCount: friends.length,
       stationName: station.name,
-      middlePointsCount: middlePoints?.length || 0
+      middlePointsCount: middlePoints?.length || 0,
+      friendsDetail: friends.map((friend, index) => ({
+        index: index,
+        name: friend.name,
+        coordinates: friend.coordinates,
+        hasValidCoords: isValidCoordinates(friend.coordinates)
+      }))
     });
 
     const routes: MapRoute[] = [];
@@ -492,72 +646,72 @@ export const useHomeLogic = () => {
       const firstMiddlePoint = middlePoints[0];
       
       if (firstMiddlePoint.segments && Array.isArray(firstMiddlePoint.segments)) {
-        console.log('🎯 중간지점 segments 데이터 활용:', firstMiddlePoint.segments);
+        console.log('🎯 중간지점 데이터 분석:', {
+          middlePointsCount: middlePoints.length,
+          friendsCount: friends.length,
+          firstMiddlePointSegments: firstMiddlePoint.segments?.length || 0
+        });
         
-        // 각 친구별로 segments 기반 경로 생성
+        // 각 친구별로 segments 기반 상세 경로 생성
         friends.forEach((friend, friendIndex) => {
+          console.log(`🎯 친구 ${friendIndex + 1} (${friend.name}) 경로 생성 시작`);
+          console.log(`📍 친구 ${friend.name} 출발지:`, friend.coordinates);
+          
           if (!validateFriendCoordinates(friend, friendIndex)) {
+            console.log(`⚠️ 친구 ${friend.name}: 좌표 검증 실패`);
             return;
           }
 
-          const friendColor = getFriendColor(friendIndex);
+          // 마커와 동일한 방식으로 색상 계산 (user-1, user-2에 맞춰)
+          const friendColor = getFriendColor(friend.id - 1);
+          console.log(`🎨 친구 ${friend.name} (ID: ${friend.id}): 색상 ${friendColor}`);
           
-          // segments에서 전체 경로 좌표 추출
-          const allCoords: { lat: number; lng: number }[] = [];
-          
-          // 친구 위치에서 첫 번째 segment 시작점까지의 경로
-          if (firstMiddlePoint.segments.length > 0) {
-            const firstSegment = firstMiddlePoint.segments[0];
-            if (firstSegment.startX && firstSegment.startY && friend.coordinates) {
-              allCoords.push(friend.coordinates);
-              allCoords.push({ lat: firstSegment.startY, lng: firstSegment.startX });
+          // 백엔드에서 친구별 segments를 제공하는지 확인
+          let segmentsToUse;
+          if (middlePoints.length > friendIndex && middlePoints[friendIndex]?.segments) {
+            // 친구별로 다른 segments가 있는 경우
+            segmentsToUse = middlePoints[friendIndex].segments;
+            console.log(`🗺️ 친구 ${friend.name}: 전용 segments 사용 (${segmentsToUse.length}개)`);
+          } else {
+            // 모든 친구가 같은 segments를 사용하는 경우 - 친구별로 다른 경로 생성
+            segmentsToUse = firstMiddlePoint.segments;
+            console.log(`🗺️ 친구 ${friend.name}: 공통 segments 사용, 친구별 경로 분리 처리`);
+            
+            // 친구별로 다른 출발지에서 시작하는 독립적인 경로 생성
+            if (friend.coordinates) {
+              console.log(`🎯 친구 ${friend.name} 독립 경로 생성: 출발지 (${friend.coordinates.lat}, ${friend.coordinates.lng})`);
+              
+              // 친구 출발지에서 역까지 직접 곡선 경로 생성 (segments 무시)
+              const directRoute = generateCurvedRoute(friend.coordinates, { lat: station.lat, lng: station.lng }, friendColor);
+              routes.push(directRoute);
+              console.log(`🌀 친구 ${friend.name}: 독립 곡선 경로 생성 완료`);
+              return; // 다음 친구로 이동
             }
           }
           
-          // 각 segment의 좌표들 추가
-          firstMiddlePoint.segments.forEach((segment: any) => {
-            if (segment.startX && segment.startY) {
-              allCoords.push({ lat: segment.startY, lng: segment.startX });
-            }
-            
-            // passStops 좌표들 추가
-            if (segment.passStops && segment.passStops.length > 0) {
-              const sortedStops = segment.passStops.sort((a: any, b: any) => (a.index || 0) - (b.index || 0));
-              sortedStops.forEach((stop: any) => {
-                if (stop.x && stop.y) {
-                  allCoords.push({ lat: stop.y, lng: stop.x });
-                }
-              });
-            }
-            
-            if (segment.endX && segment.endY) {
-              allCoords.push({ lat: segment.endY, lng: segment.endX });
-            }
-          });
+          // 전용 segments가 있는 경우에만 정상 처리
+          const friendRoutes = generateDetailedRoutesForFriend(friend, segmentsToUse, station, friendColor);
+          console.log(`📍 친구 ${friend.name}: 생성된 경로 수 ${friendRoutes.length}`);
           
-          // 마지막 segment 끝점에서 역까지의 경로
-          allCoords.push({ lat: station.lat, lng: station.lng });
-          
-          if (allCoords.length > 0 && friend.coordinates) {
-            routes.push({
-              from: friend.coordinates,
-              to: { lat: station.lat, lng: station.lng },
-              color: friendColor,
-              coords: allCoords // 구불구불한 실제 경로 좌표
-            });
-            console.log(`✅ 친구 ${friend.name}의 segments 기반 경로 생성 완료:`, allCoords.length, '개 좌표');
-          }
+          routes.push(...friendRoutes);
         });
       } else {
         console.warn('⚠️ 중간지점에 segments 데이터가 없습니다.');
-        // segments가 없으면 직선 경로 사용
-        friends.forEach(friend => {
+        // segments가 없으면 곡선 경로로 대체
+        friends.forEach((friend, friendIndex) => {
+          console.log(`🌀 친구 ${friendIndex + 1} (${friend.name}) 곡선 경로 생성 시작`);
+          
           if (friend.coordinates) {
-            routes.push({
-              from: friend.coordinates,
-              to: { lat: station.lat, lng: station.lng },
-              color: '#4A90E2'
-            });
+            // 마커와 동일한 방식으로 색상 계산
+            const friendColor = getFriendColor(friend.id - 1);
+            console.log(`🎨 친구 ${friend.name} (ID: ${friend.id}): 곡선 경로 색상 ${friendColor}`);
+            
+            const curvedRoute = generateCurvedRoute(friend.coordinates, { lat: station.lat, lng: station.lng }, friendColor);
+            routes.push(curvedRoute);
+            
+            console.log(`✅ 친구 ${friend.name}: 곡선 경로 생성 완료`);
+          } else {
+            console.log(`⚠️ 친구 ${friend.name}: 좌표 없음`);
           }
         });
       }
@@ -566,16 +720,32 @@ export const useHomeLogic = () => {
       // 중간지점 데이터가 없으면 직선 경로 사용
       friends.forEach(friend => {
         if (friend.coordinates) {
+          // 마커와 동일한 방식으로 색상 계산
+          const friendColor = getFriendColor(friend.id - 1);
           routes.push({
             from: friend.coordinates,
             to: { lat: station.lat, lng: station.lng },
-            color: '#4A90E2'
+            color: friendColor
           });
         }
       });
     }
 
-    console.log('🚌 백엔드 segments 기반 경로 생성 완료:', routes.length, '개');
+    console.log('🚌 백엔드 segments 기반 경로 생성 완료:');
+    console.log('  📊 총 경로 수:', routes.length);
+    console.log('  👥 친구 수:', friends.length);
+    routes.forEach((route, index) => {
+      console.log(`  📍 경로 ${index + 1}:`);
+      console.log(`    🎨 색상: ${route.color}`);
+      console.log(`    📍 시작점:`, route.from);
+      console.log(`    📍 도착점:`, route.to);
+      console.log(`    🛣️ 좌표 수: ${route.coords?.length || 0}`);
+      if (route.coords && route.coords.length > 0) {
+        console.log(`    🗺️ 첫 좌표:`, route.coords[0]);
+        console.log(`    🗺️ 마지막 좌표:`, route.coords[route.coords.length - 1]);
+      }
+    });
+    
     return routes;
   }, []);
 
@@ -893,9 +1063,7 @@ export const useHomeLogic = () => {
               }
             });
             
-            // 🎯 모든 사용자(1번, 2번, 3번...)에서 중간지점까지의 경로 생성
-            const allUsersToMiddleRoute = generateAllUsersToMiddleRoute(middlePointData);
-            updateMapState({ routes: allUsersToMiddleRoute });
+            // 🎯 모든 사용자(1번, 2번, 3번...)에서 중간지점까지의 경로 생성은 하단에서 백엔드 segments로 처리
             
             // 🎯 모든 사용자 마커와 중간지점 마커 표시
             const allUserMarkers = friends.map((friend, index) => {
@@ -1025,26 +1193,35 @@ export const useHomeLogic = () => {
             // 🎯 모든 사용자 마커와 중간지점 마커 포함
             const allMarkers = [...allUserMarkers, middlePointMarker];
             
+            // 🚌 중간지점 카드 클릭시에도 상세 경로 생성
+            console.log('🚌 중간지점 카드 클릭 - 백엔드 segments 기반 경로 생성 시작');
+            const friendRoutes = generateRoutesFromBackendSegments(friends, { 
+              lat: markerPosition.lat, 
+              lng: markerPosition.lng, 
+              name: middlePointData.lastEndStation || `중간지점 ${actualMiddlePointId}` 
+            }, [middlePointData]);
+            
             // 🎯 모든 상태를 한 번에 업데이트 (렌더링 최적화!)
             updateMapState({
               markers: allMarkers,
+              routes: friendRoutes, // 🎯 상세 경로 추가
               center: middlePointMarker.position, // 중간지점을 중심으로 설정
               level: 4, // 더 가까운 줌 레벨로 설정
               interaction: {
-                zoomable: false,
-                draggable: false
+                zoomable: true,
+                draggable: true
               }
             });
             
             // 중간지점 정보로 TransportInfoModal 설정
             updateModalState({
-            selectedStationInfo: {
+              selectedStationInfo: {
               id: actualMiddlePointId,
-              name: middlePointData.lastEndStation || `중간지점 ${actualMiddlePointId}`,
+                name: middlePointData.lastEndStation || `중간지점 ${actualMiddlePointId}`,
               lat: markerPosition.lat,
               lng: markerPosition.lng,
-              position: markerPosition
-            },
+                position: markerPosition
+              },
               showTransport: true
             });
             
@@ -1101,8 +1278,8 @@ export const useHomeLogic = () => {
             center: mapCenter,
             level: 6,
             interaction: {
-              zoomable: false,
-              draggable: false
+              zoomable: true,
+              draggable: true
             }
           });
           
@@ -1293,11 +1470,11 @@ export const useHomeLogic = () => {
             
           // 맵 중심점을 모든 마커 중심으로 계산 (mapState.center 의존성 제거)
           let mapCenter = { lat: 37.5663, lng: 126.9779 }; // 기본값: 서울시청
-          if (allPoints.length > 0) {
-            const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
-            const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
-            mapCenter = { lat: centerLat, lng: centerLng };
-          }
+            if (allPoints.length > 0) {
+              const centerLat = allPoints.reduce((sum, point) => sum + point.lat, 0) / allPoints.length;
+              const centerLng = allPoints.reduce((sum, point) => sum + point.lng, 0) / allPoints.length;
+              mapCenter = { lat: centerLat, lng: centerLng };
+            }
             
             updateMapState({
               markers: allMarkers,
@@ -1355,8 +1532,8 @@ export const useHomeLogic = () => {
                 center: { lat: centerLat, lng: centerLng },
                 level: 1, // 🎯 줌 레벨을 1로 변경 (더 가깝게)
                 interaction: {
-                  zoomable: false,
-                  draggable: false
+                  zoomable: true,
+                  draggable: true
                 }
               });
               
