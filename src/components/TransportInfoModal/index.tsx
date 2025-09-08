@@ -204,8 +204,13 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       // 백엔드에서 받은 segments 데이터를 활용
       const segments = middlePointData.segments || [];
       
-      // 교통수단 정보 추출 (null 값 안전 처리)
-      const transportType = middlePointData.transportType || '대중교통';
+      // 교통수단 정보 추출 및 변환
+      const rawTransportType = middlePointData.transportType || '지하철';
+      const transportMode: 'bus' | 'subway' | 'bus_subway' | 'walk' = 
+        rawTransportType === '버스' ? 'bus' :
+        rawTransportType === '지하철' ? 'subway' :
+        rawTransportType === '도보' ? 'walk' :
+        'bus_subway'; // 기본값은 버스+지하철
       const totalTravelTime = middlePointData.totalTravelTime || 0;
       
       // 경로 단계 생성
@@ -232,7 +237,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
       return {
         friendId: friend.id,
         friendName: friend.name,
-        transportMode: transportType as 'transit' | 'car' | 'walk',
+        transportMode: transportMode,
         duration: totalTravelTime,
         distance: Math.round((middlePointData.trafficDistance || 0) / 1000 * 10) / 10,
         details: details.length > 0 ? details : [friend.location, middlePointData.lastEndStation || stationName],
@@ -462,7 +467,7 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
   }, []);
 
   // 교통수단 아이콘
-  const getTransportIcon = (mode: string, line?: string) => {
+  const getTransportIcon = (mode: string) => {
     switch (mode) {
       case 'bus': return '🚌';
       case 'subway': return '🚇';
