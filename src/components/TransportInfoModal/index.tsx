@@ -66,6 +66,7 @@ interface TransportInfoModalProps {
     contact?: string;
     rating?: number;
     reviewCount?: number;
+    recommendationReason?: string;
   };
   onAddSchedule?: (scheduleData: {
     placeInfo: any;
@@ -631,18 +632,23 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
                     {/* 🎯 추천 이유 */}
                     <div className={styles.recommendationReason}>
                       <h5>🎯 추천 이유</h5>
-                      <ul>
-                        <li>🚇 역에서 도보 {placeInfo.duration} 거리에 위치</li>
-                        <li>📍 중간 지점으로 접근성이 좋음</li>
-                        <li>⭐ {placeInfo.category} 카테고리에서 인기 있는 장소</li>
-                        <li>🕐 만남 시간에 적합한 운영 시간</li>
-                        {placeInfo.rating && placeInfo.rating >= 4.0 && (
-                          <li>🌟 높은 평점({placeInfo.rating}점)으로 검증된 품질</li>
-                        )}
-                        {placePosition && (
-                          <li>📍 정확한 위치 정보로 쉬운 길찾기</li>
-                        )}
-                      </ul>
+                      {placeInfo.recommendationReason ? (
+                        <ul>
+                          {placeInfo.recommendationReason.split('\n').filter(reason => reason.trim()).map((reason, index) => (
+                            <li key={index}>🎯 {reason.trim()}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul>
+                          <li>🚇 역에서 도보 {placeInfo.duration} 거리에 위치</li>
+                          <li>📍 중간 지점으로 접근성이 좋음</li>
+                          <li>⭐ {placeInfo.category} 카테고리에서 인기 있는 장소</li>
+                          <li>🕐 만남 시간에 적합한 운영 시간</li>
+                          {placePosition && (
+                            <li>📍 정확한 위치 정보로 쉬운 길찾기</li>
+                          )}
+                        </ul>
+                      )}
                     </div>
                     
                     {/* 🎯 교통 정보 */}

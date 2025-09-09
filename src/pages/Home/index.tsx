@@ -154,7 +154,7 @@ const Home = () => {
         }))}
         onRouteUpdate={() => {}}
         onMapRouteUpdate={() => {}}
-        isPlaceMode={modalState.selectedStationInfo?.name?.includes('→') || false}
+        isPlaceMode={!!modalState.selectedStationInfo?.placeInfo}
         placePosition={modalState.selectedStationInfo?.placePosition}
         placeInfo={modalState.selectedStationInfo?.placeInfo}
         onAddSchedule={handleAddSchedule}

@@ -183,11 +183,108 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       // JWT 토큰 관련 에러인지 확인
       if (error instanceof Error && error.message.includes('인증 토큰')) {
         showToast('로그인이 필요합니다. 다시 로그인해주세요.', 'error');
+        throw error; // 인증 에러는 dummy data 없이 재던짐
       } else {
-        showToast('위치 정보 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+        console.log('🎭 API 호출 실패, 더미 데이터로 대체합니다.');
+        showToast('서버 연결에 문제가 있어 테스트 데이터로 표시합니다.', 'warning');
+        
+        // 더미 중간지점 데이터 생성
+        const dummyMiddlePoints = [
+          {
+            id: 1,
+            latitude: 37.5665,
+            longitude: 126.9780,
+            lastEndStation: "강남역",
+            totalTravelTime: 20,
+            transportType: "SUBWAY",
+            travelCost: 1470.0,
+            fairnessScore: 95.5,
+            segments: [
+              {
+                trafficTypeName: "지하철",
+                startX: 127.0276,
+                startY: 37.4979,
+                endX: 126.9780,
+                endY: 37.5665,
+                passStops: [
+                  { stationName: "강남역", x: 126.9780, y: 37.5665, index: 0 }
+                ]
+              }
+            ],
+            trafficDistance: 12.3,
+            totalWalk: 500,
+            formattedAddress: "서울특별시 강남구 강남대로 396",
+            stationName: "강남역",
+            recommendationReason: "모든 참가자에게 가장 공평한 교통 접근성을 제공합니다.",
+            advantages: ["지하철 접근성 우수", "상업시설 밀집", "교통 편리"]
+          },
+          {
+            id: 2,
+            latitude: 37.5651,
+            longitude: 126.9895,
+            lastEndStation: "명동역",
+            totalTravelTime: 22,
+            transportType: "SUBWAY",
+            travelCost: 1470.0,
+            fairnessScore: 92.3,
+            segments: [
+              {
+                trafficTypeName: "지하철",
+                startX: 127.0276,
+                startY: 37.4979,
+                endX: 126.9895,
+                endY: 37.5651,
+                passStops: [
+                  { stationName: "명동역", x: 126.9895, y: 37.5651, index: 0 }
+                ]
+              }
+            ],
+            trafficDistance: 13.8,
+            totalWalk: 360,
+            formattedAddress: "서울특별시 중구 명동길 26",
+            stationName: "명동역",
+            recommendationReason: "쇼핑과 관광을 함께 즐길 수 있는 최적의 위치입니다.",
+            advantages: ["쇼핑 편리", "관광명소 근접", "음식점 다양"]
+          },
+          {
+            id: 3,
+            latitude: 37.5547,
+            longitude: 126.9707,
+            lastEndStation: "용산역",
+            totalTravelTime: 25,
+            transportType: "BUS_SUBWAY",
+            travelCost: 1780.0,
+            fairnessScore: 88.7,
+            segments: [
+              {
+                trafficTypeName: "지하철",
+                startX: 127.0276,
+                startY: 37.4979,
+                endX: 126.9707,
+                endY: 37.5547,
+                passStops: [
+                  { stationName: "용산역", x: 126.9707, y: 37.5547, index: 0 }
+                ]
+              }
+            ],
+            trafficDistance: 15.2,
+            totalWalk: 640,
+            formattedAddress: "서울특별시 용산구 한강대로 405", 
+            stationName: "용산역",
+            recommendationReason: "다양한 교통수단 이용 가능한 교통의 요충지입니다.",
+            advantages: ["KTX 연결", "대형 쇼핑몰", "한강 근접"]
+          }
+        ];
+
+        console.log('🎭 더미 중간지점 데이터:', dummyMiddlePoints);
+        
+        // onFindMiddle 콜백에 더미 데이터 전달
+        if (onFindMiddle) {
+          onFindMiddle(friends, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined, dummyMiddlePoints);
+        }
+        
+        return dummyMiddlePoints; // 더미 데이터 반환
       }
-      
-      throw error;
     }
   };
 
