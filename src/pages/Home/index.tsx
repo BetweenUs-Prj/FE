@@ -13,6 +13,7 @@ import ScheduleModal from '@/components/ScheduleModal';
 import MeetingModal from '@/components/MeetingModal';
 import TransportInfoModal from '@/components/TransportInfoModal';
 import ScheduleConfirmModal from '@/components/ScheduleConfirmModal';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 import { useHomeLogic } from '@/hooks/useHomeLogic';
 
@@ -41,6 +42,7 @@ const Home = () => {
     showScheduleModal,
     showMeetingModal,
     schedules,
+    isLoadingRoutes,
 
     
     // 핸들러
@@ -216,6 +218,12 @@ const Home = () => {
         onGoToSchedule={handleGoToSchedule}
       />
 
+      {/* 로딩 스피너 오버레이 */}
+      <LoadingSpinner 
+        isLoading={isLoadingRoutes} 
+        text="경로를 계산하고 있습니다..." 
+        overlay={true}
+      />
 
     </div>
   );

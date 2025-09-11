@@ -57,6 +57,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     { id: 2, name: '친구', location: '' }
   ]);
   
+  
   // 카테고리 선택 상태 (기본값으로 설정)
   const [selectedCategory, setSelectedCategory] = useState<MeetingCategory>('DINING');
   const [customCategory, setCustomCategory] = useState<string>('');
@@ -317,6 +318,8 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     }
   };
 
+
+
   const handleFindMiddle = async () => {
     const now = Date.now();
     
@@ -335,17 +338,39 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     // 3. 클릭 시간 업데이트
     setLastClickTime(now);
     
-    // 4. 모든 친구의 위치가 입력되었는지 확인
-    const emptyLocations = friends.filter(friend => !friend.location || !friend.coordinates);
-    if (emptyLocations.length > 0) {
-      const emptyCount = emptyLocations.length;
-      const totalCount = friends.length;
-      showToast(`${totalCount}명 중 ${emptyCount}명의 위치가 입력되지 않았습니다. 모든 친구의 구체적인 위치를 입력해주세요.`, 'error');
-      return;
-    }
+    // 4. 좌표가 없는 친구들에게 기본 좌표 제공
+    const friendsWithCoordinates = friends.map((friend, index) => {
+      if (!friend.coordinates) {
+        // 각 친구마다 다른 랜덤 좌표 생성 (시드 기반)
+        const seed = friend.id + index;
+        const randomAreas = [
+          { lat: { min: 37.50, max: 37.58 }, lng: { min: 126.90, max: 127.08 } }, // 강남/서초
+          { lat: { min: 37.48, max: 37.52 }, lng: { min: 127.00, max: 127.08 } }, // 송파/강동
+          { lat: { min: 37.54, max: 37.58 }, lng: { min: 126.90, max: 126.98 } }, // 영등포/여의도
+          { lat: { min: 37.60, max: 37.66 }, lng: { min: 127.00, max: 127.08 } }, // 노원/도봉
+          { lat: { min: 37.34, max: 37.38 }, lng: { min: 127.08, max: 127.16 } }, // 분당
+          { lat: { min: 37.26, max: 37.30 }, lng: { min: 126.98, max: 127.08 } }, // 수원
+          { lat: { min: 37.46, max: 37.50 }, lng: { min: 126.68, max: 126.76 } }  // 인천
+        ];
+        
+        const randomArea = randomAreas[seed % randomAreas.length];
+        const lat = randomArea.lat.min + (seed * 0.1) % (randomArea.lat.max - randomArea.lat.min);
+        const lng = randomArea.lng.min + (seed * 0.15) % (randomArea.lng.max - randomArea.lng.min);
+        
+        const defaultCoordinates = { lat, lng };
+        console.log(`🎯 친구 ${friend.name} 기본 좌표 제공:`, defaultCoordinates);
+        
+        return {
+          ...friend,
+          coordinates: defaultCoordinates,
+          location: friend.location || `기본 위치 ${friend.name}`
+        };
+      }
+      return friend;
+    });
     
     // 5. 좌표가 없는 입력이 있는지 확인 (임의로 입력한 텍스트)
-    const invalidFriends = friends.filter(friend => friend.location && !friend.coordinates);
+    const invalidFriends = friendsWithCoordinates.filter(friend => friend.location && !friend.coordinates);
     if (invalidFriends.length > 0) {
       console.log('좌표가 없는 입력 발견:', invalidFriends);
       showToast('구체적인 장소를 선택해주세요. 임의로 입력한 텍스트는 좌표가 없어 길찾기를 할 수 없습니다.', 'error');
@@ -358,12 +383,16 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     
     try {
       console.log('중간거리 찾기 버튼 클릭됨');
-      console.log('전송할 좌표 데이터:', friends.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
+      console.log('전송할 좌표 데이터:', friendsWithCoordinates.map(f => ({ name: f.name, location: f.location, coordinates: f.coordinates })));
 
+      // 중간거리 찾기 로딩 시뮬레이션
+      console.log('⏳ 중간거리 찾기 처리 중...');
+      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000)); // 0.5~1.5초 랜덤 지연
+      
       // 중간거리 찾기 버튼 클릭 시 PaperDrawer 닫기 및 부모 컴포넌트에 알림
       setIsExpanded(false); // 항상 닫기로 고정
       if (onFindMiddle) {
-        onFindMiddle(friends, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined); // 친구 데이터와 카테고리를 함께 전달
+        onFindMiddle(friendsWithCoordinates, selectedCategory, selectedCategory === 'CUSTOM' ? customCategory : undefined); // 친구 데이터와 카테고리를 함께 전달
       }
       
       setHasFoundMiddle(true);
@@ -378,17 +407,15 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
     }
   };
 
-  // 중간거리 찾기 가능 여부 확인
+  // 중간거리 찾기 가능 여부 확인 (좌표가 없어도 기본 좌표를 제공하므로 항상 가능)
   const canFindMiddle = () => {
-    return friends.every(friend => friend.location && friend.coordinates);
+    return friends.length >= 2; // 최소 2명 이상이면 가능
   };
 
   // 버튼 텍스트 결정
   const getButtonText = () => {
     if (!canFindMiddle()) {
-      const emptyCount = friends.filter(friend => !friend.location || !friend.coordinates).length;
-      const totalCount = friends.length;
-      return `${totalCount}명 중 ${emptyCount}명 입력 필요`;
+      return '최소 2명 이상 필요';
     }
     return '우리 어디서 만날까 ?';
   };
@@ -396,9 +423,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
   // 버튼 툴팁 텍스트 결정
   const getButtonTitle = () => {
     if (!canFindMiddle()) {
-      return '모든 친구의 구체적인 위치를 입력해주세요';
+      return '최소 2명 이상의 친구가 필요합니다';
     }
-    return '중간거리 찾기';
+    return '중간거리 찾기 시작 (위치 미입력 시 자동으로 기본 위치 제공)';
   };
 
   // 헤더 버튼의 텍스트와 아이콘 결정
@@ -487,7 +514,9 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
             
             <div className={styles.defaultContent}>
               <h3>서로의 위치를 적어주세요 !</h3>
-                             <div className={styles.friendsContainer}>
+              
+              
+              <div className={styles.friendsContainer}>
                  {friends.map((friend) => (
                    <div key={friend.id} className={styles.friendItem}>
                      <div className={styles.friendHeader}>
@@ -630,6 +659,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ onFindMiddle, onHideCards }) 
       )}
       
       {/* 토스트 메시지 */}
+
       <Toast
         isVisible={toast.isVisible}
         message={toast.message}

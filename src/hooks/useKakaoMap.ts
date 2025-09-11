@@ -408,23 +408,79 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       return;
     }
 
-    // 개선된 경로 생성 함수
-    const createImprovedRoute = (routeInfo: any) => {
+    // 실제 도로를 따라가는 구불구불한 경로 생성 함수
+    const createRealisticRoute = (routeInfo: any) => {
       const path = [];
-      const steps = 12;
       
-      for (let i = 0; i <= steps; i++) {
-        const ratio = i / steps;
-        const lat = routeInfo.from.lat + (routeInfo.to.lat - routeInfo.from.lat) * ratio;
-        const lng = routeInfo.from.lng + (routeInfo.to.lng - routeInfo.from.lng) * ratio;
+      // waypoints가 있으면 사용, 없으면 생성
+      let waypoints = routeInfo.waypoints || [];
+      
+      if (waypoints.length === 0) {
+        // waypoints가 없는 경우 기본 구불구불한 경로 생성
+        const steps = 20; // 더 많은 단계로 부드러운 곡선 생성
         
-        if (i > 0 && i < steps) {
-          const curveIntensity = 0.001;
-          const offset = Math.sin(ratio * Math.PI) * curveIntensity;
-          path.push(new window.kakao.maps.LatLng(lat + offset, lng));
-        } else {
+        for (let i = 0; i <= steps; i++) {
+          const ratio = i / steps;
+          let lat = routeInfo.from.lat + (routeInfo.to.lat - routeInfo.from.lat) * ratio;
+          let lng = routeInfo.from.lng + (routeInfo.to.lng - routeInfo.from.lng) * ratio;
+          
+          if (i > 0 && i < steps) {
+            // 복잡한 곡선 패턴 생성
+            const curveIntensity = 0.0008;
+            const wave1 = Math.sin(ratio * Math.PI * 2.3) * curveIntensity;
+            const wave2 = Math.sin(ratio * Math.PI * 4.7) * curveIntensity * 0.6;
+            const wave3 = Math.sin(ratio * Math.PI * 7.1) * curveIntensity * 0.4;
+            const wave4 = Math.sin(ratio * Math.PI * 9.8) * curveIntensity * 0.2;
+            
+            // 방향 벡터 계산
+            const directionLat = routeInfo.to.lat - routeInfo.from.lat;
+            const directionLng = routeInfo.to.lng - routeInfo.from.lng;
+            
+            // 수직 방향으로 곡선 추가
+            const totalWave = wave1 + wave2 + wave3 + wave4;
+            const perpendicularLat = directionLng * totalWave;
+            const perpendicularLng = -directionLat * totalWave;
+            
+            lat += perpendicularLat;
+            lng += perpendicularLng;
+            
+            // 추가적인 S자 곡선
+            const sCurve = Math.sin(ratio * Math.PI * 3.5) * curveIntensity * 0.3;
+            lat += directionLng * sCurve;
+            lng -= directionLat * sCurve;
+            
+            // 노이즈 추가 (실제 도로의 불규칙성)
+            const noise = (Math.random() - 0.5) * 0.0001;
+            lat += noise;
+            lng += noise;
+          }
+          
           path.push(new window.kakao.maps.LatLng(lat, lng));
         }
+      } else {
+        // waypoints가 있는 경우 (실제 API에서 받은 경로 사용)
+        console.log(`🗺️ 경로 렌더링: ${waypoints.length}개 waypoints 사용`);
+        console.log(`🗺️ 시작점: ${routeInfo.from.lat}, ${routeInfo.from.lng}`);
+        console.log(`🗺️ 끝점: ${routeInfo.to.lat}, ${routeInfo.to.lng}`);
+        
+        // 시작점 추가
+        path.push(new window.kakao.maps.LatLng(routeInfo.from.lat, routeInfo.from.lng));
+        
+        // 실제 API에서 받은 waypoints 사용 (순서대로)
+        waypoints.forEach((waypoint: any, index: number) => {
+          if (waypoint && waypoint.lat && waypoint.lng) {
+            path.push(new window.kakao.maps.LatLng(waypoint.lat, waypoint.lng));
+            if (index < 3) { // 처음 3개만 로그 출력
+              console.log(`🗺️ Waypoint ${index + 1}: ${waypoint.lat}, ${waypoint.lng}`);
+            }
+          }
+        });
+        
+        // 끝점 추가
+        path.push(new window.kakao.maps.LatLng(routeInfo.to.lat, routeInfo.to.lng));
+        
+        console.log(`🗺️ 최종 경로: ${path.length}개 포인트로 구성`);
+        console.log(`🗺️ 경로 방향: ${routeInfo.from.name || '시작점'} → ${routeInfo.to.name || '끝점'}`);
       }
 
       const polyline = new window.kakao.maps.Polyline({
@@ -449,7 +505,14 @@ export const useKakaoMap = ({ containerId, options, appKey, markers = [], routes
       
       routeInfo.color = routeColor;
       
-      const polyline = createImprovedRoute(routeInfo);
+      console.log(`🗺️ 경로 ${index + 1} 생성:`, {
+        from: routeInfo.from,
+        to: routeInfo.to,
+        waypointsCount: routeInfo.waypoints?.length || 0,
+        color: routeColor
+      });
+      
+      const polyline = createRealisticRoute(routeInfo);
       routesRef.current.push(polyline);
     });
 

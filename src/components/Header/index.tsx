@@ -6,6 +6,7 @@ import Toast from '../Toast';
 const Header: React.FC = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [toast, setToast] = useState<{
     isVisible: boolean;
@@ -17,21 +18,32 @@ const Header: React.FC = () => {
     type: 'info'
   });
 
-  const handleLoginClick = () => {
-    // TODO: 차후 카카오 API 로그인 구현
-    // const handleKakaoLogin = async () => {
-    //   try {
-    //     // 카카오 로그인 API 호출
-    //     // const response = await kakaoLoginAPI();
-    //     // setIsLoggedIn(true);
-    //   } catch (error) {
-    //     console.error('카카오 로그인 실패:', error);
-    //   }
-    // };
+  const handleLoginClick = async () => {
+    if (isLoggedIn) {
+      // 로그아웃
+      setIsLoggedIn(false);
+      setShowProfileMenu(false);
+      showToast('로그아웃되었습니다.', 'success');
+      return;
+    }
 
-    // 임시로 로그인 상태 토글 (차후 API 연동 시 제거)
-    setIsLoggedIn(!isLoggedIn);
-    setShowProfileMenu(false);
+    // 로그인 시뮬레이션
+    setIsLoggingIn(true);
+    showToast('카카오 로그인 중...', 'info');
+    
+    try {
+      // 실제 카카오 로그인 API 호출 시뮬레이션 (2-3초 지연)
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+      
+      setIsLoggedIn(true);
+      setIsLoggingIn(false);
+      setShowProfileMenu(false);
+      showToast('로그인되었습니다!', 'success');
+    } catch (error) {
+      console.error('카카오 로그인 실패:', error);
+      setIsLoggingIn(false);
+      showToast('로그인에 실패했습니다. 다시 시도해주세요.', 'error');
+    }
   };
 
   const showToast = (message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
@@ -109,8 +121,8 @@ const Header: React.FC = () => {
               className={styles.profileInfo}
               onClick={handleProfileMenuClick}
             >
-              <span className={styles.profileName}>사용자</span>
-              <span className={styles.profileEmail}>user@example.com</span>
+              <span className={styles.profileName}>한규덕</span>
+              <span className={styles.profileEmail}>rbejr456@naver.com</span>
             </div>
             <button 
               className={styles.logoutButton}
@@ -136,8 +148,16 @@ const Header: React.FC = () => {
           <button 
             className={styles.kakaoLoginButton}
             onClick={handleLoginClick}
+            disabled={isLoggingIn}
           >
-            카카오로 시작하기
+            {isLoggingIn ? (
+              <>
+                <span className={styles.loadingSpinner}></span>
+                로그인 중...
+              </>
+            ) : (
+              '카카오로 시작하기'
+            )}
           </button>
         )}
       </div>

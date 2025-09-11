@@ -118,8 +118,13 @@
   background: rgba(255, 255, 255, 1);
 }
 
+.navItem.active .navText {
+  color: #54AE57;
+  font-weight: 600;
+}
+
 .friendItem.show {
-  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.05s forwards;
   opacity: 0;
   transform: translateX(100px) scale(0.8);
 }
@@ -131,7 +136,7 @@
 }
 
 .meetingItem.show {
-  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
   opacity: 0;
   transform: translateX(100px) scale(0.8);
 }
@@ -167,7 +172,7 @@
 
 /* 사라질 때 순차적 애니메이션 */
 .friendItem.closing {
-  animation: slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0s forwards;
+  animation: slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.05s forwards;
   opacity: 1;
   transform: translateX(0) scale(1);
 }
@@ -179,7 +184,7 @@
 }
 
 .meetingItem.closing {
-  animation: slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+  animation: slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
   opacity: 1;
   transform: translateX(0) scale(1);
 }
@@ -193,5 +198,513 @@
     opacity: 0;
     transform: translateX(100px) scale(0.8);
   }
+}
+
+/* 친구관리 섹션 */
+.friendManagementSection {
+  position: fixed;
+  right: 30px;
+  bottom: 90px;
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  width: 360px;
+  max-height: 60vh;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  animation: slideInFromRight 0.3s ease-out;
+  pointer-events: auto;
+  z-index: 9999998;
+  overflow: hidden;
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.friendManagementHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.friendManagementHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sendRequestBtn {
+  background: #54AE57;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  pointer-events: auto;
+}
+
+.sendRequestBtn:hover {
+  background: #45a049;
+}
+
+.closeSectionBtn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.closeSectionBtn:hover {
+  background: #4b5563;
+}
+
+.friendManagementContent {
+  padding: 16px 20px;
+  max-height: calc(60vh - 60px);
+  overflow-y: auto;
+}
+
+/* 스크롤바 스타일 */
+.friendManagementContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.friendManagementContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.friendManagementContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.friendManagementContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 섹션 스타일 */
+.requestsSection, .friendsSection, .sentRequestsSection {
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 받은 요청 스타일 */
+.requestsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requestItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.requestItem:hover {
+  background: #f1f3f4;
+}
+
+.requestInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.requestMainInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requestName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.requestLocation {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.requestActions {
+  display: flex;
+  gap: 4px;
+}
+
+.acceptBtn, .rejectBtn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.acceptBtn {
+  background: none;
+  color: #10b981;
+}
+
+.acceptBtn:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.rejectBtn {
+  background: none;
+  color: #6b7280;
+}
+
+.rejectBtn:hover {
+  background: #f9fafb;
+  color: #4b5563;
+}
+
+/* 내 친구 목록 스타일 */
+.friendsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.friendListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.friendListItem:hover {
+  background: #f1f3f4;
+}
+
+.friendInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.friendName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.friendLocation {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.removeFriendBtn {
+  background: none;
+  color: #ef4444;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.removeFriendBtn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* 보낸 요청 스타일 */
+.sentRequestsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sentRequestItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.sentRequestItem:hover {
+  background: #f1f3f4;
+}
+
+.requestStatus {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  width: fit-content;
+  margin-top: 2px;
+}
+
+.requestStatus.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.requestStatus.accepted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.cancelRequestBtn {
+  background: none;
+  color: #6b7280;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.cancelRequestBtn:hover {
+  background: #f9fafb;
+  color: #4b5563;
+}
+
+.dismissBtn {
+  background: none;
+  color: #10b981;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.dismissBtn:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* 친구 요청 모달 스타일 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999999;
+  backdrop-filter: blur(5px);
+  pointer-events: auto !important;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 15px;
+  padding: 0;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+  pointer-events: auto !important;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  pointer-events: auto !important;
+}
+
+.closeButton:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.modalBody {
+  padding: 25px;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  pointer-events: auto !important;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #54AE57;
+}
+
+.input::placeholder {
+  color: #adb5bd;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 10px;
+  padding: 20px 25px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+}
+
+.cancelButton, .sendButton {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto !important;
+}
+
+.cancelButton {
+  background: #6c757d;
+  color: white;
+}
+
+.cancelButton:hover {
+  background: #5a6268;
+}
+
+.sendButton {
+  background: #54AE57;
+  color: white;
+}
+
+.sendButton:hover {
+  background: #45a049;
 }
 

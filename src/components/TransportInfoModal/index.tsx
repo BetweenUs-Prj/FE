@@ -173,6 +173,10 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     setIsLoading(true);
     
     try {
+      // 추천장소 경로 생성 로딩 시뮬레이션
+      console.log('⏳ 추천장소 경로 생성 중...');
+      await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 800)); // 0.4~1.2초 랜덤 지연
+      
         const distance = calculateDistance(
           stationPosition.lat, stationPosition.lng,
           placePosition.lat, placePosition.lng
@@ -234,6 +238,10 @@ const TransportInfoModal: React.FC<TransportInfoModalProps> = ({
     setIsLoading(true);
     
     try {
+      // 경로 생성 로딩 시뮬레이션
+      console.log('⏳ 친구들 경로 생성 중...');
+      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200)); // 0.8~2초 랜덤 지연
+      
       const friendRoutes = friends.map((friend) => 
         generateSimulatedRoute(friend, selectedTransportMode)
       );
